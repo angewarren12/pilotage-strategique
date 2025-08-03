@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PilierController;
@@ -29,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
     
     // Routes pour les piliers (Admin général uniquement)
     Route::resource('piliers', PilierController::class);
+    Route::get('/piliers/{pilier}/details', [PilierController::class, 'show'])->name('piliers.show');
     
     // Routes pour les objectifs stratégiques
     Route::resource('objectifs-strategiques', ObjectifStrategiqueController::class);
@@ -59,11 +61,139 @@ Route::middleware(['auth'])->group(function () {
     })->name('tableau-avancement');
 });
 
-// Route de déconnexion
-Route::post('/logout', function () {
-    Auth::logout();
-    return redirect('/');
-})->name('logout');
+    // Route de déconnexion
+    Route::post('/logout', function () {
+        Auth::logout();
+        return redirect('/');
+    })->name('logout');
+    
+    // Route pour la vue générale
+Route::get('/vue-generale', function () {
+    return view('vue-generale');
+})->name('vue-generale');
+
+// API pour récupérer les données de la vue générale
+Route::get('/api/vue-generale', function () {
+    Log::info('🚀 [DEBUG] API vue générale appelée');
+    
+    try {
+        $piliers = App\Models\Pilier::with([
+            'owner',
+            'objectifsStrategiques.owner',
+            'objectifsStrategiques.objectifsSpecifiques.owner',
+            'objectifsStrategiques.objectifsSpecifiques.actions.owner',
+            'objectifsStrategiques.objectifsSpecifiques.actions.sousActions.owner'
+        ])->get();
+        
+        Log::info('📊 [DEBUG] Piliers récupérés:', ['count' => $piliers->count()]);
+        
+        // Calculer les taux d'avancement pour chaque niveau
+        $piliers->each(function ($pilier) {
+            // Calculer le taux du pilier comme moyenne des objectifs stratégiques
+            $objectifsStrategiques = $pilier->objectifsStrategiques;
+            $tauxAvancementPilier = 0;
+            
+            if ($objectifsStrategiques->count() > 0) {
+                $objectifsStrategiques->each(function ($objectifStrategique) {
+                    // Calculer le taux de l'objectif stratégique comme moyenne des objectifs spécifiques
+                    $objectifsSpecifiques = $objectifStrategique->objectifsSpecifiques;
+                    $tauxAvancementOS = 0;
+                    
+                    if ($objectifsSpecifiques->count() > 0) {
+                        $objectifsSpecifiques->each(function ($objectifSpecifique) {
+                            // Calculer le taux de l'objectif spécifique comme moyenne des actions
+                            $actions = $objectifSpecifique->actions;
+                            $tauxAvancementOSpec = 0;
+                            
+                            if ($actions->count() > 0) {
+                                $actions->each(function ($action) {
+                                    // Calculer le taux de l'action comme moyenne des sous-actions
+                                    $sousActions = $action->sousActions;
+                                    $tauxAvancementAction = 0;
+                                    
+                                    if ($sousActions->count() > 0) {
+                                        $sousActions->each(function ($sousAction) {
+                                            // Utiliser directement le taux_avancement de la base de données
+                                            if (!is_numeric($sousAction->taux_avancement)) {
+                                                $sousAction->taux_avancement = 0;
+                                            }
+                                        });
+                                        
+                                        $tauxAvancementAction = $sousActions->avg('taux_avancement');
+                                    }
+                                    
+                                    $action->taux_avancement = round($tauxAvancementAction, 2);
+                                });
+                                
+                                $tauxAvancementOSpec = $actions->avg('taux_avancement');
+                            }
+                            
+                            $objectifSpecifique->taux_avancement = round($tauxAvancementOSpec, 2);
+                        });
+                        
+                        $tauxAvancementOS = $objectifsSpecifiques->avg('taux_avancement');
+                    }
+                    
+                    $objectifStrategique->taux_avancement = round($tauxAvancementOS, 2);
+                });
+                
+                $tauxAvancementPilier = $objectifsStrategiques->avg('taux_avancement');
+            }
+            
+            $pilier->taux_avancement = round($tauxAvancementPilier, 2);
+        });
+        
+        Log::info('✅ [DEBUG] Calculs terminés, réponse préparée');
+        
+        return response()->json([
+            'success' => true,
+            'piliers' => $piliers
+        ]);
+    } catch (\Exception $e) {
+        Log::error('💥 [DEBUG] Erreur dans l\'API vue générale:', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors du chargement des données: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// Route API pour mettre à jour le taux d'avancement d'une sous-action
+Route::put('/api/sous-actions/{sousAction}', function (App\Models\SousAction $sousAction, Request $request) {
+    Log::info('🔄 [DEBUG] Mise à jour sous-action:', [
+        'sous_action_id' => $sousAction->id,
+        'taux_avancement' => $request->taux_avancement
+    ]);
+    
+    try {
+        $sousAction->update([
+            'taux_avancement' => $request->taux_avancement
+        ]);
+        
+        Log::info('✅ [DEBUG] Sous-action mise à jour avec succès');
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Progression mise à jour avec succès'
+        ]);
+    } catch (\Exception $e) {
+        Log::error('💥 [DEBUG] Erreur lors de la mise à jour:', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Erreur lors de la mise à jour: ' . $e->getMessage()
+        ], 500);
+    }
+});
 
 Auth::routes();
 
@@ -71,15 +201,28 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 
 // Route API pour récupérer tous les piliers avec leurs taux d'avancement
 Route::get('/api/piliers', function () {
-    $piliers = App\Models\Pilier::with('owner')->get();
+    $piliers = App\Models\Pilier::with(['owner', 'objectifsStrategiques'])->get();
     
     // Calculer les taux d'avancement en temps réel pour chaque pilier
     $piliers->each(function ($pilier) {
-        $pilier->taux_avancement = $pilier->getTauxAvancementAttribute();
-        // S'assurer que le taux est un nombre
-        if (!is_numeric($pilier->taux_avancement)) {
-            $pilier->taux_avancement = 0;
+        // Calculer la progression du pilier comme moyenne des objectifs stratégiques
+        $objectifsStrategiques = $pilier->objectifsStrategiques;
+        $tauxAvancementPilier = 0;
+        
+        if ($objectifsStrategiques->count() > 0) {
+            // Calculer le taux d'avancement de chaque objectif stratégique
+            $objectifsStrategiques->each(function ($objectif) {
+                $objectif->taux_avancement = $objectif->getCalculatedTauxAvancement();
+                if (!is_numeric($objectif->taux_avancement)) {
+                    $objectif->taux_avancement = 0;
+                }
+            });
+            
+            // Calculer la moyenne des objectifs stratégiques
+            $tauxAvancementPilier = $objectifsStrategiques->avg('taux_avancement');
         }
+        
+        $pilier->taux_avancement = round($tauxAvancementPilier, 2);
     });
     
     return response()->json($piliers);
@@ -87,7 +230,7 @@ Route::get('/api/piliers', function () {
 
 // Routes API pour la navigation hiérarchique
 Route::get('/api/piliers/{pilier}/objectifs-strategiques', function (App\Models\Pilier $pilier) {
-    \Log::info('🚀 [DEBUG] API appelée pour pilier:', ['pilier_id' => $pilier->id, 'pilier_code' => $pilier->code]);
+    Log::info('🚀 [DEBUG] API appelée pour pilier:', ['pilier_id' => $pilier->id, 'pilier_code' => $pilier->code]);
     
     try {
         $objectifsStrategiques = $pilier->objectifsStrategiques()->with('owner')->get();
@@ -95,7 +238,7 @@ Route::get('/api/piliers/{pilier}/objectifs-strategiques', function (App\Models\
         
         // Calculer les taux d'avancement en temps réel pour chaque objectif stratégique
         $objectifsStrategiques->each(function ($objectif) {
-            $objectif->taux_avancement = $objectif->getTauxAvancementAttribute();
+            $objectif->taux_avancement = $objectif->getCalculatedTauxAvancement();
             // S'assurer que le taux est un nombre
             if (!is_numeric($objectif->taux_avancement)) {
                 $objectif->taux_avancement = 0;
@@ -103,11 +246,20 @@ Route::get('/api/piliers/{pilier}/objectifs-strategiques', function (App\Models\
             \Log::info('📈 [DEBUG] Taux calculé pour OS:', ['os_id' => $objectif->id, 'taux' => $objectif->taux_avancement]);
         });
         
+        // Calculer la progression du pilier comme moyenne des objectifs stratégiques
+        $tauxAvancementPilier = 0;
+        if ($objectifsStrategiques->count() > 0) {
+            $tauxAvancementPilier = $objectifsStrategiques->avg('taux_avancement');
+        }
+        
         $response = [
             'objectifs_strategiques' => $objectifsStrategiques,
             'pilier_code' => $pilier->code,
             'pilier_libelle' => $pilier->libelle,
-            'pilier_taux_avancement' => $pilier->taux_avancement
+            'description' => $pilier->description,
+            'taux_avancement' => round($tauxAvancementPilier, 2),
+            'nb_objectifs_strategiques' => $objectifsStrategiques->count(),
+            'nb_objectifs_termines' => $objectifsStrategiques->where('taux_avancement', 100)->count()
         ];
         
         \Log::info('✅ [DEBUG] Réponse préparée:', $response);
@@ -127,27 +279,48 @@ Route::get('/api/piliers/{pilier}/objectifs-strategiques', function (App\Models\
 });
 
 Route::get('/api/objectifs-strategiques/{objectifStrategique}/objectifs-specifiques', function (App\Models\ObjectifStrategique $objectifStrategique) {
+    Log::info('🚀 [DEBUG] API objectifs-specifiques appelée pour OS:', [
+        'os_id' => $objectifStrategique->id,
+        'os_code' => $objectifStrategique->code,
+        'os_libelle' => $objectifStrategique->libelle
+    ]);
+    
     $objectifsSpecifiques = $objectifStrategique->objectifsSpecifiques()->with('owner')->get();
     $pilier = $objectifStrategique->pilier()->with('owner')->first();
     
+    Log::info('📊 [DEBUG] Données récupérées:', [
+        'objectifs_specifiques_count' => $objectifsSpecifiques->count(),
+        'pilier_code' => $pilier ? $pilier->code : 'null'
+    ]);
+    
     // Calculer les taux d'avancement en temps réel pour chaque objectif spécifique
     $objectifsSpecifiques->each(function ($objectif) {
-        $objectif->taux_avancement = $objectif->getTauxAvancementAttribute();
+        $objectif->taux_avancement = $objectif->getCalculatedTauxAvancement();
         // S'assurer que le taux est un nombre
         if (!is_numeric($objectif->taux_avancement)) {
             $objectif->taux_avancement = 0;
         }
     });
     
-    return response()->json([
+    // Calculer la progression de l'objectif stratégique comme moyenne des objectifs spécifiques
+    $tauxAvancementOS = 0;
+    if ($objectifsSpecifiques->count() > 0) {
+        $tauxAvancementOS = $objectifsSpecifiques->avg('taux_avancement');
+    }
+    
+    $response = [
         'objectifs_specifiques' => $objectifsSpecifiques,
-        'taux_avancement' => $objectifStrategique->taux_avancement,
+        'taux_avancement' => round($tauxAvancementOS, 2),
         'objectif_strategique_owner' => $objectifStrategique->owner ? $objectifStrategique->owner->name : null,
         'pilier_code' => $pilier->code,
         'pilier_libelle' => $pilier->libelle,
-        'pilier_taux_avancement' => $pilier->taux_avancement,
-        'pilier_owner' => $pilier->owner ? $pilier->owner->name : null
-    ]);
+        'objectif_strategique_code' => $objectifStrategique->code,
+        'objectif_strategique_libelle' => $objectifStrategique->libelle
+    ];
+    
+    Log::info('✅ [DEBUG] Réponse préparée:', $response);
+    
+    return response()->json($response);
 });
 
 Route::get('/api/objectifs-specifiques/{objectifSpecifique}/actions', function (App\Models\ObjectifSpecifique $objectifSpecifique) {
@@ -157,25 +330,29 @@ Route::get('/api/objectifs-specifiques/{objectifSpecifique}/actions', function (
     
     // Calculer les taux d'avancement en temps réel pour chaque action
     $actions->each(function ($action) {
-        $action->taux_avancement = $action->getTauxAvancementAttribute();
+        $action->taux_avancement = $action->getCalculatedTauxAvancement();
         // S'assurer que le taux est un nombre
         if (!is_numeric($action->taux_avancement)) {
             $action->taux_avancement = 0;
         }
     });
     
+    // Calculer la progression de l'objectif spécifique comme moyenne des actions
+    $tauxAvancementOSpec = 0;
+    if ($actions->count() > 0) {
+        $tauxAvancementOSpec = $actions->avg('taux_avancement');
+    }
+    
     return response()->json([
         'actions' => $actions,
-        'taux_avancement' => $objectifSpecifique->taux_avancement,
-        'objectif_specifique_owner' => $objectifSpecifique->owner ? $objectifSpecifique->owner->name : null,
+        'taux_avancement' => round($tauxAvancementOSpec, 2),
+        'action_owner' => $objectifSpecifique->owner ? $objectifSpecifique->owner->name : null,
         'pilier_code' => $pilier->code,
         'pilier_libelle' => $pilier->libelle,
-        'pilier_taux_avancement' => $pilier->taux_avancement,
-        'pilier_owner' => $pilier->owner ? $pilier->owner->name : null,
         'objectif_strategique_code' => $objectifStrategique->code,
         'objectif_strategique_libelle' => $objectifStrategique->libelle,
-        'objectif_strategique_taux_avancement' => $objectifStrategique->taux_avancement,
-        'objectif_strategique_owner' => $objectifStrategique->owner ? $objectifStrategique->owner->name : null
+        'objectif_specifique_code' => $objectifSpecifique->code,
+        'objectif_specifique_libelle' => $objectifSpecifique->libelle
     ]);
 });
 
@@ -185,22 +362,24 @@ Route::get('/api/actions/{action}/sous-actions', function (App\Models\Action $ac
     $objectifStrategique = $objectifSpecifique->objectifStrategique()->with('owner')->first();
     $pilier = $objectifStrategique->pilier()->with('owner')->first();
     
+    // Calculer la progression de l'action comme moyenne des sous-actions
+    $tauxAvancementAction = 0;
+    if ($sousActions->count() > 0) {
+        $tauxAvancementAction = $sousActions->avg('taux_avancement');
+    }
+    
     return response()->json([
         'sous_actions' => $sousActions,
-        'taux_avancement' => $action->taux_avancement,
+        'taux_avancement' => round($tauxAvancementAction, 2),
         'action_owner' => $action->owner ? $action->owner->name : null,
         'pilier_code' => $pilier->code,
         'pilier_libelle' => $pilier->libelle,
-        'pilier_taux_avancement' => $pilier->taux_avancement,
-        'pilier_owner' => $pilier->owner ? $pilier->owner->name : null,
         'objectif_strategique_code' => $objectifStrategique->code,
         'objectif_strategique_libelle' => $objectifStrategique->libelle,
-        'objectif_strategique_taux_avancement' => $objectifStrategique->taux_avancement,
-        'objectif_strategique_owner' => $objectifStrategique->owner ? $objectifStrategique->owner->name : null,
         'objectif_specifique_code' => $objectifSpecifique->code,
         'objectif_specifique_libelle' => $objectifSpecifique->libelle,
-        'objectif_specifique_taux_avancement' => $objectifSpecifique->taux_avancement,
-        'objectif_specifique_owner' => $objectifSpecifique->owner ? $objectifSpecifique->owner->name : null
+        'action_code' => $action->code,
+        'action_libelle' => $action->libelle
     ]);
 });
 
@@ -251,6 +430,12 @@ Route::get('/api/objectifs-specifiques/{objectifSpecifique}', function ($objecti
 
 // Routes pour créer des objectifs stratégiques via API
 Route::post('/api/objectifs-strategiques', function (Request $request) {
+    Log::info('🚀 [DEBUG] API POST objectif stratégique appelée', [
+        'request_all' => $request->all(),
+        'request_json' => $request->json()->all(),
+        'content_type' => $request->header('Content-Type')
+    ]);
+    
     $request->validate([
         'code' => 'required|string|max:10',
         'libelle' => 'required|string|max:255',
@@ -315,6 +500,13 @@ Route::post('/api/objectifs-specifiques', function (Request $request) {
 
 // Routes pour modifier des objectifs stratégiques via API
 Route::put('/api/objectifs-strategiques/{objectifStrategique}', function (Request $request, $objectifStrategique) {
+    Log::info('🚀 [DEBUG] API PUT objectif stratégique appelée', [
+        'objectif_id' => $objectifStrategique,
+        'request_all' => $request->all(),
+        'request_json' => $request->json()->all(),
+        'content_type' => $request->header('Content-Type')
+    ]);
+    
     $objectifStrategique = App\Models\ObjectifStrategique::findOrFail($objectifStrategique);
     
     $request->validate([

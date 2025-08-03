@@ -255,11 +255,11 @@
                                 @if($sousAction->date_echeance)
                                     <div>
                                         <span class="badge bg-light text-dark">
-                                            <i class="fas fa-calendar me-1"></i>{{ $sousAction->date_echeance->format('d/m/Y') }}
+                                            <i class="fas fa-calendar me-1"></i>{{ \Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') }}
                                         </span>
                                         @if($sousAction->date_realisation)
                                             <br><small class="text-success">
-                                                <i class="fas fa-check me-1"></i>Réalisé le {{ $sousAction->date_realisation->format('d/m/Y') }}
+                                                <i class="fas fa-check me-1"></i>Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}
                                             </small>
                                         @endif
                                     </div>

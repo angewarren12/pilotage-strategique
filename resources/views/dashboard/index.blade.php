@@ -257,7 +257,7 @@
                                     <td>
                                         @if($sousAction->date_echeance)
                                             <span class="badge bg-light text-dark">
-                                                {{ $sousAction->date_echeance->format('d/m/Y') }}
+                                                {{ \Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') }}
                                             </span>
                                             @if($sousAction->ecart_jours !== null)
                                                 <br><small class="text-{{ $sousAction->ecart_jours < 0 ? 'danger' : 'success' }}">

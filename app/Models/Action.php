@@ -52,7 +52,8 @@ class Action extends Model
         $count = 0;
 
         foreach ($sousActions as $sousAction) {
-            $taux = $sousAction->taux_avancement;
+            // Utiliser le taux d'avancement direct de la sous-action (pas de récursion)
+            $taux = $sousAction->getAttribute('taux_avancement');
             if ($taux !== null) {
                 $totalTaux += $taux;
                 $count++;
@@ -60,5 +61,13 @@ class Action extends Model
         }
 
         return $count > 0 ? round($totalTaux / $count, 2) : 0;
+    }
+
+    /**
+     * Méthode pour obtenir le taux d'avancement calculé sans récursion
+     */
+    public function getCalculatedTauxAvancement()
+    {
+        return $this->getTauxAvancementAttribute();
     }
 }

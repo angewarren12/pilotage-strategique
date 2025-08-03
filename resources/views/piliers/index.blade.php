@@ -91,10 +91,6 @@
                     Gestion des Piliers
                 </h2>
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-info" onclick="ouvrirVueGenerale()">
-                        <i class="fas fa-table me-2"></i>
-                        Vue Générale
-                    </button>
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPilierModal">
                         <i class="fas fa-plus me-2"></i>
                         Nouveau Pilier
@@ -146,11 +142,11 @@
                                                      aria-valuenow="{{ $pilier->taux_avancement }}" 
                                                      aria-valuemin="0" 
                                                      aria-valuemax="100">
-                                                    {{ number_format($pilier->taux_avancement, 1) }}%
+                                                    {{ number_format($pilier->taux_avancement, 2) }}%
                                                 </div>
                                             </div>
                                             <div class="taux-avancement-display text-center mt-1">
-                                                {{ number_format($pilier->taux_avancement, 1) }}%
+                                                {{ number_format($pilier->taux_avancement, 2) }}%
                                             </div>
                                         </td>
                                         <td>
@@ -158,15 +154,10 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-outline-primary"
-                                                        title="Voir les détails"
-                                                        data-pilier-id="{{ $pilier->id }}"
-                                                        data-pilier-code="{{ $pilier->code }}"
-                                                        data-pilier-libelle="{{ $pilier->libelle }}"
-                                                        data-pilier-description="{{ $pilier->description ?? '' }}"
-                                                        data-pilier-taux="{{ $pilier->taux_avancement }}"
-                                                        data-pilier-count="{{ $pilier->objectifsStrategiques->count() }}"
-                                                        onclick="ouvrirModalPilier(this)">
+                                                                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        onclick="openPilierModal({{ $pilier->id }})"
+                                                        title="Voir les détails">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-sm btn-outline-warning"
@@ -276,27 +267,7 @@
     </div>
 </div>
 
-<!-- Modal hiérarchique -->
-<div class="modal fade" id="hierarchieModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="hierarchieModalTitle">Détails</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="hierarchieModalBody" style="max-height: 70vh; overflow-y: auto;">
-                <!-- Le contenu sera chargé dynamiquement -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="btnRetour" style="display: none;" onclick="retourNiveauPrecedent()">
-                    <i class="fas fa-arrow-left me-2"></i>
-                    Retour
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Modal Créer Objectif Stratégique -->
 <div class="modal fade" id="createObjectifStrategiqueModal" tabindex="-1">
@@ -880,7 +851,30 @@
 @endsection
 
 @push('scripts')
-<script>
+    <script>
+        // Listener pour les toasts Livewire
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('showToast', (event) => {
+                console.log('🔍 [DEBUG] Toast event reçu:', event);
+                // L'événement est un tableau avec un objet
+                const toastData = event[0];
+                showToast(toastData.type, toastData.message);
+            });
+        });
+
+        // Fonction pour ouvrir le modal Livewire
+        function openPilierModal(pilierId) {
+            console.log('🔍 [DEBUG] Tentative d\'ouverture du modal pour le pilier:', pilierId);
+            if (typeof Livewire !== 'undefined') {
+                console.log('✅ [DEBUG] Livewire est disponible, dispatch de l\'événement');
+                Livewire.dispatch('openPilierModal', { pilierId: pilierId });
+            } else {
+                console.error('❌ [ERROR] Livewire not initialized');
+                alert('Erreur: Livewire n\'est pas initialisé');
+            }
+        }
+
+
 // Variables globales pour la navigation hiérarchique
 let niveauActuel = 'pilier';
 let historiqueNavigation = [];
@@ -910,7 +904,7 @@ function ouvrirModalPilier(button) {
     niveauActuel = 'pilier';
 
     // Charger les données du pilier
-    chargerDonneesPilier(pilierId, code, libelle, description, tauxAvancement, nbObjectifsStrategiques);
+            chargerDonneesPilier(pilierId, code, libelle);
     
     // Afficher la modale
     const modal = new bootstrap.Modal(document.getElementById('hierarchieModal'));
@@ -918,14 +912,17 @@ function ouvrirModalPilier(button) {
 }
 
 // Fonction pour charger les données du pilier dans la modale hiérarchique
-function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvancement, nbObjectifsStrategiques) {
-    console.log('🚀 [DEBUG] chargerDonneesPilier appelée avec:', { pilierId, code, libelle, description, tauxAvancement, nbObjectifsStrategiques });
+function chargerDonneesPilier(pilierId, code, libelle, isRetour = false) {
+    console.log('🚀 [DEBUG] chargerDonneesPilier appelée avec:', { pilierId, code, libelle, isRetour });
     
     const modalTitle = document.getElementById('hierarchieModalTitle');
     const modalBody = document.getElementById('hierarchieModalBody');
     const btnRetour = document.getElementById('btnRetour');
 
+    // Ne modifier le titre que si ce n'est pas un retour
+    if (!isRetour) {
     modalTitle.textContent = `Détails du Pilier ${code}`;
+    }
     btnRetour.style.display = 'none';
 
     // Afficher un indicateur de chargement
@@ -939,7 +936,7 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
     `;
 
     console.log('🌐 [DEBUG] Appel AJAX vers:', `/api/piliers/${pilierId}/objectifs-strategiques`);
-    
+
     // Charger les objectifs stratégiques via AJAX
     fetch(`/api/piliers/${pilierId}/objectifs-strategiques`)
         .then(response => {
@@ -963,7 +960,7 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
                                     </h6>
                                     <div class="btn-group" role="group">
                                         <button type="button" class="btn btn-sm btn-outline-primary"
-                                                onclick="voirObjectifStrategique(${objectif.id}, '${escapeJsString(objectif.code)}', '${escapeJsString(objectif.libelle)}', ${pilierId})">
+                                                onclick="voirObjectifStrategique(${objectif.id}, '${escapeJsString(objectif.code)}', '${escapeJsString(objectif.libelle)}', ${pilierId}, '${escapeJsString(code)}', '${escapeJsString(libelle)}')">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-warning"
@@ -986,8 +983,8 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
                                     <div class="mb-3">
                                         <strong>Owner:</strong>
                                         <div class="mt-1">
-                                            ${objectif.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${objectif.owner.name || objectif.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
+                                        ${objectif.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${objectif.owner.name || objectif.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
+                                    </div>
                                     </div>
                                     <div class="mb-2">
                                         <strong>Pourcentage:</strong>
@@ -1040,16 +1037,16 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
                                         <h5 class="text-dark">${libelle}</h5>
                                     </div>
                                 </div>
-                                ${description ? `<div class="mb-3"><strong>Description:</strong><p class="mb-0 text-muted">${escapeJsString(description)}</p></div>` : ''}
+                                ${data.description ? `<div class="mb-3"><strong>Description:</strong><p class="mb-0 text-muted">${escapeJsString(data.description)}</p></div>` : ''}
                                 <div class="row">
                                     <div class="col-md-6">
                                         <strong>Progression:</strong>
                                         <div class="progress mt-1" style="height: 20px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: ${tauxAvancement}%" aria-valuenow="${tauxAvancement}" aria-valuemin="0" aria-valuemax="100">${tauxAvancement}%</div>
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <strong>Objectifs Stratégiques:</strong> ${nbObjectifsStrategiques}
+                                        <strong>Objectifs Stratégiques:</strong> ${data.objectifs_strategiques ? data.objectifs_strategiques.length : 0}
                                     </div>
                                 </div>
                             </div>
@@ -1063,10 +1060,10 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
                             </div>
                             <div class="card-body">
                                 <div class="text-center">
-                                    <h2 class="text-success mb-3">${tauxAvancement}%</h2>
+                                    <h2 class="text-success mb-3">${data.taux_avancement || 0}%</h2>
                                     <div class="row text-center">
                                         <div class="col-6">
-                                            <h4 class="text-muted">${nbObjectifsStrategiques}</h4>
+                                            <h4 class="text-muted">${data.objectifs_strategiques ? data.objectifs_strategiques.length : 0}</h4>
                                             <small class="text-muted">Objectifs Stratégiques</small>
                                         </div>
                                         <div class="col-6">
@@ -1084,7 +1081,7 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
                     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                         <div>
                             <i class="fas fa-bullseye me-2"></i>
-                            Objectifs Stratégiques (${nbObjectifsStrategiques})
+                            Objectifs Stratégiques (${data.objectifs_strategiques ? data.objectifs_strategiques.length : 0})
                         </div>
                         <button type="button" class="btn btn-light btn-sm" onclick="ajouterObjectifStrategique(${pilierId})">
                             <i class="fas fa-plus me-1"></i>
@@ -1113,7 +1110,7 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
                 <div class="alert alert-danger">
                     <h5><i class="fas fa-exclamation-triangle me-2"></i>Erreur lors du chargement des données</h5>
                     <p class="mb-0">Détails: ${error.message}</p>
-                    <button type="button" class="btn btn-primary mt-3" onclick="chargerDonneesPilier(${pilierId}, '${code}', '${libelle}', '${description}', ${tauxAvancement}, ${nbObjectifsStrategiques})">
+                    <button type="button" class="btn btn-primary mt-3" onclick="chargerDonneesPilier(${pilierId}, '${code}', '${libelle}')">
                         <i class="fas fa-redo me-2"></i>Réessayer
                     </button>
                 </div>
@@ -1121,275 +1118,32 @@ function chargerDonneesPilier(pilierId, code, libelle, description, tauxAvanceme
         });
 }
 
-// Fonction pour voir les détails d'un objectif stratégique
-function voirObjectifStrategique(objectifId, code, libelle, pilierId) {
-    // Sauvegarder l'état actuel avec plus d'informations
-    historiqueNavigation.push({
-        niveau: niveauActuel,
-        titre: document.getElementById('hierarchieModalTitle').textContent,
-        contenu: document.getElementById('hierarchieModalBody').innerHTML,
-        objectifId: objectifId,
-        code: code,
-        libelle: libelle,
-        pilierId: pilierId
-    });
-    
-    niveauActuel = 'objectif_strategique';
-    
-    // Charger les données de l'objectif stratégique
-    chargerDonneesObjectifStrategique(objectifId, code, libelle, pilierId);
-    
-    // Afficher le bouton retour
-    document.getElementById('btnRetour').style.display = 'block';
-}
 
-// Fonction pour charger les données d'un objectif stratégique
-function chargerDonneesObjectifStrategique(objectifId, code, libelle, parentId) {
-    const modalTitle = document.getElementById('hierarchieModalTitle');
-    
-    // Charger les objectifs spécifiques via AJAX
-    fetch(`/api/objectifs-strategiques/${objectifId}/objectifs-specifiques`)
-        .then(response => response.json())
-        .then(data => {
-            // Mettre à jour le titre avec le code concaténé
-            modalTitle.textContent = `Détails de l'Objectif Stratégique ${data.pilier_code}.${code}`;
-            let objectifsSpecifiquesHtml = '';
-            if (data.objectifs_specifiques && data.objectifs_specifiques.length > 0) {
-                data.objectifs_specifiques.forEach(objectif => {
-                    objectifsSpecifiquesHtml += `
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">
-                                        <span class="badge bg-info me-2">${data.pilier_code}.${code}.${objectif.code}</span>
-                                    </h6>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-sm btn-outline-primary"
-                                                onclick="voirObjectifSpecifique(${objectif.id}, '${escapeJsString(objectif.code)}', '${escapeJsString(objectif.libelle)}', ${objectifId})">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-warning"
-                                                onclick="modifierObjectifSpecifique(${objectif.id})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <strong>Objectif:</strong>
-                                        <p class="mb-0 text-dark">${escapeJsString(objectif.libelle)}</p>
-                                    </div>
-                                    ${objectif.description ? `
-                                    <div class="mb-3">
-                                        <strong>Description:</strong>
-                                        <p class="mb-0 text-muted small">${escapeJsString(objectif.description)}</p>
-                                    </div>
-                                    ` : ''}
-                                    <div class="mb-3">
-                                        <strong>Owner:</strong>
-                                        <div class="mt-1">
-                                            ${objectif.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${objectif.owner.name || objectif.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong>Pourcentage:</strong>
-                                        <div class="progress mt-1" style="height: 12px;">
-                                            <div class="progress-bar bg-success" style="width: ${objectif.taux_avancement}%" role="progressbar" aria-valuenow="${objectif.taux_avancement}" aria-valuemin="0" aria-valuemax="100"></div>
-                                        </div>
-                                        <div class="text-center mt-1">
-                                            <span class="badge bg-success fs-6">${objectif.taux_avancement}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } else {
-                objectifsSpecifiquesHtml = `
-                    <div class="col-12">
-                        <div class="text-center py-5">
-                            <i class="fas fa-list-check fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">Aucun objectif spécifique</h5>
-                            <p class="text-muted">Cet objectif stratégique n'a pas encore d'objectifs spécifiques.</p>
-                            <button type="button" class="btn btn-primary" onclick="ajouterObjectifSpecifique(${objectifId})">
-                                <i class="fas fa-plus me-2"></i>
-                                Créer le premier objectif
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
 
-            document.getElementById('hierarchieModalBody').innerHTML = `
-                <!-- Carte de contexte du Pilier parent -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="card border-info">
-                            <div class="card-header bg-info text-white">
-                                <i class="fas fa-layer-group me-2"></i>
-                                Contexte - Pilier Parent
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <strong>Code Pilier:</strong>
-                                        <span class="badge bg-primary fs-6">${data.pilier_code || 'N/A'}</span>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Libellé Pilier:</strong>
-                                        <h6 class="text-dark mb-0">${data.pilier_libelle || 'N/A'}</h6>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Owner Pilier:</strong>
-                                        <div class="mt-1">
-                                            ${data.pilier_owner ? `<span class="badge bg-success">${data.pilier_owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <strong>Progression Pilier:</strong>
-                                        <div class="progress mt-1" style="height: 15px;">
-                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${data.pilier_taux_avancement || 0}%" aria-valuenow="${data.pilier_taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.pilier_taux_avancement || 0}%</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <div class="col-md-8">
-                        <div class="card border-success">
-                            <div class="card-header bg-success text-white">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Détails de l'Objectif Stratégique
-                            </div>
-                            <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-md-4">
-                                        <strong>Code:</strong>
-                                        <span class="badge bg-primary fs-6">${data.pilier_code}.${code}</span>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <strong>Libellé:</strong>
-                                        <h5 class="text-dark">${libelle}</h5>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <strong>Owner:</strong>
-                                        <div class="mt-1">
-                                            ${data.objectif_strategique_owner ? `<span class="badge bg-success">${data.objectif_strategique_owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
-                                    </div>
-                                </div>
-                                ${data.objectif_strategique && data.objectif_strategique.description ? `<div class="mb-3"><strong>Description:</strong><p class="mb-0 text-muted">${escapeJsString(data.objectif_strategique.description)}</p></div>` : ''}
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Progression:</strong>
-                                        <div class="progress mt-1" style="height: 20px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Objectifs Spécifiques:</strong> ${data.objectifs_specifiques ? data.objectifs_specifiques.length : 0}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-success">
-                            <div class="card-header bg-success text-white">
-                                <i class="fas fa-chart-line me-2"></i>
-                                Statistiques
-                            </div>
-                            <div class="card-body">
-                                <div class="text-center">
-                                    <h2 class="text-success mb-3">${data.taux_avancement || 0}%</h2>
-                                    <div class="row text-center">
-                                        <div class="col-6">
-                                            <h4 class="text-muted">${data.objectifs_specifiques ? data.objectifs_specifiques.length : 0}</h4>
-                                            <small class="text-muted">Objectifs</small>
-                                        </div>
-                                        <div class="col-6">
-                                            <h4 class="text-success">${data.objectifs_specifiques ? data.objectifs_specifiques.filter(os => os.taux_avancement == 100).length : 0}</h4>
-                                            <small class="text-muted">Terminés</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-success">
-                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-list-check me-2"></i>
-                            Objectifs Spécifiques (${data.objectifs_specifiques ? data.objectifs_specifiques.length : 0})
-                        </div>
-                        <button type="button" class="btn btn-light btn-sm" onclick="ajouterObjectifSpecifique(${objectifId})">
-                            <i class="fas fa-plus me-1"></i>
-                            Ajouter un Objectif
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            ${objectifsSpecifiquesHtml}
-                        </div>
-                    </div>
-                </div>
-            `;
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            document.getElementById('hierarchieModalBody').innerHTML = '<div class="alert alert-danger">Erreur lors du chargement des données.</div>';
-        });
-    
-    // Afficher le bouton retour
-    document.getElementById('btnRetour').style.display = 'block';
-}
-
-// Fonction pour retourner au niveau précédent avec rechargement des données
+// Fonction pour retourner au niveau précédent (nouvelle approche)
 function retourNiveauPrecedent() {
-    if (historiqueNavigation.length > 0) {
-        const niveauPrecedent = historiqueNavigation.pop();
-        
-        // Recharger les données fraîches selon le niveau en utilisant les IDs sauvegardés
-        if (niveauPrecedent.niveau === 'pilier' && niveauPrecedent.pilierId) {
-            console.log('🔄 [DEBUG] Rechargement pilier avec ID sauvegardé:', niveauPrecedent.pilierId);
-            // Recharger les données du pilier avec les taux mis à jour
-            rechargerDonneesPilier(niveauPrecedent.pilierId, niveauPrecedent.code, niveauPrecedent.libelle);
-            return;
-        } else if (niveauPrecedent.niveau === 'objectif_strategique' && niveauPrecedent.objectifId) {
-            console.log('🔄 [DEBUG] Rechargement objectif stratégique avec ID sauvegardé:', niveauPrecedent.objectifId);
-            chargerDonneesObjectifStrategique(niveauPrecedent.objectifId, niveauPrecedent.code, niveauPrecedent.libelle, niveauPrecedent.pilierId);
-            return;
-        } else if (niveauPrecedent.niveau === 'objectif_specifique' && niveauPrecedent.objectifId) {
-            console.log('🔄 [DEBUG] Rechargement objectif spécifique avec ID sauvegardé:', niveauPrecedent.objectifId);
-            chargerDonneesObjectifSpecifique(niveauPrecedent.objectifId, niveauPrecedent.code, niveauPrecedent.libelle, niveauPrecedent.parentId);
-            return;
-        } else if (niveauPrecedent.niveau === 'action' && niveauPrecedent.actionId) {
-            console.log('🔄 [DEBUG] Rechargement action avec ID sauvegardé:', niveauPrecedent.actionId);
-            chargerDonneesAction(niveauPrecedent.actionId, niveauPrecedent.code, niveauPrecedent.libelle, niveauPrecedent.objectifId);
-            return;
-        }
-        
-        // Si on ne peut pas recharger dynamiquement, utiliser le contenu sauvegardé
-        document.getElementById('hierarchieModalTitle').textContent = niveauPrecedent.titre;
-        document.getElementById('hierarchieModalBody').innerHTML = niveauPrecedent.contenu;
-        
-        if (historiqueNavigation.length === 0) {
-            niveauActuel = 'pilier';
-            document.getElementById('btnRetour').style.display = 'none';
+    console.log('🔄 [DEBUG] Retour au niveau précédent');
+    
+    if (currentAction) {
+        // Retour vers l'objectif spécifique
+        voirObjectifSpecifique(currentObjectifSpecifique.id, currentObjectifSpecifique.code, currentObjectifSpecifique.libelle);
+    } else if (currentObjectifSpecifique) {
+        // Retour vers l'objectif stratégique
+        if (currentObjectifStrategique && currentPilier) {
+            voirObjectifStrategique(currentObjectifStrategique.id, currentObjectifStrategique.code, currentObjectifStrategique.libelle, currentPilier.id, currentPilier.code, currentPilier.libelle);
         } else {
-            niveauActuel = historiqueNavigation[historiqueNavigation.length - 1].niveau;
+            retourPiliers();
         }
-        
-        // Forcer un rechargement des données après 500ms pour s'assurer que les données sont à jour
-        setTimeout(() => {
-            rechargerDonneesActuelles();
-        }, 500);
+    } else if (currentObjectifStrategique) {
+        // Retour vers le pilier
+        if (currentPilier) {
+            voirPilier(currentPilier.id, currentPilier.code, currentPilier.libelle);
+        } else {
+            retourPiliers();
+        }
+    } else {
+        // Retour vers la liste des piliers
+        retourPiliers();
     }
 }
 
@@ -1410,6 +1164,7 @@ document.getElementById('createPilierForm').addEventListener('submit', function(
         method: 'POST',
         body: formData,
         headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
         }
     })
@@ -1454,6 +1209,7 @@ document.getElementById('editPilierForm').addEventListener('submit', function(e)
         method: 'POST',
         body: formData,
         headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
         }
     })
@@ -1481,20 +1237,46 @@ document.getElementById('editPilierForm').addEventListener('submit', function(e)
 document.getElementById('createObjectifStrategiqueForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
-    formData.append('_token', '{{ csrf_token() }}');
+    console.log('🚀 [DEBUG] Soumission du formulaire de création d\'objectif stratégique');
+    
+    // Récupérer les données du formulaire
+    const code = document.getElementById('createObjectifStrategiqueCode').value;
+    const libelle = document.getElementById('createObjectifStrategiqueLibelle').value;
+    const description = document.getElementById('createObjectifStrategiqueDescription').value;
     const pilierId = document.getElementById('createObjectifStrategiquePilierId').value;
+    const ownerId = document.getElementById('createObjectifStrategiqueOwnerId').value;
+    
+    console.log('📊 [DEBUG] Données du formulaire:', {
+        code, libelle, description, pilierId, ownerId
+    });
+    
+    // Préparer les données JSON
+    const data = {
+        code: code,
+        libelle: libelle,
+        description: description,
+        pilier_id: pilierId,
+        owner_id: ownerId || null
+    };
+    
+    console.log('📤 [DEBUG] Données à envoyer:', data);
     
     fetch(`/api/objectifs-strategiques`, {
         method: 'POST',
-        body: formData,
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 [DEBUG] Réponse reçue:', { status: response.status, statusText: response.statusText });
+        return response.json();
+    })
     .then(data => {
+        console.log('📊 [DEBUG] Données de réponse:', data);
+        
         if (data.success) {
             // Fermer la modale de création
             const modal = bootstrap.Modal.getInstance(document.getElementById('createObjectifStrategiqueModal'));
@@ -1505,34 +1287,73 @@ document.getElementById('createObjectifStrategiqueForm').addEventListener('submi
             if (button) {
                 ouvrirModalPilier(button);
             }
+            
+            showToast('success', 'Objectif stratégique créé avec succès !');
         } else {
+            // Gestion spécifique des erreurs de validation
+            if (data.errors) {
+                let errorMessage = 'Erreurs de validation :\n';
+                Object.keys(data.errors).forEach(field => {
+                    errorMessage += `- ${field}: ${data.errors[field][0]}\n`;
+                });
+                alert(errorMessage);
+            } else if (data.message) {
             alert('Erreur lors de la création : ' + data.message);
+            } else {
+                alert('Erreur lors de la création.');
+            }
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de la création.');
+        console.error('💥 [DEBUG] Erreur:', error);
+        alert('Erreur lors de la création : ' + error.message);
     });
 });
 
 document.getElementById('editObjectifStrategiqueForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
-    formData.append('_token', '{{ csrf_token() }}');
+    console.log('🚀 [DEBUG] Soumission du formulaire d\'édition d\'objectif stratégique');
+    
+    // Récupérer les données du formulaire
     const objectifId = document.getElementById('editObjectifStrategiqueId').value;
+    const code = document.getElementById('editObjectifStrategiqueCode').value;
+    const libelle = document.getElementById('editObjectifStrategiqueLibelle').value;
+    const description = document.getElementById('editObjectifStrategiqueDescription').value;
     const pilierId = document.getElementById('editObjectifStrategiquePilierId').value;
+    const ownerId = document.getElementById('editObjectifStrategiqueOwnerId').value;
+    
+    console.log('📊 [DEBUG] Données du formulaire:', {
+        objectifId, code, libelle, description, pilierId, ownerId
+    });
+    
+    // Préparer les données JSON
+    const data = {
+        code: code,
+        libelle: libelle,
+        description: description,
+        pilier_id: pilierId,
+        owner_id: ownerId || null
+    };
+    
+    console.log('📤 [DEBUG] Données à envoyer:', data);
     
     fetch(`/api/objectifs-strategiques/${objectifId}`, {
         method: 'PUT',
-        body: formData,
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 [DEBUG] Réponse reçue:', { status: response.status, statusText: response.statusText });
+        return response.json();
+    })
     .then(data => {
+        console.log('📊 [DEBUG] Données de réponse:', data);
+        
         if (data.success) {
             // Fermer la modale d'édition
             const modal = bootstrap.Modal.getInstance(document.getElementById('editObjectifStrategiqueModal'));
@@ -1543,13 +1364,26 @@ document.getElementById('editObjectifStrategiqueForm').addEventListener('submit'
             if (button) {
                 ouvrirModalPilier(button);
             }
+            
+            showToast('success', 'Objectif stratégique modifié avec succès !');
         } else {
+            // Gestion spécifique des erreurs de validation
+            if (data.errors) {
+                let errorMessage = 'Erreurs de validation :\n';
+                Object.keys(data.errors).forEach(field => {
+                    errorMessage += `- ${field}: ${data.errors[field][0]}\n`;
+                });
+                alert(errorMessage);
+            } else if (data.message) {
             alert('Erreur lors de la modification : ' + data.message);
+            } else {
+                alert('Erreur lors de la modification.');
+            }
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur lors de la modification.');
+        console.error('💥 [DEBUG] Erreur:', error);
+        alert('Erreur lors de la modification : ' + error.message);
     });
 });
 
@@ -1606,15 +1440,23 @@ document.getElementById('createObjectifSpecifiqueForm').addEventListener('submit
 document.getElementById('editObjectifSpecifiqueForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
-    formData.append('_token', '{{ csrf_token() }}');
     const objectifId = document.getElementById('editObjectifSpecifiqueId').value;
     const objectifStrategiqueId = document.getElementById('editObjectifSpecifiqueObjectifStrategiqueId').value;
     
+    // Collecter les données du formulaire
+    const formData = {
+        code: document.getElementById('editObjectifSpecifiqueCode').value,
+        libelle: document.getElementById('editObjectifSpecifiqueLibelle').value,
+        description: document.getElementById('editObjectifSpecifiqueDescription').value,
+        objectif_strategique_id: objectifStrategiqueId,
+        owner_id: document.getElementById('editObjectifSpecifiqueOwnerId').value
+    };
+    
     fetch(`/api/objectifs-specifiques/${objectifId}`, {
         method: 'PUT',
-        body: formData,
+        body: JSON.stringify(formData),
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
         }
@@ -1706,15 +1548,23 @@ document.getElementById('createActionForm').addEventListener('submit', function(
 document.getElementById('editActionForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
-    formData.append('_token', '{{ csrf_token() }}');
     const actionId = document.getElementById('editActionId').value;
     const objectifSpecifiqueId = document.getElementById('editActionObjectifSpecifiqueId').value;
     
+    // Collecter les données du formulaire
+    const formData = {
+        code: document.getElementById('editActionCode').value,
+        libelle: document.getElementById('editActionLibelle').value,
+        description: document.getElementById('editActionDescription').value,
+        objectif_specifique_id: objectifSpecifiqueId,
+        owner_id: document.getElementById('editActionOwnerId').value
+    };
+    
     fetch(`/api/actions/${actionId}`, {
         method: 'PUT',
-        body: formData,
+        body: JSON.stringify(formData),
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Accept': 'application/json'
         }
@@ -2463,8 +2313,8 @@ function chargerDonneesObjectifSpecifique(objectifId, code, libelle, parentId) {
                                     <div class="mb-3">
                                         <strong>Owner:</strong>
                                         <div class="mt-1">
-                                            ${action.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${action.owner.name || action.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
+                                        ${action.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${action.owner.name || action.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
+                                    </div>
                                     </div>
                                     <div class="mb-2">
                                         <strong>Pourcentage:</strong>
@@ -2507,7 +2357,7 @@ function chargerDonneesObjectifSpecifique(objectifId, code, libelle, parentId) {
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <strong>Code Pilier:</strong>
                                         <span class="badge bg-primary fs-6">${data.pilier_code || 'N/A'}</span>
                                     </div>
@@ -2515,16 +2365,10 @@ function chargerDonneesObjectifSpecifique(objectifId, code, libelle, parentId) {
                                         <strong>Libellé Pilier:</strong>
                                         <h6 class="text-dark mb-0">${data.pilier_libelle || 'N/A'}</h6>
                                     </div>
-                                    <div class="col-md-3">
-                                        <strong>Owner Pilier:</strong>
-                                        <div class="mt-1">
-                                            ${data.pilier_owner ? `<span class="badge bg-success">${data.pilier_owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <strong>Progression:</strong>
+                                    <div class="col-md-4">
+                                        <strong>Progression Pilier:</strong>
                                         <div class="progress mt-1" style="height: 15px;">
-                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${data.pilier_taux_avancement || 0}%" aria-valuenow="${data.pilier_taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.pilier_taux_avancement || 0}%</div>
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2560,7 +2404,7 @@ function chargerDonneesObjectifSpecifique(objectifId, code, libelle, parentId) {
                                     <div class="col-md-2">
                                         <strong>Progression:</strong>
                                         <div class="progress mt-1" style="height: 15px;">
-                                            <div class="progress-bar bg-warning" role="progressbar" style="width: ${data.objectif_strategique_taux_avancement || 0}%" aria-valuenow="${data.objectif_strategique_taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.objectif_strategique_taux_avancement || 0}%</div>
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2724,7 +2568,7 @@ function chargerDonneesAction(actionId, code, libelle, objectifId) {
                                     <div class="mb-3">
                                         <strong>Owner:</strong>
                                         <div class="mt-1">
-                                            ${sousAction.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${sousAction.owner.name || sousAction.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
+                                        ${sousAction.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${sousAction.owner.name || sousAction.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
                                         </div>
                                     </div>
                                     
@@ -2788,7 +2632,7 @@ function chargerDonneesAction(actionId, code, libelle, objectifId) {
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-3">
+                                    <div class="col-md-4">
                                         <strong>Code Pilier:</strong>
                                         <span class="badge bg-primary fs-6">${data.pilier_code || 'N/A'}</span>
                                     </div>
@@ -2796,16 +2640,10 @@ function chargerDonneesAction(actionId, code, libelle, objectifId) {
                                         <strong>Libellé Pilier:</strong>
                                         <h6 class="text-dark mb-0">${data.pilier_libelle || 'N/A'}</h6>
                                     </div>
-                                    <div class="col-md-3">
-                                        <strong>Owner Pilier:</strong>
-                                        <div class="mt-1">
-                                            ${data.pilier_owner ? `<span class="badge bg-success">${data.pilier_owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <strong>Progression:</strong>
+                                    <div class="col-md-4">
+                                        <strong>Progression Pilier:</strong>
                                         <div class="progress mt-1" style="height: 15px;">
-                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${data.pilier_taux_avancement || 0}%" aria-valuenow="${data.pilier_taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.pilier_taux_avancement || 0}%</div>
+                                            <div class="progress-bar bg-info" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2841,7 +2679,7 @@ function chargerDonneesAction(actionId, code, libelle, objectifId) {
                                     <div class="col-md-2">
                                         <strong>Progression:</strong>
                                         <div class="progress mt-1" style="height: 15px;">
-                                            <div class="progress-bar bg-warning" role="progressbar" style="width: ${data.objectif_strategique_taux_avancement || 0}%" aria-valuenow="${data.objectif_strategique_taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.objectif_strategique_taux_avancement || 0}%</div>
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2877,7 +2715,7 @@ function chargerDonneesAction(actionId, code, libelle, objectifId) {
                                     <div class="col-md-2">
                                         <strong>Progression:</strong>
                                         <div class="progress mt-1" style="height: 15px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: ${data.objectif_specifique_taux_avancement || 0}%" aria-valuenow="${data.objectif_specifique_taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.objectif_specifique_taux_avancement || 0}%</div>
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: ${data.taux_avancement || 0}%" aria-valuenow="${data.taux_avancement || 0}" aria-valuemin="0" aria-valuemax="100">${data.taux_avancement || 0}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -3591,7 +3429,7 @@ function rechargerDonneesPilier(pilierId, code, libelle) {
             console.log('🔄 [DEBUG] Données du pilier rechargées:', data);
             
             // Mettre à jour le taux d'avancement du pilier dans les détails
-            const pilierTaux = data.pilier_taux_avancement || 0;
+            const pilierTaux = data.taux_avancement || 0;
             
             // Mettre à jour la barre de progression du pilier
             const pilierProgressBar = document.querySelector('.modal-body .row .col-md-8 .card-body .progress .progress-bar');
@@ -3669,5 +3507,467 @@ function showToast(type, message) {
     });
 }
 
+// Fonction pour ajouter un objectif spécifique
+function ajouterObjectifSpecifique(objectifStrategiqueId) {
+    console.log('🚀 [DEBUG] ajouterObjectifSpecifique appelée avec objectifStrategiqueId:', objectifStrategiqueId);
+    
+    // Pré-remplir l'objectif stratégique sélectionné
+    document.getElementById('createObjectifSpecifiqueObjectifStrategiqueId').value = objectifStrategiqueId;
+    
+    // Suggérer un code basé sur les objectifs spécifiques existants
+    fetch(`/api/objectifs-specifiques/codes/${objectifStrategiqueId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Codes existants reçus:', data);
+            const codeInput = document.getElementById('createObjectifSpecifiqueCode');
+            const existingCodes = data.codes;
+            let nextCode = 'PIL1';
+            
+            if (existingCodes.length > 0) {
+                // Trouver le prochain numéro disponible
+                const numbers = existingCodes.map(code => parseInt(code.replace('PIL', ''))).filter(n => !isNaN(n));
+                if (numbers.length > 0) {
+                    const maxNumber = Math.max(...numbers);
+                    nextCode = `PIL${maxNumber + 1}`;
+                }
+            }
+            
+            console.log('🔢 [DEBUG] Code suggéré:', nextCode);
+            codeInput.value = nextCode;
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors de la récupération des codes:', error);
+        });
+    
+    // Afficher la modale de création
+    const modal = new bootstrap.Modal(document.getElementById('createObjectifSpecifiqueModal'));
+    modal.show();
+}
+
+// Fonction pour modifier un objectif spécifique
+function modifierObjectifSpecifique(objectifSpecifiqueId) {
+    console.log('🚀 [DEBUG] modifierObjectifSpecifique appelée avec objectifSpecifiqueId:', objectifSpecifiqueId);
+    
+    // Charger les données de l'objectif spécifique
+    fetch(`/api/objectifs-specifiques/${objectifSpecifiqueId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Données de l\'objectif spécifique reçues:', data);
+            
+            // Remplir le formulaire d'édition
+            document.getElementById('editObjectifSpecifiqueId').value = objectifSpecifiqueId;
+            document.getElementById('editObjectifSpecifiqueCode').value = data.objectif_specifique.code;
+            document.getElementById('editObjectifSpecifiqueLibelle').value = data.objectif_specifique.libelle;
+            document.getElementById('editObjectifSpecifiqueDescription').value = data.objectif_specifique.description || '';
+            document.getElementById('editObjectifSpecifiqueObjectifStrategiqueId').value = data.objectif_specifique.objectif_strategique_id;
+            document.getElementById('editObjectifSpecifiqueOwnerId').value = data.objectif_specifique.owner_id || '';
+            
+            // Afficher la modale d'édition
+            const modal = new bootstrap.Modal(document.getElementById('editObjectifSpecifiqueModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors du chargement des données:', error);
+            showToast('error', 'Erreur lors du chargement des données de l\'objectif spécifique');
+        });
+}
+
+// Fonction pour ajouter une action
+function ajouterAction(objectifSpecifiqueId) {
+    console.log('🚀 [DEBUG] ajouterAction appelée avec objectifSpecifiqueId:', objectifSpecifiqueId);
+    
+    // Pré-remplir l'objectif spécifique sélectionné
+    document.getElementById('createActionObjectifSpecifiqueId').value = objectifSpecifiqueId;
+    
+    // Suggérer un code basé sur les actions existantes
+    fetch(`/api/actions/codes/${objectifSpecifiqueId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Codes existants reçus:', data);
+            const codeInput = document.getElementById('createActionCode');
+            const existingCodes = data.codes;
+            let nextCode = 'A1';
+            
+            if (existingCodes.length > 0) {
+                // Trouver le prochain numéro disponible
+                const numbers = existingCodes.map(code => parseInt(code.replace('A', ''))).filter(n => !isNaN(n));
+                if (numbers.length > 0) {
+                    const maxNumber = Math.max(...numbers);
+                    nextCode = `A${maxNumber + 1}`;
+                }
+            }
+            
+            console.log('🔢 [DEBUG] Code suggéré:', nextCode);
+            codeInput.value = nextCode;
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors de la récupération des codes:', error);
+        });
+    
+    // Afficher la modale de création
+    const modal = new bootstrap.Modal(document.getElementById('createActionModal'));
+    modal.show();
+}
+
+// Fonction pour modifier une action
+function modifierAction(actionId) {
+    console.log('🚀 [DEBUG] modifierAction appelée avec actionId:', actionId);
+    
+    // Charger les données de l'action
+    fetch(`/api/actions/${actionId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Données de l\'action reçues:', data);
+            
+            // Remplir le formulaire d'édition
+            document.getElementById('editActionId').value = actionId;
+            document.getElementById('editActionCode').value = data.action.code;
+            document.getElementById('editActionLibelle').value = data.action.libelle;
+            document.getElementById('editActionDescription').value = data.action.description || '';
+            document.getElementById('editActionObjectifSpecifiqueId').value = data.action.objectif_specifique_id;
+            document.getElementById('editActionOwnerId').value = data.action.owner_id || '';
+            
+            // Afficher la modale d'édition
+            const modal = new bootstrap.Modal(document.getElementById('editActionModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors du chargement des données:', error);
+            showToast('error', 'Erreur lors du chargement des données de l\'action');
+        });
+}
+
+// Fonction pour modifier une sous-action
+function modifierSousAction(sousActionId) {
+    console.log('🚀 [DEBUG] modifierSousAction appelée avec sousActionId:', sousActionId);
+    
+    // Charger les données de la sous-action
+    fetch(`/api/sous-actions/${sousActionId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Données de la sous-action reçues:', data);
+            
+            // Remplir le formulaire d'édition
+            document.getElementById('editSousActionId').value = sousActionId;
+            document.getElementById('editSousActionCode').value = data.sous_action.code;
+            document.getElementById('editSousActionLibelle').value = data.sous_action.libelle;
+            document.getElementById('editSousActionDescription').value = data.sous_action.description || '';
+            document.getElementById('editSousActionActionId').value = data.sous_action.action_id;
+            document.getElementById('editSousActionTauxAvancement').value = data.sous_action.taux_avancement;
+            document.getElementById('editSousActionDateEcheance').value = data.sous_action.date_echeance || '';
+            document.getElementById('editSousActionOwnerId').value = data.sous_action.owner_id || '';
+            
+            // Afficher la modale d'édition
+            const modal = new bootstrap.Modal(document.getElementById('editSousActionModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors du chargement des données:', error);
+            showToast('error', 'Erreur lors du chargement des données de la sous-action');
+        });
+}
+
+// Fonction pour ajouter un objectif stratégique
+function ajouterObjectifStrategique(pilierId) {
+    console.log('🚀 [DEBUG] ajouterObjectifStrategique appelée avec pilierId:', pilierId);
+    
+    // Pré-remplir le pilier sélectionné
+    document.getElementById('createObjectifStrategiquePilierId').value = pilierId;
+    
+    // Suggérer un code basé sur les objectifs stratégiques existants
+    fetch(`/api/objectifs-strategiques/codes/${pilierId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Codes existants reçus:', data);
+            const codeInput = document.getElementById('createObjectifStrategiqueCode');
+            const existingCodes = data.codes;
+            let nextCode = 'OS1';
+            
+            if (existingCodes.length > 0) {
+                // Trouver le prochain numéro disponible
+                const numbers = existingCodes.map(code => parseInt(code.replace('OS', ''))).filter(n => !isNaN(n));
+                if (numbers.length > 0) {
+                    const maxNumber = Math.max(...numbers);
+                    nextCode = `OS${maxNumber + 1}`;
+                }
+            }
+            
+            console.log('🔢 [DEBUG] Code suggéré:', nextCode);
+            codeInput.value = nextCode;
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors de la récupération des codes:', error);
+        });
+    
+    // Afficher la modale de création
+    const modal = new bootstrap.Modal(document.getElementById('createObjectifStrategiqueModal'));
+    modal.show();
+}
+
+// Fonction pour modifier un objectif stratégique
+function modifierObjectifStrategique(objectifStrategiqueId) {
+    console.log('🚀 [DEBUG] modifierObjectifStrategique appelée avec objectifStrategiqueId:', objectifStrategiqueId);
+    
+    // Charger les données de l'objectif stratégique
+    fetch(`/api/objectifs-strategiques/${objectifStrategiqueId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Données de l\'objectif stratégique reçues:', data);
+            
+            // Remplir le formulaire d'édition
+            document.getElementById('editObjectifStrategiqueId').value = objectifStrategiqueId;
+            document.getElementById('editObjectifStrategiqueCode').value = data.objectif_strategique.code;
+            document.getElementById('editObjectifStrategiqueLibelle').value = data.objectif_strategique.libelle;
+            document.getElementById('editObjectifStrategiqueDescription').value = data.objectif_strategique.description || '';
+            document.getElementById('editObjectifStrategiquePilierId').value = data.objectif_strategique.pilier_id;
+            document.getElementById('editObjectifStrategiqueOwnerId').value = data.objectif_strategique.owner_id || '';
+            
+            // Afficher la modale d'édition
+            const modal = new bootstrap.Modal(document.getElementById('editObjectifStrategiqueModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('❌ [DEBUG] Erreur lors du chargement des données:', error);
+            showToast('error', 'Erreur lors du chargement des données de l\'objectif stratégique');
+        });
+}
+
+// Fonction pour charger les données d'un pilier pour l'édition
+function chargerDonneesPilierEdit(button) {
+    console.log('🚀 [DEBUG] chargerDonneesPilierEdit appelée');
+    
+    const pilierId = button.getAttribute('data-pilier-id');
+    const code = button.getAttribute('data-pilier-code');
+    const libelle = button.getAttribute('data-pilier-libelle');
+    const description = button.getAttribute('data-pilier-description');
+    
+    console.log('📊 [DEBUG] Données du pilier:', { pilierId, code, libelle, description });
+    
+    // Remplir le formulaire d'édition
+    document.getElementById('editPilierId').value = pilierId;
+    document.getElementById('editPilierCode').value = code;
+    document.getElementById('editPilierLibelle').value = libelle;
+    document.getElementById('editPilierDescription').value = description || '';
+    
+    // Afficher la modale d'édition
+    const modal = new bootstrap.Modal(document.getElementById('editPilierModal'));
+    modal.show();
+}
+
+// Fonction pour ouvrir la vue générale
+function ouvrirVueGenerale() {
+    console.log('🚀 [DEBUG] ouvrirVueGenerale appelée');
+    
+    // Rediriger vers la page de vue générale
+    window.location.href = '{{ route("vue-generale") }}';
+}
+
+// Fonction pour voir les détails d'un pilier
+function voirPilier(pilierId, code, libelle) {
+    console.log('🚀 [DEBUG] Voir pilier:', { pilierId, code, libelle });
+    
+    currentPilier = { id: pilierId, code, libelle };
+    currentObjectifStrategique = null;
+    currentObjectifSpecifique = null;
+    currentAction = null;
+    
+    const modalTitle = document.getElementById('hierarchieModalTitle');
+    const modalBody = document.getElementById('hierarchieModalBody');
+    const btnRetour = document.getElementById('btnRetour');
+    
+    modalTitle.textContent = `Détails du Pilier ${code}`;
+    btnRetour.style.display = 'block';
+    btnRetour.onclick = retourPiliers;
+    
+    // Afficher un indicateur de chargement
+    modalBody.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-3 text-muted">Chargement des données du pilier...</p>
+        </div>
+    `;
+    
+    // Charger les objectifs stratégiques via AJAX
+    fetch(`/api/piliers/${pilierId}/objectifs-strategiques`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('📊 [DEBUG] Données du pilier reçues:', data);
+            
+            let objectifsStrategiquesHtml = '';
+            if (data.objectifs_strategiques && data.objectifs_strategiques.length > 0) {
+                data.objectifs_strategiques.forEach(objectif => {
+                    objectifsStrategiquesHtml += `
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-header bg-gradient-success text-white d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <span class="badge bg-light text-dark me-2">${code}.${objectif.code}</span>
+                                        ${objectif.libelle}
+                                    </h6>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-light"
+                                                onclick="voirObjectifStrategique(${objectif.id}, '${escapeJsString(objectif.code)}', '${escapeJsString(objectif.libelle)}', ${pilierId}, '${escapeJsString(code)}', '${escapeJsString(libelle)}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-light"
+                                                onclick="modifierObjectifStrategique(${objectif.id})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Description:</strong>
+                                        <p class="mb-0 text-muted">${escapeJsString(objectif.description || 'Aucune description')}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Owner:</strong>
+                                        <div class="mt-1">
+                                            ${objectif.owner ? `<span class="badge bg-success"><i class="fas fa-user me-1"></i>${objectif.owner.name || objectif.owner}</span>` : '<span class="text-muted small">Non assigné</span>'}
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Progression:</strong>
+                                        <div class="progress mt-2" style="height: 15px;">
+                                            <div class="progress-bar bg-success" style="width: ${objectif.taux_avancement}%" 
+                                                 role="progressbar" aria-valuenow="${objectif.taux_avancement}" aria-valuemin="0" aria-valuemax="100">
+                                                ${objectif.taux_avancement}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-list-check me-1"></i>
+                                            ${objectif.objectifs_specifiques_count || 0} objectifs spécifiques
+                                        </span>
+                                        <button type="button" class="btn btn-success btn-sm" 
+                                                onclick="voirObjectifStrategique(${objectif.id}, '${escapeJsString(objectif.code)}', '${escapeJsString(objectif.libelle)}', ${pilierId}, '${escapeJsString(code)}', '${escapeJsString(libelle)}')">
+                                            <i class="fas fa-arrow-right me-1"></i>
+                                            Voir détails
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                objectifsStrategiquesHtml = `
+                    <div class="col-12">
+                        <div class="text-center py-5">
+                            <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun objectif stratégique</h5>
+                            <p class="text-muted">Ce pilier n'a pas encore d'objectifs stratégiques.</p>
+                            <button type="button" class="btn btn-success" onclick="ajouterObjectifStrategique(${pilierId})">
+                                <i class="fas fa-plus me-2"></i>
+                                Créer le premier objectif
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            modalBody.innerHTML = `
+                <!-- Informations du pilier -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Détails du Pilier
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <strong>Code:</strong>
+                                    <span class="badge bg-primary ms-2">${code}</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Libellé:</strong>
+                                    <p class="mb-0">${escapeJsString(libelle)}</p>
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Progression:</strong>
+                                    <div class="progress mt-2" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: ${data.taux_avancement}%" 
+                                             role="progressbar" aria-valuenow="${data.taux_avancement}" aria-valuemin="0" aria-valuemax="100">
+                                            <strong>${data.taux_avancement}%</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Statistiques
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="display-4 text-success mb-2">${data.taux_avancement}%</div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="border-end">
+                                            <div class="h4 text-primary">${data.objectifs_strategiques ? data.objectifs_strategiques.length : 0}</div>
+                                            <small class="text-muted">Objectifs Stratégiques</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="h4 text-success">0</div>
+                                        <small class="text-muted">Terminés</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Objectifs Stratégiques -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-bullseye me-2 text-success"></i>
+                                Objectifs Stratégiques (${data.objectifs_strategiques ? data.objectifs_strategiques.length : 0})
+                            </h5>
+                            <button type="button" class="btn btn-success" onclick="ajouterObjectifStrategique(${pilierId})">
+                                <i class="fas fa-plus me-2"></i>
+                                Ajouter un Objectif
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    ${objectifsStrategiquesHtml}
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error('❌ [ERROR] Erreur lors du chargement du pilier:', error);
+            modalBody.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erreur lors du chargement des données du pilier. Veuillez réessayer.
+                </div>
+            `;
+        });
+}
+
+// Fonction pour retourner à la liste des piliers
+function retourPiliers() {
+    console.log('🔄 [DEBUG] Retour à la liste des piliers');
+    currentPilier = null;
+    currentObjectifStrategique = null;
+    currentObjectifSpecifique = null;
+    currentAction = null;
+    chargerListePiliers();
+}
+
 </script>
 @endpush
+
+<!-- Composant Livewire pour le modal des détails du pilier -->
+<livewire:pilier-details-modal-new />

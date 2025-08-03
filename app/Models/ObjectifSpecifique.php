@@ -52,7 +52,8 @@ class ObjectifSpecifique extends Model
         $count = 0;
 
         foreach ($actions as $action) {
-            $taux = $action->taux_avancement;
+            // Utiliser le calcul en temps réel de l'action
+            $taux = $action->getCalculatedTauxAvancement();
             if ($taux !== null) {
                 $totalTaux += $taux;
                 $count++;
@@ -60,5 +61,13 @@ class ObjectifSpecifique extends Model
         }
 
         return $count > 0 ? round($totalTaux / $count, 2) : 0;
+    }
+
+    /**
+     * Méthode pour obtenir le taux d'avancement calculé sans récursion
+     */
+    public function getCalculatedTauxAvancement()
+    {
+        return $this->getTauxAvancementAttribute();
     }
 }
