@@ -21,6 +21,8 @@ class PilierDetailsModalNew extends Component
     public $showPilierMainView = true;
     public $isLoading = false;
     public $currentBreadcrumb = [];
+    public $animationDirection = 'next'; // 'next' ou 'prev'
+    public $isAnimating = false;
     
     // Propriétés pour les statistiques
     public $totalObjectifsSpecifiques = 0;
@@ -247,6 +249,10 @@ class PilierDetailsModalNew extends Component
     // Nouvelles méthodes pour la navigation via breadcrumb
     public function naviguerVersPilier()
     {
+        $this->animationDirection = 'prev';
+        $this->isAnimating = true;
+        $this->dispatch('startSlideAnimation', ['direction' => 'prev']);
+        
         $this->isLoading = true;
         $this->dispatch('startLoading');
         
@@ -271,10 +277,18 @@ class PilierDetailsModalNew extends Component
         
         // Mettre à jour le breadcrumb
         $this->updateBreadcrumb('pilier');
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function naviguerVersObjectifStrategique()
     {
+        $this->animationDirection = 'prev';
+        $this->isAnimating = true;
+        $this->dispatch('startSlideAnimation', ['direction' => 'prev']);
+        
         $this->isLoading = true;
         $this->dispatch('startLoading');
         
@@ -297,10 +311,18 @@ class PilierDetailsModalNew extends Component
         
         // Mettre à jour le breadcrumb
         $this->updateBreadcrumb('objectif_strategique');
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function naviguerVersObjectifSpecifique()
     {
+        $this->animationDirection = 'prev';
+        $this->isAnimating = true;
+        $this->dispatch('startSlideAnimation', ['direction' => 'prev']);
+        
         $this->isLoading = true;
         $this->dispatch('startLoading');
         
@@ -321,10 +343,18 @@ class PilierDetailsModalNew extends Component
         
         // Mettre à jour le breadcrumb
         $this->updateBreadcrumb('objectif_specifique');
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function naviguerVersAction()
     {
+        $this->animationDirection = 'prev';
+        $this->isAnimating = true;
+        $this->dispatch('startSlideAnimation', ['direction' => 'prev']);
+        
         $this->isLoading = true;
         $this->dispatch('startLoading');
         
@@ -343,6 +373,10 @@ class PilierDetailsModalNew extends Component
         
         // Mettre à jour le breadcrumb
         $this->updateBreadcrumb('action');
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function closeModal()
@@ -387,6 +421,12 @@ class PilierDetailsModalNew extends Component
 
     public function voirObjectifStrategique($objectifId)
     {
+        $this->animationDirection = 'next';
+        $this->isAnimating = true;
+        
+        // Déclencher l'animation
+        $this->dispatch('startSlideAnimation', ['direction' => 'next']);
+        
         $this->isLoading = true;
         $this->dispatch('startLoading');
         
@@ -397,6 +437,10 @@ class PilierDetailsModalNew extends Component
         
         // Mettre à jour le breadcrumb
         $this->updateBreadcrumb('objectif_strategique');
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function retourListeObjectifs()
@@ -685,6 +729,10 @@ class PilierDetailsModalNew extends Component
     // Méthodes pour les détails d'objectif spécifique
     public function showObjectifSpecifiqueDetails($objectifSpecifiqueId)
     {
+        $this->animationDirection = 'next';
+        $this->isAnimating = true;
+        $this->dispatch('startSlideAnimation', ['direction' => 'next']);
+        
         $this->isLoading = true;
         $this->dispatch('startLoading');
         
@@ -721,6 +769,10 @@ class PilierDetailsModalNew extends Component
             // Mettre à jour le breadcrumb
             $this->updateBreadcrumb('objectif_specifique');
         }
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function retourListeObjectifsSpecifiques()
@@ -772,6 +824,10 @@ class PilierDetailsModalNew extends Component
     // Méthodes pour les actions
     public function displayActionDetails($actionId)
     {
+        $this->animationDirection = 'next';
+        $this->isAnimating = true;
+        $this->dispatch('startSlideAnimation', ['direction' => 'next']);
+        
         $this->dispatch('showToast', ['type' => 'info', 'message' => 'showActionDetails appelée avec ID: ' . $actionId]);
         
         $this->isLoading = true;
@@ -799,6 +855,10 @@ class PilierDetailsModalNew extends Component
         } else {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Action non trouvée']);
         }
+        
+        // Arrêter l'animation après le délai
+        $this->dispatch('stopSlideAnimation');
+        $this->isAnimating = false;
     }
 
     public function retourListeActions()
@@ -1214,6 +1274,56 @@ class PilierDetailsModalNew extends Component
             $this->dispatch('showToast', ['type' => 'success', 'message' => 'Objectif stratégique mis à jour avec succès !']);
             $this->cancelEditObjectifStrategique();
             $this->loadPilierData();
+        }
+    }
+
+    public function updateSousActionTaux($sousActionId, $newTaux, $actionId, $objectifSpecifiqueId, $objectifStrategiqueId, $pilierId)
+    {
+        try {
+            Log::info('Mise à jour du taux sous-action', [
+                'sousActionId' => $sousActionId,
+                'newTaux' => $newTaux,
+                'actionId' => $actionId
+            ]);
+            
+            // Mettre à jour la sous-action
+            $sousAction = SousAction::find($sousActionId);
+            if (!$sousAction) {
+                throw new \Exception('Sous-action non trouvée');
+            }
+
+            $sousAction->update(['taux_avancement' => $newTaux]);
+
+            // Recharger les données pour mettre à jour les taux parents
+            $this->loadPilierData();
+
+            // Mettre à jour les éléments d'interface en temps réel
+            $this->dispatch('updateTauxDisplay', [
+                'sousActionId' => $sousActionId,
+                'newTaux' => $newTaux,
+                'actionId' => $actionId,
+                'objectifSpecifiqueId' => $objectifSpecifiqueId,
+                'objectifStrategiqueId' => $objectifStrategiqueId,
+                'pilierId' => $pilierId
+            ]);
+
+            // Rafraîchir la page principale pour synchroniser les taux
+            $this->dispatch('refreshPilierList');
+
+            Log::info('Taux sous-action mis à jour avec succès', [
+                'sousActionId' => $sousActionId,
+                'newTaux' => $newTaux,
+                'actionId' => $actionId
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour du taux', [
+                'error' => $e->getMessage(),
+                'sousActionId' => $sousActionId,
+                'newTaux' => $newTaux
+            ]);
+            
+            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Erreur lors de la mise à jour du taux: ' . $e->getMessage()]);
         }
     }
 

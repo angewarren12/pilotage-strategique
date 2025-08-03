@@ -860,6 +860,12 @@
                 const toastData = event[0];
                 showToast(toastData.type, toastData.message);
             });
+            
+            // Écouter les mises à jour de taux pour rafraîchir la page
+            Livewire.on('refreshPilierList', () => {
+                console.log('🔄 Rafraîchissement de la liste des piliers...');
+                window.location.reload();
+            });
         });
 
         // Fonction pour ouvrir le modal Livewire

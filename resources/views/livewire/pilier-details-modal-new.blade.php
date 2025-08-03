@@ -1,7 +1,7 @@
 <div>
     <!-- Modal principal -->
     @if($showModal)
-    <div class="modal fade show" style="display: block;" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade show" style="display: block; z-index: 1055;" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <!-- Header fixe avec breadcrumb dynamique -->
@@ -943,13 +943,35 @@
                                                                 </small>
                                                             </div>
                                                         @endif
+                                                        <div class="mb-3">
+                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                <small class="text-muted fw-bold">Progression</small>
+                                                                <small class="text-success fw-bold" id="taux-{{ $sousAction->id }}">{{ number_format($sousAction->taux_avancement, 2) }}%</small>
+                                                            </div>
+                                                            <div class="progress-container">
+                                                                <input type="range" 
+                                                                       class="form-range sous-action-slider" 
+                                                                       id="slider-{{ $sousAction->id }}"
+                                                                       data-sous-action-id="{{ $sousAction->id }}"
+                                                                       data-action-id="{{ $selectedAction->id }}"
+                                                                       data-objectif-specifique-id="{{ $selectedObjectifSpecifiqueDetails->id }}"
+                                                                       data-objectif-strategique-id="{{ $selectedObjectifStrategique->id }}"
+                                                                       data-pilier-id="{{ $pilier->id }}"
+                                                                       min="0" 
+                                                                       max="100" 
+                                                                       step="0.1" 
+                                                                       value="{{ $sousAction->taux_avancement }}"
+                                                                       style="width: 100%; height: 8px;">
+                                                                <div class="progress mt-1" style="height: 8px;">
+                                                                    <div class="progress-bar bg-success" 
+                                                                         id="progress-{{ $sousAction->id }}"
+                                                                         role="progressbar" 
+                                                                         style="width: {{ $sousAction->taux_avancement }}%"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div class="btn-group" role="group">
-                                                                <button type="button" 
-                                                                        wire:click="showSousActionDetails({{ $sousAction->id }})"
-                                                                        class="btn btn-success btn-sm">
-                                                                    <i class="fas fa-eye me-1"></i>Voir
-                                                                </button>
                                                                 <button type="button" 
                                                                         wire:click="showEditSousActionForm({{ $sousAction->id }})"
                                                                         class="btn btn-outline-success btn-sm">
@@ -1251,17 +1273,223 @@
                 </div>
             </div>
         </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="modal-backdrop fade show"></div>
+    <div class="modal-backdrop fade show" style="z-index: 1054;"></div>
     @endif
-</div>
 
-                <script>
-                document.addEventListener('livewire:init', () => {
-                    Livewire.on('startLoading', () => {
-                        // Arrêter le chargement immédiatement
-                        @this.stopLoading();
-                    });
+    <style>
+    /* Animation Slide Suivant */
+    .slide-next-enter {
+        transform: translateX(100%);
+        opacity: 0.3;
+        transition: none;
+    }
+
+    .slide-next-enter-active {
+        transform: translateX(0);
+        opacity: 1;
+        transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* Animation Slide Précédent */
+    .slide-prev-enter {
+        transform: translateX(-100%);
+        opacity: 0.3;
+        transition: none;
+    }
+
+    .slide-prev-enter-active {
+        transform: translateX(0);
+        opacity: 1;
+        transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* Animation de chargement */
+    .loading-fade {
+        opacity: 0.6;
+        transition: opacity 0.3s ease;
+    }
+
+    .loading-fade.active {
+        opacity: 1;
+    }
+
+    /* Debug: bordures colorées pour voir les animations */
+    .slide-next-enter {
+        border: 3px solid red !important;
+    }
+    
+    .slide-next-enter-active {
+        border: 3px solid green !important;
+    }
+    
+    .slide-prev-enter {
+        border: 3px solid blue !important;
+    }
+    
+    .slide-prev-enter-active {
+        border: 3px solid orange !important;
+    }
+
+    /* Styles pour les sliders de sous-actions */
+    .sous-action-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        border-radius: 4px;
+        background: #e9ecef;
+        outline: none;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .sous-action-slider:hover {
+        opacity: 1;
+    }
+
+    .sous-action-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #28a745;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .sous-action-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #28a745;
+        cursor: pointer;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .progress-container {
+        position: relative;
+    }
+
+    .progress-container .progress {
+        margin-top: 8px;
+    }
+    </style>
+
+    <script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('startLoading', () => {
+            // Arrêter le chargement immédiatement
+            @this.stopLoading();
+        });
+
+        Livewire.on('startSlideAnimation', (event) => {
+            const direction = event.detail?.direction || 'next';
+            const modalContent = document.querySelector('.modal-content');
+            
+            if (modalContent) {
+                console.log('🚀 Animation démarrée:', direction);
+                
+                // Nettoyer les classes précédentes
+                modalContent.classList.remove('slide-next-enter', 'slide-next-enter-active');
+                modalContent.classList.remove('slide-prev-enter', 'slide-prev-enter-active');
+                
+                // Ajouter la classe initiale
+                modalContent.classList.add(`slide-${direction}-enter`);
+                
+                // Forcer le reflow pour que l'animation fonctionne
+                modalContent.offsetHeight;
+                
+                // Déclencher l'animation
+                setTimeout(() => {
+                    modalContent.classList.remove(`slide-${direction}-enter`);
+                    modalContent.classList.add(`slide-${direction}-enter-active`);
+                    console.log('✅ Animation en cours:', direction);
+                }, 50);
+                
+                // Nettoyer après l'animation
+                setTimeout(() => {
+                    modalContent.classList.remove(`slide-${direction}-enter-active`);
+                    console.log('✅ Animation terminée:', direction);
+                }, 400);
+            }
+        });
+        
+        Livewire.on('stopSlideAnimation', () => {
+            const modalContent = document.querySelector('.modal-content');
+            
+            if (modalContent) {
+                // Nettoyer les classes d'animation
+                modalContent.classList.remove('slide-next-enter', 'slide-next-enter-active');
+                modalContent.classList.remove('slide-prev-enter', 'slide-prev-enter-active');
+                console.log('🧹 Animation nettoyée');
+            }
+        });
+
+        // Gestion des sliders de sous-actions
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('sous-action-slider')) {
+                const slider = e.target;
+                const sousActionId = slider.dataset.sousActionId;
+                const actionId = slider.dataset.actionId;
+                const objectifSpecifiqueId = slider.dataset.objectifSpecifiqueId;
+                const objectifStrategiqueId = slider.dataset.objectifStrategiqueId;
+                const pilierId = slider.dataset.pilierId;
+                const newValue = parseFloat(slider.value);
+
+                console.log('🎯 Slider modifié:', {
+                    sousActionId,
+                    actionId,
+                    objectifSpecifiqueId,
+                    objectifStrategiqueId,
+                    pilierId,
+                    newValue
                 });
-                </script>
+
+                // Mettre à jour l'affichage en temps réel
+                const tauxElement = document.getElementById(`taux-${sousActionId}`);
+                const progressElement = document.getElementById(`progress-${sousActionId}`);
+                
+                if (tauxElement) {
+                    tauxElement.textContent = newValue.toFixed(2) + '%';
+                }
+                
+                if (progressElement) {
+                    progressElement.style.width = newValue + '%';
+                }
+
+                // Appeler directement la méthode Livewire
+                @this.updateSousActionTaux(sousActionId, newValue, actionId, objectifSpecifiqueId, objectifStrategiqueId, pilierId);
+            }
+        });
+
+        // Écouter les mises à jour des taux parents
+        Livewire.on('updateTauxDisplay', (event) => {
+            const data = event.detail;
+            console.log('🔄 Mise à jour des taux parents:', data);
+            
+            // Mettre à jour les taux des actions parents
+            const actionProgressBars = document.querySelectorAll('.progress-bar');
+            actionProgressBars.forEach(bar => {
+                if (bar.id && bar.id.includes('progress-')) {
+                    // Recalculer le taux basé sur les sous-actions
+                    const actionId = bar.id.replace('progress-', '');
+                    if (actionId == data.actionId) {
+                        // Mettre à jour la barre de progression de l'action
+                        const actionTauxElement = document.querySelector(`[data-action-id="${data.actionId}"] .action-taux`);
+                        if (actionTauxElement) {
+                            // Le taux sera mis à jour par le rechargement des données
+                            console.log('✅ Taux action mis à jour');
+                        }
+                    }
+                }
+            });
+        });
+    });
+    </script>
+</div>
 
