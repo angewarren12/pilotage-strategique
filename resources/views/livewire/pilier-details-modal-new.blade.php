@@ -36,6 +36,11 @@
                     
                     <!-- Bouton fermer -->
                     <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
+                    
+                    <!-- Bouton debug temporaire -->
+                    <button type="button" class="btn btn-warning btn-sm me-2" wire:click="debugMethods" title="Debug">
+                        <i class="fas fa-bug"></i>
+                    </button>
                 </div>
                 
                 <!-- Animation de chargement -->
@@ -602,6 +607,11 @@
                                             class="btn btn-info btn-sm">
                                         <i class="fas fa-plus me-2"></i>
                                         Créer une Action
+                                    </button>
+                                    
+                                    <!-- Bouton test temporaire -->
+                                    <button type="button" class="btn btn-warning btn-sm ms-2" wire:click="testMethod" title="Test">
+                                        <i class="fas fa-flask"></i> Test
                                     </button>
                                 </div>
                                 
@@ -1269,6 +1279,373 @@
                         <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
                     @endif
 
+                    <!-- Modal Créer Action -->
+                    @if($showCreateActionForm)
+                        <div class="modal fade show" style="display: block; z-index: 9999;" tabindex="-1" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-info text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-plus-circle me-2"></i>
+                                            Nouvelle Action
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" wire:click="cancelCreateAction"></button>
+                                    </div>
+                                    <form wire:submit.prevent="createAction">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Code *</label>
+                                                    <input type="text" class="form-control @error('newActionCode') is-invalid @enderror" 
+                                                           wire:model="newActionCode" required>
+                                                    @error('newActionCode')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Libellé *</label>
+                                                    <input type="text" class="form-control @error('newActionLibelle') is-invalid @enderror" 
+                                                           wire:model="newActionLibelle" required>
+                                                    @error('newActionLibelle')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control @error('newActionDescription') is-invalid @enderror" 
+                                                          wire:model="newActionDescription" rows="3"></textarea>
+                                                @error('newActionDescription')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Owner</label>
+                                                    <select class="form-select @error('newActionOwnerId') is-invalid @enderror" 
+                                                            wire:model="newActionOwnerId">
+                                                        <option value="">Sélectionner un owner</option>
+                                                        @foreach($this->users as $user)
+                                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('newActionOwnerId')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Date d'échéance</label>
+                                                    <input type="date" class="form-control @error('newActionDateEcheance') is-invalid @enderror" 
+                                                           wire:model="newActionDateEcheance">
+                                                    @error('newActionDateEcheance')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Date de réalisation</label>
+                                                <input type="date" class="form-control @error('newActionDateRealisation') is-invalid @enderror" 
+                                                       wire:model="newActionDateRealisation">
+                                                @error('newActionDateRealisation')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" wire:click="cancelCreateAction">
+                                                Annuler
+                                            </button>
+                                            <button type="submit" class="btn btn-info">
+                                                <i class="fas fa-save me-2"></i>Créer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+                    @endif
+
+                    <!-- Modal Éditer Action -->
+                    @if($showEditActionForm && $editingAction)
+                        <div class="modal fade show" style="display: block; z-index: 9999;" tabindex="-1" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-edit me-2"></i>
+                                            Modifier l'Action
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" wire:click="cancelEditAction"></button>
+                                    </div>
+                                    <form wire:submit.prevent="updateAction">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Code *</label>
+                                                    <input type="text" class="form-control @error('editActionCode') is-invalid @enderror" 
+                                                           wire:model="editActionCode" required>
+                                                    @error('editActionCode')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Libellé *</label>
+                                                    <input type="text" class="form-control @error('editActionLibelle') is-invalid @enderror" 
+                                                           wire:model="editActionLibelle" required>
+                                                    @error('editActionLibelle')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control @error('editActionDescription') is-invalid @enderror" 
+                                                          wire:model="editActionDescription" rows="3"></textarea>
+                                                @error('editActionDescription')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Owner</label>
+                                                    <select class="form-select @error('editActionOwnerId') is-invalid @enderror" 
+                                                            wire:model="editActionOwnerId">
+                                                        <option value="">Sélectionner un owner</option>
+                                                        @foreach($this->users as $user)
+                                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('editActionOwnerId')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Date d'échéance</label>
+                                                    <input type="date" class="form-control @error('editActionDateEcheance') is-invalid @enderror" 
+                                                           wire:model="editActionDateEcheance">
+                                                    @error('editActionDateEcheance')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Date de réalisation</label>
+                                                <input type="date" class="form-control @error('editActionDateRealisation') is-invalid @enderror" 
+                                                       wire:model="editActionDateRealisation">
+                                                @error('editActionDateRealisation')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" wire:click="cancelEditAction">
+                                                Annuler
+                                            </button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>Enregistrer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+                    @endif
+
+                    <!-- Modal Créer Sous-Action -->
+                    @if($showCreateSousActionForm)
+                        <div class="modal fade show" style="display: block; z-index: 9999;" tabindex="-1" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-plus-circle me-2"></i>
+                                            Nouvelle Sous-Action
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" wire:click="cancelCreateSousAction"></button>
+                                    </div>
+                                    <form wire:submit.prevent="createSousAction">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Code *</label>
+                                                    <input type="text" class="form-control @error('newSousActionCode') is-invalid @enderror" 
+                                                           wire:model="newSousActionCode" required>
+                                                    @error('newSousActionCode')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Libellé *</label>
+                                                    <input type="text" class="form-control @error('newSousActionLibelle') is-invalid @enderror" 
+                                                           wire:model="newSousActionLibelle" required>
+                                                    @error('newSousActionLibelle')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control @error('newSousActionDescription') is-invalid @enderror" 
+                                                          wire:model="newSousActionDescription" rows="3"></textarea>
+                                                @error('newSousActionDescription')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Owner</label>
+                                                    <select class="form-select @error('newSousActionOwnerId') is-invalid @enderror" 
+                                                            wire:model="newSousActionOwnerId">
+                                                        <option value="">Sélectionner un owner</option>
+                                                        @foreach($this->users as $user)
+                                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('newSousActionOwnerId')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Taux d'avancement (%)</label>
+                                                    <input type="number" class="form-control @error('newSousActionTaux') is-invalid @enderror" 
+                                                           wire:model="newSousActionTaux" min="0" max="100" step="0.1">
+                                                    @error('newSousActionTaux')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Date d'échéance</label>
+                                                    <input type="date" class="form-control @error('newSousActionDateEcheance') is-invalid @enderror" 
+                                                           wire:model="newSousActionDateEcheance">
+                                                    @error('newSousActionDateEcheance')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Date de réalisation</label>
+                                                    <input type="date" class="form-control @error('newSousActionDateRealisation') is-invalid @enderror" 
+                                                           wire:model="newSousActionDateRealisation">
+                                                    @error('newSousActionDateRealisation')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" wire:click="cancelCreateSousAction">
+                                                Annuler
+                                            </button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-save me-2"></i>Créer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+                    @endif
+
+                    <!-- Modal Éditer Sous-Action -->
+                    @if($showEditSousActionForm && $editingSousAction)
+                        <div class="modal fade show" style="display: block; z-index: 9999;" tabindex="-1" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-warning text-dark">
+                                        <h5 class="modal-title">
+                                            <i class="fas fa-edit me-2"></i>
+                                            Modifier la Sous-Action
+                                        </h5>
+                                        <button type="button" class="btn-close" wire:click="cancelEditSousAction"></button>
+                                    </div>
+                                    <form wire:submit.prevent="updateSousAction">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Code *</label>
+                                                    <input type="text" class="form-control @error('editSousActionCode') is-invalid @enderror" 
+                                                           wire:model="editSousActionCode" required>
+                                                    @error('editSousActionCode')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Libellé *</label>
+                                                    <input type="text" class="form-control @error('editSousActionLibelle') is-invalid @enderror" 
+                                                           wire:model="editSousActionLibelle" required>
+                                                    @error('editSousActionLibelle')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Description</label>
+                                                <textarea class="form-control @error('editSousActionDescription') is-invalid @enderror" 
+                                                          wire:model="editSousActionDescription" rows="3"></textarea>
+                                                @error('editSousActionDescription')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Owner</label>
+                                                    <select class="form-select @error('editSousActionOwnerId') is-invalid @enderror" 
+                                                            wire:model="editSousActionOwnerId">
+                                                        <option value="">Sélectionner un owner</option>
+                                                        @foreach($this->users as $user)
+                                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('editSousActionOwnerId')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Taux d'avancement (%)</label>
+                                                    <input type="number" class="form-control @error('editSousActionTaux') is-invalid @enderror" 
+                                                           wire:model="editSousActionTaux" min="0" max="100" step="0.1">
+                                                    @error('editSousActionTaux')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Date d'échéance</label>
+                                                    <input type="date" class="form-control @error('editSousActionDateEcheance') is-invalid @enderror" 
+                                                           wire:model="editSousActionDateEcheance">
+                                                    @error('editSousActionDateEcheance')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Date de réalisation</label>
+                                                    <input type="date" class="form-control @error('editSousActionDateRealisation') is-invalid @enderror" 
+                                                           wire:model="editSousActionDateRealisation">
+                                                    @error('editSousActionDateRealisation')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" wire:click="cancelEditSousAction">
+                                                Annuler
+                                            </button>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fas fa-save me-2"></i>Enregistrer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+                    @endif
 
                 </div>
             </div>
@@ -1430,7 +1807,8 @@
             }
         });
 
-        // Gestion des sliders de sous-actions
+        // Gestion des sliders de sous-actions avec debounce
+        let sliderTimeout;
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('sous-action-slider')) {
                 const slider = e.target;
@@ -1462,33 +1840,17 @@
                     progressElement.style.width = newValue + '%';
                 }
 
-                // Appeler directement la méthode Livewire
-                @this.updateSousActionTaux(sousActionId, newValue, actionId, objectifSpecifiqueId, objectifStrategiqueId, pilierId);
+                // Debounce pour éviter trop d'appels
+                clearTimeout(sliderTimeout);
+                sliderTimeout = setTimeout(() => {
+                    // Appeler directement la méthode Livewire
+                    @this.updateSousActionTaux(sousActionId, newValue, actionId, objectifSpecifiqueId, objectifStrategiqueId, pilierId);
+                }, 300); // Attendre 300ms après la dernière modification
             }
         });
 
-        // Écouter les mises à jour des taux parents
-        Livewire.on('updateTauxDisplay', (event) => {
-            const data = event.detail;
-            console.log('🔄 Mise à jour des taux parents:', data);
-            
-            // Mettre à jour les taux des actions parents
-            const actionProgressBars = document.querySelectorAll('.progress-bar');
-            actionProgressBars.forEach(bar => {
-                if (bar.id && bar.id.includes('progress-')) {
-                    // Recalculer le taux basé sur les sous-actions
-                    const actionId = bar.id.replace('progress-', '');
-                    if (actionId == data.actionId) {
-                        // Mettre à jour la barre de progression de l'action
-                        const actionTauxElement = document.querySelector(`[data-action-id="${data.actionId}"] .action-taux`);
-                        if (actionTauxElement) {
-                            // Le taux sera mis à jour par le rechargement des données
-                            console.log('✅ Taux action mis à jour');
-                        }
-                    }
-                }
-            });
-        });
+        // Note: Suppression du listener updateTauxDisplay qui cause des erreurs
+        // Les taux se mettent à jour automatiquement via Livewire
     });
     </script>
 </div>

@@ -807,6 +807,17 @@ class PilierDetailsModalNew extends Component
         ]);
     }
 
+    public function debugMethods()
+    {
+        $methods = get_class_methods($this);
+        $publicMethods = array_filter($methods, function($method) {
+            return is_callable([$this, $method]) && !str_starts_with($method, '_');
+        });
+        
+        Log::info('Méthodes disponibles:', $publicMethods);
+        $this->dispatch('showToast', ['type' => 'info', 'message' => 'Méthodes disponibles: ' . implode(', ', array_slice($publicMethods, 0, 10))]);
+    }
+
     public function setActionToView($objectifSpecifiqueId)
     {
         $this->selectedObjectifSpecifiqueId = $objectifSpecifiqueId;
@@ -881,10 +892,21 @@ class PilierDetailsModalNew extends Component
 
     public function showCreateActionForm()
     {
+        Log::info('showCreateActionForm appelée');
+        
         $this->showCreateActionForm = true;
         $this->showActionDetails = false;
         $this->showEditActionForm = false;
+        
+        Log::info('Propriétés mises à jour', [
+            'showCreateActionForm' => $this->showCreateActionForm,
+            'showActionDetails' => $this->showActionDetails,
+            'showEditActionForm' => $this->showEditActionForm
+        ]);
+        
         $this->suggestNewActionCode();
+        
+        $this->dispatch('showToast', ['type' => 'info', 'message' => 'Formulaire de création d\'action affiché']);
     }
 
     public function cancelCreateAction()
@@ -956,7 +978,11 @@ class PilierDetailsModalNew extends Component
 
     public function showEditActionForm($actionId)
     {
+        Log::info('showEditActionForm appelée avec actionId:', ['actionId' => $actionId]);
+        
         $this->editingAction = $this->selectedObjectifSpecifiqueDetails->actions->find($actionId);
+        
+        Log::info('Action trouvée:', ['editingAction' => $this->editingAction ? $this->editingAction->id : null]);
         
         if ($this->editingAction) {
             $this->editActionCode = $this->editingAction->code;
@@ -969,6 +995,16 @@ class PilierDetailsModalNew extends Component
             $this->showEditActionForm = true;
             $this->showCreateActionForm = false;
             $this->showActionDetails = false;
+            
+            Log::info('Propriétés d\'édition mises à jour', [
+                'showEditActionForm' => $this->showEditActionForm,
+                'editActionCode' => $this->editActionCode,
+                'editActionLibelle' => $this->editActionLibelle
+            ]);
+            
+            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Formulaire d\'édition d\'action affiché']);
+        } else {
+            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Action non trouvée']);
         }
     }
 
@@ -1294,21 +1330,14 @@ class PilierDetailsModalNew extends Component
 
             $sousAction->update(['taux_avancement' => $newTaux]);
 
-            // Recharger les données pour mettre à jour les taux parents
-            $this->loadPilierData();
+            // Mettre à jour les taux parents sans recharger complètement
+            $this->updateParentRates($sousActionId, $newTaux, $actionId, $objectifSpecifiqueId, $objectifStrategiqueId, $pilierId);
 
-            // Mettre à jour les éléments d'interface en temps réel
-            $this->dispatch('updateTauxDisplay', [
-                'sousActionId' => $sousActionId,
-                'newTaux' => $newTaux,
-                'actionId' => $actionId,
-                'objectifSpecifiqueId' => $objectifSpecifiqueId,
-                'objectifStrategiqueId' => $objectifStrategiqueId,
-                'pilierId' => $pilierId
-            ]);
+            // Note: Suppression de l'événement updateTauxDisplay qui cause des erreurs
+            // Les taux se mettent à jour automatiquement via le refresh des modèles
 
-            // Rafraîchir la page principale pour synchroniser les taux
-            $this->dispatch('refreshPilierList');
+            // Note: Suppression du refreshPilierList pour éviter la fermeture du modal
+            // Les taux seront synchronisés lors de la prochaine ouverture du modal
 
             Log::info('Taux sous-action mis à jour avec succès', [
                 'sousActionId' => $sousActionId,
@@ -1324,6 +1353,35 @@ class PilierDetailsModalNew extends Component
             ]);
             
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Erreur lors de la mise à jour du taux: ' . $e->getMessage()]);
+        }
+    }
+
+    private function updateParentRates($sousActionId, $newTaux, $actionId, $objectifSpecifiqueId, $objectifStrategiqueId, $pilierId)
+    {
+        try {
+            // Mettre à jour le taux de l'action parent
+            if ($this->selectedAction && $this->selectedAction->id == $actionId) {
+                $this->selectedAction->refresh();
+            }
+
+            // Mettre à jour le taux de l'objectif spécifique parent
+            if ($this->selectedObjectifSpecifiqueDetails && $this->selectedObjectifSpecifiqueDetails->id == $objectifSpecifiqueId) {
+                $this->selectedObjectifSpecifiqueDetails->refresh();
+            }
+
+            // Mettre à jour le taux de l'objectif stratégique parent
+            if ($this->selectedObjectifStrategique && $this->selectedObjectifStrategique->id == $objectifStrategiqueId) {
+                $this->selectedObjectifStrategique->refresh();
+            }
+
+            // Mettre à jour le taux du pilier parent
+            if ($this->pilier && $this->pilier->id == $pilierId) {
+                $this->pilier->refresh();
+            }
+
+            Log::info('Taux parents mis à jour avec succès');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la mise à jour des taux parents', ['error' => $e->getMessage()]);
         }
     }
 
