@@ -1,0 +1,195 @@
+@extends('layouts.app')
+
+@section('title', 'Objectifs Spécifiques')
+
+@section('content')
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-bullseye me-2"></i>
+                Objectifs Spécifiques
+            </h1>
+            <p class="text-muted">Gestion des objectifs spécifiques de pilotage</p>
+        </div>
+        
+        @if(Auth::user()->canCreateObjectifSpecifique())
+        <a href="{{ route('objectifs-specifiques.create') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Nouvel Objectif Spécifique
+        </a>
+        @endif
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label for="owner" class="form-label">Owner</label>
+                    <select name="owner" id="owner" class="form-select">
+                        <option value="">Tous</option>
+                        @foreach($objectifsSpecifiques->pluck('owner')->unique()->filter() as $owner)
+                            <option value="{{ $owner->id }}" {{ request('owner') == $owner->id ? 'selected' : '' }}>
+                                {{ $owner->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="objectif_strategique" class="form-label">Objectif Stratégique</label>
+                    <select name="objectif_strategique" id="objectif_strategique" class="form-select">
+                        <option value="">Tous</option>
+                        @foreach($objectifsSpecifiques->pluck('objectifStrategique')->unique()->filter() as $os)
+                            <option value="{{ $os->id }}" {{ request('objectif_strategique') == $os->id ? 'selected' : '' }}>
+                                {{ $os->code_complet }} - {{ $os->libelle }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="avancement" class="form-label">Taux d'Avancement</label>
+                    <select name="avancement" id="avancement" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="0-25" {{ request('avancement') == '0-25' ? 'selected' : '' }}>0-25%</option>
+                        <option value="25-50" {{ request('avancement') == '25-50' ? 'selected' : '' }}>25-50%</option>
+                        <option value="50-75" {{ request('avancement') == '50-75' ? 'selected' : '' }}>50-75%</option>
+                        <option value="75-100" {{ request('avancement') == '75-100' ? 'selected' : '' }}>75-100%</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-search me-1"></i>
+                        Filtrer
+                    </button>
+                    <a href="{{ route('objectifs-specifiques.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>
+                        Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau des objectifs spécifiques -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Liste des Objectifs Spécifiques
+                <span class="badge bg-primary ms-2">{{ $objectifsSpecifiques->count() }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if($objectifsSpecifiques->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Code</th>
+                            <th>Libellé</th>
+                            <th>Objectif Stratégique</th>
+                            <th>Owner</th>
+                            <th>Taux d'Avancement</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($objectifsSpecifiques as $objectifSpecifique)
+                        <tr>
+                            <td>
+                                <span class="badge bg-info">{{ $objectifSpecifique->code_complet }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ $objectifSpecifique->libelle }}</strong>
+                                @if($objectifSpecifique->description)
+                                    <br><small class="text-muted">{{ Str::limit($objectifSpecifique->description, 50) }}</small>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ $objectifSpecifique->objectifStrategique->code_complet ?? 'N/A' }}</span>
+                                <br><small>{{ $objectifSpecifique->objectifStrategique->libelle ?? 'N/A' }}</small>
+                            </td>
+                            <td>
+                                @if($objectifSpecifique->owner)
+                                    <span class="badge bg-success">{{ $objectifSpecifique->owner->name }}</span>
+                                @else
+                                    <span class="text-muted">Non assigné</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                        <div class="progress-bar bg-{{ $objectifSpecifique->statut_color }}" 
+                                             style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
+                                    </div>
+                                    <span class="badge bg-{{ $objectifSpecifique->statut_color }}">
+                                        {{ $objectifSpecifique->taux_avancement }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ route('objectifs-specifiques.show', $objectifSpecifique) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    @if(Auth::user()->canCreateObjectifSpecifique())
+                                    <a href="{{ route('objectifs-specifiques.edit', $objectifSpecifique) }}" 
+                                       class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <form action="{{ route('objectifs-specifiques.destroy', $objectifSpecifique) }}" 
+                                          method="POST" class="d-inline" 
+                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet objectif spécifique ?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="text-center py-5">
+                <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucun objectif spécifique trouvé</h5>
+                <p class="text-muted">Commencez par créer votre premier objectif spécifique.</p>
+                @if(Auth::user()->canCreateObjectifSpecifique())
+                <a href="{{ route('objectifs-specifiques.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Créer le premier objectif spécifique
+                </a>
+                @endif
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit des filtres
+    const filterSelects = document.querySelectorAll('#owner, #objectif_strategique, #avancement');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+});
+</script>
+@endpush
+@endsection 
