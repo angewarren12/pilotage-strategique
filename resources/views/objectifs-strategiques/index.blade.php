@@ -86,6 +86,12 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-info" 
+                                            title="Vue hiérarchique"
+                                            wire:click="$dispatch('openHierarchicalModal', { pilierId: {{ $objectifStrategique->pilier->id }} })">
+                                        <i class="fas fa-sitemap"></i>
+                                    </button>
                                     <a href="{{ route('objectifs-strategiques.show', $objectifStrategique) }}" 
                                        class="btn btn-sm btn-outline-primary" title="Voir">
                                         <i class="fas fa-eye"></i>
@@ -130,4 +136,6 @@
         </div>
     </div>
 </div>
+    <!-- Composant Livewire pour le modal hiérarchique global -->
+    <livewire:pilier-details-modal-new />
 @endsection 

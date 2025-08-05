@@ -26,19 +26,19 @@ class ActionController extends Controller
         $user = Auth::user();
         
         if ($user->isAdminGeneral()) {
-            $actions = Action::actif()->with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])->get();
+            $actions = Action::with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])->get();
         } elseif ($user->isOwnerOS()) {
-            $actions = Action::actif()->with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])
+            $actions = Action::with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])
                 ->whereHas('objectifSpecifique.objectifStrategique', function($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })->get();
         } elseif ($user->isOwnerPIL()) {
-            $actions = Action::actif()->with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])
+            $actions = Action::with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])
                 ->whereHas('objectifSpecifique', function($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })->get();
         } elseif ($user->isOwnerAction()) {
-            $actions = Action::actif()->byOwner($user->id)->with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])->get();
+            $actions = Action::where('owner_id', $user->id)->with(['owner', 'objectifSpecifique.objectifStrategique.pilier'])->get();
         } else {
             $actions = collect();
         }
@@ -46,7 +46,7 @@ class ActionController extends Controller
         return view('actions.index', compact('actions'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
         
@@ -54,16 +54,22 @@ class ActionController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
+        // Récupérer l'objectif spécifique pré-sélectionné si fourni
+        $selectedObjectifSpecifique = null;
+        if ($request->has('objectif_specifique_id')) {
+            $selectedObjectifSpecifique = ObjectifSpecifique::find($request->objectif_specifique_id);
+        }
+
         // Déterminer les objectifs spécifiques disponibles selon le rôle
         if ($user->isAdminGeneral()) {
-            $objectifsSpecifiques = ObjectifSpecifique::actif()->with(['objectifStrategique.pilier'])->get();
+            $objectifsSpecifiques = ObjectifSpecifique::with(['objectifStrategique.pilier'])->get();
         } elseif ($user->isOwnerOS()) {
-            $objectifsSpecifiques = ObjectifSpecifique::actif()->with(['objectifStrategique.pilier'])
+            $objectifsSpecifiques = ObjectifSpecifique::with(['objectifStrategique.pilier'])
                 ->whereHas('objectifStrategique', function($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })->get();
         } elseif ($user->isOwnerPIL()) {
-            $objectifsSpecifiques = ObjectifSpecifique::actif()->byOwner($user->id)->with(['objectifStrategique.pilier'])->get();
+            $objectifsSpecifiques = ObjectifSpecifique::where('owner_id', $user->id)->with(['objectifStrategique.pilier'])->get();
         } else {
             $objectifsSpecifiques = collect();
         }
@@ -72,7 +78,7 @@ class ActionController extends Controller
             $query->whereIn('nom', ['owner_pil', 'owner_action']);
         })->get();
 
-        return view('actions.create', compact('objectifsSpecifiques', 'users'));
+        return view('actions.create', compact('objectifsSpecifiques', 'users', 'selectedObjectifSpecifique'));
     }
 
     public function store(Request $request)

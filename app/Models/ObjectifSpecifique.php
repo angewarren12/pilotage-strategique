@@ -70,4 +70,17 @@ class ObjectifSpecifique extends Model
     {
         return $this->getTauxAvancementAttribute();
     }
+
+    /**
+     * Obtient le code complet (Pilier.OS.OSPEC)
+     */
+    public function getCodeCompletAttribute()
+    {
+        if ($this->objectifStrategique && $this->objectifStrategique->pilier) {
+            return $this->objectifStrategique->pilier->code . '.' . 
+                   $this->objectifStrategique->code . '.' . 
+                   $this->code;
+        }
+        return $this->code;
+    }
 }

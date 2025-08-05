@@ -17,11 +17,15 @@ class SousAction extends Model
         'description',
         'action_id',
         'owner_id',
-        'taux_avancement'
+        'taux_avancement',
+        'date_echeance',
+        'date_realisation'
     ];
 
     protected $casts = [
         'taux_avancement' => 'decimal:2',
+        'date_echeance' => 'date',
+        'date_realisation' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

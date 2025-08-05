@@ -1,4 +1,6 @@
 <div>
+
+    
     <!-- Modal principal -->
     @if($showModal)
     <div class="modal fade show" style="display: block; z-index: 1055;" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -37,10 +39,7 @@
                     <!-- Bouton fermer -->
                     <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
                     
-                    <!-- Bouton debug temporaire -->
-                    <button type="button" class="btn btn-warning btn-sm me-2" wire:click="debugMethods" title="Debug">
-                        <i class="fas fa-bug"></i>
-                    </button>
+
                 </div>
                 
                 <!-- Animation de chargement -->
@@ -215,7 +214,7 @@
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                         <button type="button" 
-                                                                wire:click="showEditObjectifStrategiqueForm({{ $objectifStrategique->id }})"
+                                                                wire:click="setActionToEditObjectifStrategique({{ $objectifStrategique->id }})"
                                                                 class="btn btn-outline-warning btn-sm" 
                                                                 title="Modifier">
                                                             <i class="fas fa-edit"></i>
@@ -361,14 +360,9 @@
                                         <i class="fas fa-list-check me-2 text-warning"></i>
                                         Objectifs Spécifiques ou Pilotage ({{ $selectedObjectifStrategique->objectifsSpecifiques->count() }})
                                     </h5>
-                                    <button type="button" class="btn btn-success btn-sm" wire:click="$set('showCreateObjectifSpecifiqueForm', true)" onclick="console.log('🔍 [DEBUG] Bouton Créer Objectif Spécifique cliqué - Test direct')">
+                                    <button type="button" class="btn btn-success btn-sm" wire:click="$set('showCreateObjectifSpecifiqueForm', true)">
                                         <i class="fas fa-plus me-2"></i>
                                         Créer un Objectif Spécifique
-                                    </button>
-
-                                    <button type="button" class="btn btn-warning btn-sm ms-2" wire:click="testMethod">
-                                        <i class="fas fa-bug me-2"></i>
-                                        Test
                                     </button>
                                 </div>
                                 
@@ -603,16 +597,13 @@
                                         Actions ({{ $selectedObjectifSpecifiqueDetails->actions->count() }})
                                     </h5>
                                     <button type="button" 
-                                            wire:click="showCreateActionForm"
+                                            wire:click="$set('showCreateActionForm', true)"
                                             class="btn btn-info btn-sm">
                                         <i class="fas fa-plus me-2"></i>
                                         Créer une Action
                                     </button>
                                     
-                                    <!-- Bouton test temporaire -->
-                                    <button type="button" class="btn btn-warning btn-sm ms-2" wire:click="testMethod" title="Test">
-                                        <i class="fas fa-flask"></i> Test
-                                    </button>
+
                                 </div>
                                 
                                 @if($selectedObjectifSpecifiqueDetails->actions->count() > 0)
@@ -660,7 +651,7 @@
                                                                     <i class="fas fa-eye me-1"></i>Voir
                                                                 </button>
                                                                 <button type="button" 
-                                                                        wire:click="showEditActionForm({{ $action->id }})"
+                                                                        wire:click="setActionToEditAction({{ $action->id }})"
                                                                         class="btn btn-outline-primary btn-sm">
                                                                     <i class="fas fa-edit me-1"></i>Éditer
                                                                 </button>
@@ -902,7 +893,7 @@
                                         Sous-actions ({{ $selectedAction->sousActions->count() }})
                                     </h5>
                                     <button type="button" 
-                                            wire:click="showCreateSousActionForm"
+                                            wire:click="$set('showCreateSousActionForm', true)"
                                             class="btn btn-success btn-sm">
                                         <i class="fas fa-plus me-2"></i>
                                         Créer une Sous-action
@@ -953,6 +944,14 @@
                                                                 </small>
                                                             </div>
                                                         @endif
+                                                        @if($sousAction->date_realisation)
+                                                            <div class="mb-2">
+                                                                <small class="text-success">
+                                                                    <i class="fas fa-check-circle me-1"></i>
+                                                                    Réalisé le: {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}
+                                                                </small>
+                                                            </div>
+                                                        @endif
                                                         <div class="mb-3">
                                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                                 <small class="text-muted fw-bold">Progression</small>
@@ -983,7 +982,7 @@
                                                         <div class="d-flex justify-content-between align-items-center">
                                                             <div class="btn-group" role="group">
                                                                 <button type="button" 
-                                                                        wire:click="showEditSousActionForm({{ $sousAction->id }})"
+                                                                        wire:click="setActionToEditSousAction({{ $sousAction->id }})"
                                                                         class="btn btn-outline-success btn-sm">
                                                                     <i class="fas fa-edit me-1"></i>Éditer
                                                                 </button>
@@ -1279,6 +1278,7 @@
                         <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
                     @endif
 
+
                     <!-- Modal Créer Action -->
                     @if($showCreateActionForm)
                         <div class="modal fade show" style="display: block; z-index: 9999;" tabindex="-1" data-bs-backdrop="static">
@@ -1319,34 +1319,16 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">Owner</label>
-                                                    <select class="form-select @error('newActionOwnerId') is-invalid @enderror" 
-                                                            wire:model="newActionOwnerId">
-                                                        <option value="">Sélectionner un owner</option>
-                                                        @foreach($this->users as $user)
-                                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('newActionOwnerId')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">Date d'échéance</label>
-                                                    <input type="date" class="form-control @error('newActionDateEcheance') is-invalid @enderror" 
-                                                           wire:model="newActionDateEcheance">
-                                                    @error('newActionDateEcheance')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Date de réalisation</label>
-                                                <input type="date" class="form-control @error('newActionDateRealisation') is-invalid @enderror" 
-                                                       wire:model="newActionDateRealisation">
-                                                @error('newActionDateRealisation')
+                                                <label class="form-label">Owner</label>
+                                                <select class="form-select @error('newActionOwnerId') is-invalid @enderror" 
+                                                        wire:model="newActionOwnerId">
+                                                    <option value="">Sélectionner un owner</option>
+                                                    @foreach($this->users as $user)
+                                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('newActionOwnerId')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -1406,34 +1388,16 @@
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">Owner</label>
-                                                    <select class="form-select @error('editActionOwnerId') is-invalid @enderror" 
-                                                            wire:model="editActionOwnerId">
-                                                        <option value="">Sélectionner un owner</option>
-                                                        @foreach($this->users as $user)
-                                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @error('editActionOwnerId')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">Date d'échéance</label>
-                                                    <input type="date" class="form-control @error('editActionDateEcheance') is-invalid @enderror" 
-                                                           wire:model="editActionDateEcheance">
-                                                    @error('editActionDateEcheance')
-                                                        <div class="invalid-feedback">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Date de réalisation</label>
-                                                <input type="date" class="form-control @error('editActionDateRealisation') is-invalid @enderror" 
-                                                       wire:model="editActionDateRealisation">
-                                                @error('editActionDateRealisation')
+                                                <label class="form-label">Owner</label>
+                                                <select class="form-select @error('editActionOwnerId') is-invalid @enderror" 
+                                                        wire:model="editActionOwnerId">
+                                                    <option value="">Sélectionner un owner</option>
+                                                    @foreach($this->users as $user)
+                                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('editActionOwnerId')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -1509,9 +1473,9 @@
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">Taux d'avancement (%)</label>
-                                                    <input type="number" class="form-control @error('newSousActionTaux') is-invalid @enderror" 
-                                                           wire:model="newSousActionTaux" min="0" max="100" step="0.1">
-                                                    @error('newSousActionTaux')
+                                                    <input type="number" class="form-control @error('newSousActionTauxAvancement') is-invalid @enderror" 
+                                                           wire:model="newSousActionTauxAvancement" min="0" max="100" step="0.1">
+                                                    @error('newSousActionTauxAvancement')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -1528,7 +1492,8 @@
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">Date de réalisation</label>
                                                     <input type="date" class="form-control @error('newSousActionDateRealisation') is-invalid @enderror" 
-                                                           wire:model="newSousActionDateRealisation">
+                                                           wire:model="newSousActionDateRealisation" readonly>
+                                                    <small class="text-muted">Se remplit automatiquement à 100%</small>
                                                     @error('newSousActionDateRealisation')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -1606,9 +1571,9 @@
                                                 </div>
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">Taux d'avancement (%)</label>
-                                                    <input type="number" class="form-control @error('editSousActionTaux') is-invalid @enderror" 
-                                                           wire:model="editSousActionTaux" min="0" max="100" step="0.1">
-                                                    @error('editSousActionTaux')
+                                                    <input type="number" class="form-control @error('editSousActionTauxAvancement') is-invalid @enderror" 
+                                                           wire:model="editSousActionTauxAvancement" min="0" max="100" step="0.1">
+                                                    @error('editSousActionTauxAvancement')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>
@@ -1625,7 +1590,8 @@
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">Date de réalisation</label>
                                                     <input type="date" class="form-control @error('editSousActionDateRealisation') is-invalid @enderror" 
-                                                           wire:model="editSousActionDateRealisation">
+                                                           wire:model="editSousActionDateRealisation" readonly>
+                                                    <small class="text-muted">Se remplit automatiquement à 100%</small>
                                                     @error('editSousActionDateRealisation')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
@@ -1849,9 +1815,118 @@
             }
         });
 
-        // Note: Suppression du listener updateTauxDisplay qui cause des erreurs
-        // Les taux se mettent à jour automatiquement via Livewire
+            // Note: Suppression du listener updateTauxDisplay qui cause des erreurs
+    // Les taux se mettent à jour automatiquement via Livewire
+
+            // Écouteur pour synchroniser les taux en temps réel
+        Livewire.on('tauxUpdated', (event) => {
+            console.log('🔄 [SYNC] Événement tauxUpdated reçu:', event);
+            
+            const tauxData = event[0];
+            
+            // Mettre à jour les taux dans l'interface en temps réel
+            updateTauxInRealTime(tauxData);
+        });
+
+        // Écouteur pour actualiser la page après fermeture du modal
+        Livewire.on('refreshPage', () => {
+            console.log('🔄 [REFRESH] Actualisation de la page...');
+            setTimeout(() => {
+                window.location.reload();
+            }, 100); // Petit délai pour s'assurer que le modal est fermé
+        });
     });
+
+// Fonction pour mettre à jour les taux en temps réel dans l'interface
+function updateTauxInRealTime(tauxData) {
+    console.log('🔄 [REALTIME] Mise à jour des taux:', tauxData);
+    
+    // Mettre à jour le taux de la sous-action
+    if (tauxData.sousAction) {
+        const sousActionId = tauxData.sousAction.id;
+        const sousActionTaux = parseFloat(tauxData.sousAction.taux) || 0;
+        
+        // Mettre à jour l'affichage du taux dans la card
+        const tauxElement = document.getElementById(`taux-${sousActionId}`);
+        if (tauxElement) {
+            tauxElement.textContent = sousActionTaux.toFixed(2) + '%';
+        }
+        
+        // Mettre à jour la barre de progression
+        const progressElement = document.getElementById(`progress-${sousActionId}`);
+        if (progressElement) {
+            progressElement.style.width = sousActionTaux + '%';
+        }
+        
+        // Mettre à jour le slider
+        const sliderElement = document.getElementById(`slider-${sousActionId}`);
+        if (sliderElement) {
+            sliderElement.value = sousActionTaux;
+        }
+    }
+    
+    // Mettre à jour le taux de l'action
+    if (tauxData.action) {
+        const actionTaux = parseFloat(tauxData.action.taux) || 0;
+        
+        // Mettre à jour l'affichage du taux de l'action dans le breadcrumb ou header
+        const actionTauxElements = document.querySelectorAll('[data-action-taux]');
+        actionTauxElements.forEach(element => {
+            element.textContent = actionTaux.toFixed(2) + '%';
+        });
+        
+        // Mettre à jour les barres de progression des actions
+        const actionProgressBars = document.querySelectorAll('.action-progress-bar');
+        actionProgressBars.forEach(bar => {
+            bar.style.width = actionTaux + '%';
+            bar.setAttribute('aria-valuenow', actionTaux);
+        });
+    }
+    
+    // Mettre à jour le taux de l'objectif spécifique
+    if (tauxData.objectifSpecifique) {
+        const objectifSpecifiqueTaux = parseFloat(tauxData.objectifSpecifique.taux) || 0;
+        
+        // Mettre à jour l'affichage du taux de l'objectif spécifique
+        const objectifSpecifiqueTauxElements = document.querySelectorAll('[data-objectif-specifique-taux]');
+        objectifSpecifiqueTauxElements.forEach(element => {
+            element.textContent = objectifSpecifiqueTaux.toFixed(2) + '%';
+        });
+    }
+    
+    // Mettre à jour le taux de l'objectif stratégique
+    if (tauxData.objectifStrategique) {
+        const objectifStrategiqueTaux = parseFloat(tauxData.objectifStrategique.taux) || 0;
+        
+        // Mettre à jour l'affichage du taux de l'objectif stratégique
+        const objectifStrategiqueTauxElements = document.querySelectorAll('[data-objectif-strategique-taux]');
+        objectifStrategiqueTauxElements.forEach(element => {
+            element.textContent = objectifStrategiqueTaux.toFixed(2) + '%';
+        });
+    }
+    
+    // Mettre à jour le taux du pilier
+    if (tauxData.pilier) {
+        const pilierTaux = parseFloat(tauxData.pilier.taux) || 0;
+        
+        // Mettre à jour l'affichage du taux du pilier
+        const pilierTauxElements = document.querySelectorAll('[data-pilier-taux]');
+        pilierTauxElements.forEach(element => {
+            element.textContent = pilierTaux.toFixed(2) + '%';
+        });
+        
+        // Mettre à jour les barres de progression des piliers sur la page principale
+        const pilierProgressBars = document.querySelectorAll('.pilier-progress-bar');
+        pilierProgressBars.forEach(bar => {
+            bar.style.width = pilierTaux + '%';
+            bar.setAttribute('aria-valuenow', pilierTaux);
+        });
+    }
+    
+    console.log('✅ [REALTIME] Mise à jour des taux terminée');
+}
+    
+
     </script>
 </div>
 

@@ -386,6 +386,28 @@ class PilierDetailsModal extends Component
         ]);
     }
 
+    public function showCreateActionForm()
+    {
+        if (!$this->selectedObjectifSpecifiqueDetails) {
+            $this->dispatch('showToast', [
+                'type' => 'error',
+                'message' => 'Aucun objectif spécifique sélectionné'
+            ]);
+            return;
+        }
+
+        $this->dispatch('showToast', [
+            'type' => 'info',
+            'message' => 'Fonctionnalité de création d\'action en cours de développement'
+        ]);
+        
+        // TODO: Implémenter la création d'action
+        // Rediriger vers la page de création d'action avec l'objectif spécifique pré-sélectionné
+        return redirect()->route('actions.create', [
+            'objectif_specifique_id' => $this->selectedObjectifSpecifiqueDetails->id
+        ]);
+    }
+
     public function render()
     {
         return view('livewire.pilier-details-modal');

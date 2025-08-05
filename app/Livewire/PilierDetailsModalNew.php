@@ -87,16 +87,12 @@ class PilierDetailsModalNew extends Component
     public $newActionLibelle = '';
     public $newActionDescription = '';
     public $newActionOwnerId = '';
-    public $newActionDateEcheance = '';
-    public $newActionDateRealisation = '';
     
     // Formulaires pour l'édition d'actions
     public $editActionCode = '';
     public $editActionLibelle = '';
     public $editActionDescription = '';
     public $editActionOwnerId = '';
-    public $editActionDateEcheance = '';
-    public $editActionDateRealisation = '';
     
     // Formulaires pour les sous-actions
     public $newSousActionCode = '';
@@ -119,6 +115,7 @@ class PilierDetailsModalNew extends Component
 
     protected $listeners = [
         'openPilierModal' => 'openModal',
+        'openHierarchicalModal' => 'openModal',
         'closeModal' => 'closeModal',
         'refreshData' => 'loadPilierData'
     ];
@@ -387,11 +384,23 @@ class PilierDetailsModalNew extends Component
         $this->selectedObjectifStrategique = null;
         $this->showObjectifDetails = false;
         $this->showCreateForm = false;
+        
+        // Actualiser la page après avoir fermé le modal
+        $this->dispatch('refreshPage');
     }
 
     public function loadPilierData()
     {
-        if (!$this->pilier) return;
+        if (!$this->pilier) {
+            Log::info('🔄 [PILIER-DETAILS] Pilier est null dans loadPilierData');
+            return;
+        }
+        
+        // Vérifier que $this->pilier est bien un modèle Pilier
+        if (!($this->pilier instanceof \App\Models\Pilier)) {
+            Log::error('🔄 [PILIER-DETAILS] $this->pilier n\'est pas une instance de Pilier', ['type' => get_class($this->pilier)]);
+            return;
+        }
         
         $this->objectifsStrategiques = $this->pilier->objectifsStrategiques;
         
@@ -557,7 +566,7 @@ class PilierDetailsModalNew extends Component
     public function getUsersProperty()
     {
         return User::whereHas('role', function($query) {
-            $query->whereIn('nom', ['admin_general', 'owner_os']);
+            $query->whereIn('nom', ['admin_general', 'owner_os', 'owner_pil', 'owner_action']);
         })->get();
     }
 
@@ -799,24 +808,7 @@ class PilierDetailsModalNew extends Component
         $this->updateBreadcrumb('objectif_strategique');
     }
 
-    public function testMethod()
-    {
-        $this->dispatch('showToast', [
-            'type' => 'info',
-            'message' => 'Test method works!'
-        ]);
-    }
 
-    public function debugMethods()
-    {
-        $methods = get_class_methods($this);
-        $publicMethods = array_filter($methods, function($method) {
-            return is_callable([$this, $method]) && !str_starts_with($method, '_');
-        });
-        
-        Log::info('Méthodes disponibles:', $publicMethods);
-        $this->dispatch('showToast', ['type' => 'info', 'message' => 'Méthodes disponibles: ' . implode(', ', array_slice($publicMethods, 0, 10))]);
-    }
 
     public function setActionToView($objectifSpecifiqueId)
     {
@@ -832,6 +824,21 @@ class PilierDetailsModalNew extends Component
         $this->showEditObjectifSpecifiqueForm($objectifSpecifiqueId);
     }
 
+    public function setActionToEditAction($actionId)
+    {
+        $this->showEditActionForm($actionId);
+    }
+
+    public function setActionToEditSousAction($sousActionId)
+    {
+        $this->showEditSousActionForm($sousActionId);
+    }
+
+    public function setActionToEditObjectifStrategique($objectifStrategiqueId)
+    {
+        $this->showEditObjectifStrategiqueForm($objectifStrategiqueId);
+    }
+
     // Méthodes pour les actions
     public function displayActionDetails($actionId)
     {
@@ -839,7 +846,7 @@ class PilierDetailsModalNew extends Component
         $this->isAnimating = true;
         $this->dispatch('startSlideAnimation', ['direction' => 'next']);
         
-        $this->dispatch('showToast', ['type' => 'info', 'message' => 'showActionDetails appelée avec ID: ' . $actionId]);
+
         
         $this->isLoading = true;
         $this->dispatch('startLoading');
@@ -862,7 +869,7 @@ class PilierDetailsModalNew extends Component
             // Mettre à jour le breadcrumb
             $this->updateBreadcrumb('action');
             
-            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Détails de l\'action affichés']);
+
         } else {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Action non trouvée']);
         }
@@ -890,23 +897,45 @@ class PilierDetailsModalNew extends Component
         $this->updateBreadcrumb('objectif_specifique');
     }
 
-    public function showCreateActionForm()
+
+
+
+    public function updatedShowCreateActionForm($value)
     {
-        Log::info('showCreateActionForm appelée');
-        
-        $this->showCreateActionForm = true;
-        $this->showActionDetails = false;
-        $this->showEditActionForm = false;
-        
-        Log::info('Propriétés mises à jour', [
-            'showCreateActionForm' => $this->showCreateActionForm,
-            'showActionDetails' => $this->showActionDetails,
-            'showEditActionForm' => $this->showEditActionForm
-        ]);
-        
-        $this->suggestNewActionCode();
-        
-        $this->dispatch('showToast', ['type' => 'info', 'message' => 'Formulaire de création d\'action affiché']);
+        if ($value === true) {
+            // Le modal vient de s'ouvrir, suggérer un code
+            $this->suggestNewActionCode();
+        }
+    }
+
+    public function updatedNewSousActionTauxAvancement($value)
+    {
+        // Si le taux atteint 100%, remplir automatiquement la date de réalisation
+        if ($value == 100) {
+            $this->newSousActionDateRealisation = now()->format('Y-m-d');
+        } else {
+            // Si le taux n'est pas 100%, vider la date de réalisation
+            $this->newSousActionDateRealisation = '';
+        }
+    }
+
+    public function updatedEditSousActionTauxAvancement($value)
+    {
+        // Si le taux atteint 100%, remplir automatiquement la date de réalisation
+        if ($value == 100) {
+            $this->editSousActionDateRealisation = now()->format('Y-m-d');
+        } else {
+            // Si le taux n'est pas 100%, vider la date de réalisation
+            $this->editSousActionDateRealisation = '';
+        }
+    }
+
+    public function updatedShowCreateSousActionForm($value)
+    {
+        if ($value === true) {
+            // Le modal vient de s'ouvrir, suggérer un code
+            $this->suggestNewSousActionCode();
+        }
     }
 
     public function cancelCreateAction()
@@ -917,6 +946,8 @@ class PilierDetailsModalNew extends Component
 
     public function suggestNewActionCode()
     {
+        if (!$this->selectedObjectifSpecifiqueDetails) return;
+        
         $existingCodes = $this->selectedObjectifSpecifiqueDetails->actions->pluck('code')->toArray();
         $nextNumber = 1;
         
@@ -933,8 +964,6 @@ class PilierDetailsModalNew extends Component
         $this->newActionLibelle = '';
         $this->newActionDescription = '';
         $this->newActionOwnerId = '';
-        $this->newActionDateEcheance = '';
-        $this->newActionDateRealisation = '';
     }
 
     public function createAction()
@@ -943,9 +972,7 @@ class PilierDetailsModalNew extends Component
             'newActionCode' => 'required|string|max:10|unique:actions,code',
             'newActionLibelle' => 'required|string|max:255',
             'newActionDescription' => 'nullable|string',
-            'newActionOwnerId' => 'nullable|exists:users,id',
-            'newActionDateEcheance' => 'nullable|date',
-            'newActionDateRealisation' => 'nullable|date'
+            'newActionOwnerId' => 'nullable|exists:users,id'
         ]);
 
         try {
@@ -955,8 +982,6 @@ class PilierDetailsModalNew extends Component
                 'description' => $this->newActionDescription,
                 'objectif_specifique_id' => $this->selectedObjectifSpecifiqueDetails->id,
                 'owner_id' => $this->newActionOwnerId ?: null,
-                'date_echeance' => $this->newActionDateEcheance ?: null,
-                'date_realisation' => $this->newActionDateRealisation ?: null,
             ]);
 
             $this->resetActionForm();
@@ -976,35 +1001,21 @@ class PilierDetailsModalNew extends Component
         }
     }
 
+
+    // Méthodes pour l'édition d'action (copiées de l'objectif spécifique)
     public function showEditActionForm($actionId)
     {
-        Log::info('showEditActionForm appelée avec actionId:', ['actionId' => $actionId]);
-        
         $this->editingAction = $this->selectedObjectifSpecifiqueDetails->actions->find($actionId);
-        
-        Log::info('Action trouvée:', ['editingAction' => $this->editingAction ? $this->editingAction->id : null]);
         
         if ($this->editingAction) {
             $this->editActionCode = $this->editingAction->code;
             $this->editActionLibelle = $this->editingAction->libelle;
             $this->editActionDescription = $this->editingAction->description ?? '';
-            $this->editActionOwnerId = $this->editingAction->owner_id ?? '';
-            $this->editActionDateEcheance = $this->editingAction->date_echeance ? $this->editingAction->date_echeance->format('Y-m-d') : '';
-            $this->editActionDateRealisation = $this->editingAction->date_realisation ? $this->editingAction->date_realisation->format('Y-m-d') : '';
+            $this->editActionOwnerId = (string)($this->editingAction->owner_id ?? '');
             
             $this->showEditActionForm = true;
             $this->showCreateActionForm = false;
             $this->showActionDetails = false;
-            
-            Log::info('Propriétés d\'édition mises à jour', [
-                'showEditActionForm' => $this->showEditActionForm,
-                'editActionCode' => $this->editActionCode,
-                'editActionLibelle' => $this->editActionLibelle
-            ]);
-            
-            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Formulaire d\'édition d\'action affiché']);
-        } else {
-            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Action non trouvée']);
         }
     }
 
@@ -1021,8 +1032,6 @@ class PilierDetailsModalNew extends Component
         $this->editActionLibelle = '';
         $this->editActionDescription = '';
         $this->editActionOwnerId = '';
-        $this->editActionDateEcheance = '';
-        $this->editActionDateRealisation = '';
     }
 
     public function updateAction()
@@ -1031,9 +1040,7 @@ class PilierDetailsModalNew extends Component
             'editActionCode' => 'required|string|max:10|unique:actions,code,' . $this->editingAction->id,
             'editActionLibelle' => 'required|string|max:255',
             'editActionDescription' => 'nullable|string',
-            'editActionOwnerId' => 'nullable|exists:users,id',
-            'editActionDateEcheance' => 'nullable|date',
-            'editActionDateRealisation' => 'nullable|date'
+            'editActionOwnerId' => 'nullable|exists:users,id'
         ]);
 
         try {
@@ -1042,8 +1049,6 @@ class PilierDetailsModalNew extends Component
                 'libelle' => $this->editActionLibelle,
                 'description' => $this->editActionDescription,
                 'owner_id' => $this->editActionOwnerId ?: null,
-                'date_echeance' => $this->editActionDateEcheance ?: null,
-                'date_realisation' => $this->editActionDateRealisation ?: null,
             ]);
 
             $this->resetEditActionForm();
@@ -1181,8 +1186,8 @@ class PilierDetailsModalNew extends Component
             $this->editSousActionLibelle = $this->editingSousAction->libelle;
             $this->editSousActionDescription = $this->editingSousAction->description ?? '';
             $this->editSousActionOwnerId = $this->editingSousAction->owner_id ?? '';
-            $this->editSousActionDateEcheance = $this->editingSousAction->date_echeance ? $this->editingSousAction->date_echeance->format('Y-m-d') : '';
-            $this->editSousActionDateRealisation = $this->editingSousAction->date_realisation ? $this->editingSousAction->date_realisation->format('Y-m-d') : '';
+            $this->editSousActionDateEcheance = $this->editingSousAction->date_echeance ? (is_string($this->editingSousAction->date_echeance) ? $this->editingSousAction->date_echeance : $this->editingSousAction->date_echeance->format('Y-m-d')) : '';
+            $this->editSousActionDateRealisation = $this->editingSousAction->date_realisation ? (is_string($this->editingSousAction->date_realisation) ? $this->editingSousAction->date_realisation : $this->editingSousAction->date_realisation->format('Y-m-d')) : '';
             $this->editSousActionTauxAvancement = $this->editingSousAction->taux_avancement;
             
             $this->showEditSousActionForm = true;
@@ -1333,11 +1338,18 @@ class PilierDetailsModalNew extends Component
             // Mettre à jour les taux parents sans recharger complètement
             $this->updateParentRates($sousActionId, $newTaux, $actionId, $objectifSpecifiqueId, $objectifStrategiqueId, $pilierId);
 
-            // Note: Suppression de l'événement updateTauxDisplay qui cause des erreurs
-            // Les taux se mettent à jour automatiquement via le refresh des modèles
+            // Mettre à jour automatiquement la date de réalisation si le taux atteint 100%
+            if ($newTaux == 100 && !$sousAction->date_realisation) {
+                $sousAction->update(['date_realisation' => now()]);
+            } elseif ($newTaux < 100 && $sousAction->date_realisation) {
+                $sousAction->update(['date_realisation' => null]);
+            }
 
-            // Note: Suppression du refreshPilierList pour éviter la fermeture du modal
-            // Les taux seront synchronisés lors de la prochaine ouverture du modal
+            // Calculer et émettre les nouveaux taux pour tous les parents
+            $this->emitUpdatedTaux($sousActionId, $actionId, $objectifSpecifiqueId, $objectifStrategiqueId, $pilierId);
+
+            // Rafraîchir les données du modal sans recharger la page
+            $this->loadPilierData();
 
             Log::info('Taux sous-action mis à jour avec succès', [
                 'sousActionId' => $sousActionId,
@@ -1382,6 +1394,49 @@ class PilierDetailsModalNew extends Component
             Log::info('Taux parents mis à jour avec succès');
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour des taux parents', ['error' => $e->getMessage()]);
+        }
+    }
+
+    private function emitUpdatedTaux($sousActionId, $actionId, $objectifSpecifiqueId, $objectifStrategiqueId, $pilierId)
+    {
+        try {
+            // Récupérer les modèles frais
+            $sousAction = SousAction::find($sousActionId);
+            $action = Action::find($actionId);
+            $objectifSpecifique = ObjectifSpecifique::find($objectifSpecifiqueId);
+            $objectifStrategique = ObjectifStrategique::find($objectifStrategiqueId);
+            $pilier = Pilier::find($pilierId);
+
+            // Calculer les nouveaux taux
+            $tauxData = [
+                'sousAction' => [
+                    'id' => $sousActionId,
+                    'taux' => $sousAction ? $sousAction->taux_avancement : 0
+                ],
+                'action' => [
+                    'id' => $actionId,
+                    'taux' => $action ? $action->getCalculatedTauxAvancement() : 0
+                ],
+                'objectifSpecifique' => [
+                    'id' => $objectifSpecifiqueId,
+                    'taux' => $objectifSpecifique ? $objectifSpecifique->getCalculatedTauxAvancement() : 0
+                ],
+                'objectifStrategique' => [
+                    'id' => $objectifStrategiqueId,
+                    'taux' => $objectifStrategique ? $objectifStrategique->getCalculatedTauxAvancement() : 0
+                ],
+                'pilier' => [
+                    'id' => $pilierId,
+                    'taux' => $pilier ? $pilier->getCalculatedTauxAvancement() : 0
+                ]
+            ];
+
+            // Émettre l'événement pour synchroniser tous les composants
+            $this->dispatch('tauxUpdated', $tauxData);
+
+            Log::info('Événement tauxUpdated émis', $tauxData);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'émission des taux', ['error' => $e->getMessage()]);
         }
     }
 

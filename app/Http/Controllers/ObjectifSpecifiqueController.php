@@ -28,14 +28,14 @@ class ObjectifSpecifiqueController extends Controller
         $user = Auth::user();
         
         if ($user->isAdminGeneral()) {
-            $objectifsSpecifiques = ObjectifSpecifique::actif()->with(['owner', 'objectifStrategique.pilier'])->get();
+            $objectifsSpecifiques = ObjectifSpecifique::with(['owner', 'objectifStrategique.pilier'])->get();
         } elseif ($user->isOwnerOS()) {
-            $objectifsSpecifiques = ObjectifSpecifique::actif()->with(['owner', 'objectifStrategique.pilier'])
+            $objectifsSpecifiques = ObjectifSpecifique::with(['owner', 'objectifStrategique.pilier'])
                 ->whereHas('objectifStrategique', function($query) use ($user) {
                     $query->where('owner_id', $user->id);
                 })->get();
         } elseif ($user->isOwnerPIL()) {
-            $objectifsSpecifiques = ObjectifSpecifique::actif()->byOwner($user->id)->with(['owner', 'objectifStrategique.pilier'])->get();
+            $objectifsSpecifiques = ObjectifSpecifique::where('owner_id', $user->id)->with(['owner', 'objectifStrategique.pilier'])->get();
         } else {
             $objectifsSpecifiques = collect();
         }
@@ -53,9 +53,9 @@ class ObjectifSpecifiqueController extends Controller
 
         // Déterminer les objectifs stratégiques disponibles selon le rôle
         if ($user->isAdminGeneral()) {
-            $objectifsStrategiques = ObjectifStrategique::actif()->with('pilier')->get();
+            $objectifsStrategiques = ObjectifStrategique::with('pilier')->get();
         } elseif ($user->isOwnerOS()) {
-            $objectifsStrategiques = ObjectifStrategique::actif()->byOwner($user->id)->with('pilier')->get();
+            $objectifsStrategiques = ObjectifStrategique::where('owner_id', $user->id)->with('pilier')->get();
         } else {
             $objectifsStrategiques = collect();
         }

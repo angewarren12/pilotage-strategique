@@ -91,6 +91,9 @@
                     Gestion des Piliers
                 </h2>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-info" onclick="openVueGeneraleModal()">
+                        <i class="fas fa-chart-line me-2"></i>Vue Générale
+                    </button>
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPilierModal">
                         <i class="fas fa-plus me-2"></i>
                         Nouveau Pilier
@@ -136,7 +139,7 @@
                                         </td>
                                         <td>
                                             <div class="progress pilier-card" data-pilier-id="{{ $pilier->id }}" style="height: 25px;">
-                                                <div class="progress-bar"
+                                                <div class="progress-bar pilier-progress-bar"
                                                      role="progressbar" 
                                                      style="width: {{ $pilier->taux_avancement }}%"
                                                      aria-valuenow="{{ $pilier->taux_avancement }}" 
@@ -145,7 +148,7 @@
                                                     {{ number_format($pilier->taux_avancement, 2) }}%
                                                 </div>
                                             </div>
-                                            <div class="taux-avancement-display text-center mt-1">
+                                            <div class="taux-avancement-display text-center mt-1 taux-avancement" data-pilier-id="{{ $pilier->id }}">
                                                 {{ number_format($pilier->taux_avancement, 2) }}%
                                             </div>
                                         </td>
@@ -159,6 +162,12 @@
                                                         onclick="openPilierModal({{ $pilier->id }})"
                                                         title="Voir les détails">
                                                     <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-info"
+                                                        onclick="openPilierHierarchiqueModal({{ $pilier->id }})"
+                                                        title="Vue hiérarchique">
+                                                    <i class="fas fa-sitemap"></i>
                                                 </button>
                                                 <button type="button" class="btn btn-sm btn-outline-warning"
                                                         title="Modifier"
@@ -866,6 +875,8 @@
                 console.log('🔄 Rafraîchissement de la liste des piliers...');
                 window.location.reload();
             });
+            
+
         });
 
         // Fonction pour ouvrir le modal Livewire
@@ -874,6 +885,17 @@
             if (typeof Livewire !== 'undefined') {
                 console.log('✅ [DEBUG] Livewire est disponible, dispatch de l\'événement');
                 Livewire.dispatch('openPilierModal', { pilierId: pilierId });
+            } else {
+                console.error('❌ [ERROR] Livewire not initialized');
+                alert('Erreur: Livewire n\'est pas initialisé');
+            }
+        }
+
+        // Fonction pour ouvrir la Vue Générale
+        function openVueGeneraleModal() {
+            console.log('🔍 [DEBUG] Ouverture de la Vue Générale');
+            if (typeof Livewire !== 'undefined') {
+                Livewire.dispatch('openVueGeneraleModal');
             } else {
                 console.error('❌ [ERROR] Livewire not initialized');
                 alert('Erreur: Livewire n\'est pas initialisé');
@@ -3972,8 +3994,139 @@ function retourPiliers() {
     chargerListePiliers();
 }
 
+// Fonction pour ouvrir le modal Vue Générale
+function openVueGeneraleModal() {
+    console.log('🔄 [VUE-GENERALE] Fonction openVueGeneraleModal appelée');
+    
+    // Utiliser directement le dispatch d'événement Livewire
+    console.log('🔄 [VUE-GENERALE] Dispatch de l\'événement openVueGeneraleModal...');
+    Livewire.dispatch('openVueGeneraleModal');
+}
+
+// Fonction pour ouvrir le modal hiérarchique
+function openPilierHierarchiqueModal(pilierId) {
+    console.log('🔄 [HIERARCHIQUE] Fonction openPilierHierarchiqueModal appelée avec pilierId:', pilierId);
+    
+    // Utiliser directement le dispatch d'événement Livewire
+    console.log('🔄 [HIERARCHIQUE] Dispatch de l\'événement openPilierHierarchiqueModal...');
+    
+    // Vérifier que Livewire est disponible
+    if (typeof Livewire !== 'undefined') {
+        // Essayer de cibler spécifiquement le composant
+        const components = Livewire.all();
+        let componentFound = false;
+        
+        console.log('🔍 [HIERARCHIQUE] Composants Livewire disponibles:', Object.keys(components));
+        
+        // Lister tous les composants pour le débogage
+        for (let componentId in components) {
+            const component = components[componentId];
+            console.log('🔍 [HIERARCHIQUE] Composant:', componentId, 'Propriétés:', Object.keys(component.$wire || {}));
+        }
+        
+        for (let componentId in components) {
+            const component = components[componentId];
+            if (component.$wire && typeof component.$wire.openModal === 'function') {
+                                // Vérifier si c'est le bon composant en cherchant la propriété componentType
+                const isHierarchiqueComponent = component.$wire.componentType === 'hierarchique';
+                
+                if (isHierarchiqueComponent) {
+                    console.log('🔍 [HIERARCHIQUE] Composant hiérarchique trouvé:', componentId);
+                    try {
+                        component.$wire.openModal({ pilierId: pilierId });
+                        componentFound = true;
+                        console.log('✅ [HIERARCHIQUE] Méthode openModal appelée directement');
+                        break;
+                    } catch (e) {
+                        console.log('❌ [HIERARCHIQUE] Erreur lors de l\'appel direct:', e);
+                    }
+                } else {
+                    console.log('🔍 [HIERARCHIQUE] Composant ignoré (pas hiérarchique):', componentId);
+                }
+            }
+        }
+        
+        if (!componentFound) {
+            // Essayer de cibler le composant par ID
+            const hierarchiqueComponent = document.getElementById('pilier-hierarchique-modal');
+            if (hierarchiqueComponent && hierarchiqueComponent.__livewire) {
+                console.log('🔍 [HIERARCHIQUE] Composant trouvé par ID');
+                try {
+                    hierarchiqueComponent.__livewire.openModal({ pilierId: pilierId });
+                    console.log('✅ [HIERARCHIQUE] Méthode openModal appelée via ID');
+                } catch (e) {
+                    console.log('❌ [HIERARCHIQUE] Erreur lors de l\'appel via ID:', e);
+                    // Fallback vers le dispatch d'événement
+                    Livewire.dispatch('openPilierHierarchiqueModal', { pilierId: pilierId });
+                    console.log('✅ [HIERARCHIQUE] Événement dispatché (fallback final)');
+                }
+            } else {
+                // Fallback vers le dispatch d'événement
+                Livewire.dispatch('openPilierHierarchiqueModal', { pilierId: pilierId });
+                console.log('✅ [HIERARCHIQUE] Événement dispatché (fallback)');
+            }
+        }
+    } else {
+        console.error('❌ [HIERARCHIQUE] Livewire n\'est pas disponible');
+    }
+}
+
+// Écouteur pour synchroniser les taux en temps réel sur la page principale
+document.addEventListener('livewire:init', () => {
+    Livewire.on('tauxUpdated', (event) => {
+        console.log('🔄 [SYNC-PRINCIPAL] Événement tauxUpdated reçu:', event);
+        
+        const tauxData = event[0];
+        
+        // Mettre à jour les taux des piliers sur la page principale
+        if (tauxData.pilier) {
+            const pilierId = tauxData.pilier.id;
+            const pilierTaux = tauxData.pilier.taux;
+            
+            // Mettre à jour la barre de progression du pilier
+            const pilierProgressBar = document.querySelector(`[data-pilier-id="${pilierId}"] .progress-bar`);
+            if (pilierProgressBar) {
+                pilierProgressBar.style.width = pilierTaux + '%';
+                pilierProgressBar.setAttribute('aria-valuenow', pilierTaux);
+                pilierProgressBar.innerHTML = `<strong>${pilierTaux.toFixed(2)}%</strong>`;
+            }
+            
+            // Mettre à jour le pourcentage affiché
+            const pilierTauxElement = document.querySelector(`[data-pilier-id="${pilierId}"] .taux-avancement`);
+            if (pilierTauxElement) {
+                pilierTauxElement.textContent = pilierTaux.toFixed(2) + '%';
+            }
+            
+            console.log('✅ [SYNC-PRINCIPAL] Taux du pilier mis à jour:', pilierId, pilierTaux);
+        }
+    });
+    
+    // Écouteur pour vérifier que l'événement hiérarchique est bien reçu
+    Livewire.on('openPilierHierarchiqueModal', (event) => {
+        console.log('🔄 [HIERARCHIQUE] Événement reçu par l\'écouteur:', event);
+        
+        // Essayer de trouver le composant hiérarchique et l'appeler
+        const components = Livewire.all();
+        for (let componentId in components) {
+            const component = components[componentId];
+            if (component.$wire && component.$wire.showModal !== undefined) {
+                console.log('🔍 [HIERARCHIQUE] Composant modal trouvé:', componentId);
+                try {
+                    component.$wire.openModal(event[0]);
+                    console.log('✅ [HIERARCHIQUE] Modal ouvert via écouteur');
+                    break;
+                } catch (e) {
+                    console.log('❌ [HIERARCHIQUE] Erreur lors de l\'ouverture via écouteur:', e);
+                }
+            }
+        }
+    });
+});
+
 </script>
 @endpush
 
 <!-- Composant Livewire pour le modal des détails du pilier -->
-<livewire:pilier-details-modal-new />
+        <livewire:pilier-details-modal-new />
+        <livewire:vue-generale-modal />
+                            <livewire:pilier-hierarchique-modal wire:key="pilier-hierarchique-modal" id="pilier-hierarchique-modal" />
