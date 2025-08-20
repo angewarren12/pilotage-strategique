@@ -163,6 +163,15 @@ class PilierDetailsModal extends Component
 
     public function createObjectifStrategique()
     {
+        // Vérifier que l'utilisateur est admin général
+        if (!auth()->user()->isAdminGeneral()) {
+            $this->dispatch('showToast', [
+                'type' => 'error',
+                'message' => 'Accès non autorisé. Seuls les administrateurs généraux peuvent créer des objectifs stratégiques.'
+            ]);
+            return;
+        }
+
         $this->validate([
             'newObjectifCode' => 'required|string|max:10|unique:objectif_strategiques,code',
             'newObjectifLibelle' => 'required|string|max:255',
@@ -178,6 +187,14 @@ class PilierDetailsModal extends Component
                 'pilier_id' => $this->pilier->id,
                 'owner_id' => $this->newObjectifOwnerId ?: null,
             ]);
+
+            // Envoyer une notification à l'utilisateur assigné si un owner est spécifié
+            if ($this->newObjectifOwnerId) {
+                $owner = User::find($this->newObjectifOwnerId);
+                if ($owner) {
+                    $owner->notify(new \App\Notifications\ObjectifStrategiqueAssigned($objectifStrategique));
+                }
+            }
 
             $this->resetCreateForm();
             $this->showCreateForm = false;
@@ -201,6 +218,25 @@ class PilierDetailsModal extends Component
         try {
             $objectif = $this->objectifsStrategiques->find($objectifId);
             if ($objectif) {
+                // Vérifier les permissions : seul l'admin ou le owner peut supprimer
+                $user = auth()->user();
+                if (!$user->canDeleteObjectifStrategique($objectif)) {
+                    $this->dispatch('showToast', [
+                        'type' => 'error',
+                        'message' => 'Accès non autorisé. Seuls l\'administrateur général et le propriétaire de cet objectif stratégique peuvent le supprimer.'
+                    ]);
+                    return;
+                }
+
+                // Vérifier s'il y a des objectifs spécifiques liés
+                if ($objectif->objectifsSpecifiques()->count() > 0) {
+                    $this->dispatch('showToast', [
+                        'type' => 'error',
+                        'message' => 'Impossible de supprimer cet objectif stratégique car il contient des objectifs spécifiques.'
+                    ]);
+                    return;
+                }
+
                 $objectif->delete();
                 $this->loadPilierData();
                 

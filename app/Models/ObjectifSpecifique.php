@@ -14,7 +14,9 @@ class ObjectifSpecifique extends Model
         'libelle',
         'description',
         'objectif_strategique_id',
-        'owner_id'
+        'owner_id',
+        'taux_avancement',
+        'actif'
     ];
 
     protected $casts = [
@@ -82,5 +84,39 @@ class ObjectifSpecifique extends Model
                    $this->code;
         }
         return $this->code;
+    }
+
+    /**
+     * Mettre à jour le taux d'avancement de l'objectif stratégique parent
+     */
+    public function updateTauxAvancement(): void
+    {
+        if ($this->objectifStrategique) {
+            $this->objectifStrategique->updateTauxAvancement();
+        }
+    }
+
+    // Événements
+    protected static function booted()
+    {
+        static::saved(function ($objectifSpecifique) {
+            // Mettre à jour le taux d'avancement de l'objectif stratégique parent
+            $objectifSpecifique->updateTauxAvancement();
+            
+            // Vérifier si le taux d'avancement a changé (calculé automatiquement)
+            $currentTaux = $objectifSpecifique->getTauxAvancementAttribute();
+            $oldTaux = $objectifSpecifique->getOriginal('taux_avancement') ?? 0;
+            
+            if (abs($currentTaux - $oldTaux) > 0.01) { // Tolérance de 0.01%
+                // Créer une notification de changement d'avancement
+                app(\App\Services\NotificationService::class)->notifyAvancementChange(
+                    'objectif_specifique',
+                    $objectifSpecifique->id,
+                    $oldTaux,
+                    $currentTaux,
+                    $objectifSpecifique
+                );
+            }
+        });
     }
 }

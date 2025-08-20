@@ -137,5 +137,5 @@
     </div>
 </div>
     <!-- Composant Livewire pour le modal hiérarchique global -->
-    <livewire:pilier-details-modal-new />
+    <!-- Composant PilierDetailsModalNew supprimé -->
 @endsection 

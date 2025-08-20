@@ -14,7 +14,9 @@ class Action extends Model
         'libelle',
         'description',
         'objectif_specifique_id',
-        'owner_id'
+        'owner_id',
+        'taux_avancement',
+        'actif'
     ];
 
     protected $casts = [
@@ -35,6 +37,22 @@ class Action extends Model
     public function sousActions()
     {
         return $this->hasMany(SousAction::class);
+    }
+
+    /**
+     * Relation avec les commentaires
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Relation avec les commentaires triés par date (plus récent en premier)
+     */
+    public function commentsLatest()
+    {
+        return $this->hasMany(Comment::class)->latest();
     }
 
     /**
@@ -69,5 +87,51 @@ class Action extends Model
     public function getCalculatedTauxAvancement()
     {
         return $this->getTauxAvancementAttribute();
+    }
+
+    /**
+     * Mettre à jour le taux d'avancement de l'objectif spécifique parent
+     */
+    public function updateTauxAvancement(): void
+    {
+        if ($this->objectifSpecifique) {
+            $this->objectifSpecifique->updateTauxAvancement();
+        }
+    }
+
+    /**
+     * Obtient le code complet (Pilier.OS.OSPEC.ACTION)
+     */
+    public function getCodeCompletAttribute(): string
+    {
+        $code = $this->code;
+        if ($this->objectifSpecifique) {
+            $code = $this->objectifSpecifique->code_complet . '.' . $code;
+        }
+        return $code;
+    }
+
+    // Événements
+    protected static function booted()
+    {
+        static::saved(function ($action) {
+            // Mettre à jour le taux d'avancement de l'objectif spécifique parent
+            $action->updateTauxAvancement();
+            
+            // Vérifier si le taux d'avancement a changé (calculé automatiquement)
+            $currentTaux = $action->getTauxAvancementAttribute();
+            $oldTaux = $action->getOriginal('taux_avancement') ?? 0;
+            
+            if (abs($currentTaux - $oldTaux) > 0.01) { // Tolérance de 0.01%
+                // Créer une notification de changement d'avancement
+                app(\App\Services\NotificationService::class)->notifyAvancementChange(
+                    'action',
+                    $action->id,
+                    $oldTaux,
+                    $currentTaux,
+                    $action
+                );
+            }
+        });
     }
 }

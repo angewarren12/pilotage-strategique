@@ -25,22 +25,17 @@ class PilierController extends Controller
     {
         $user = Auth::user();
         
-        if ($user->isAdminGeneral()) {
-            $piliers = Pilier::with(['owner', 'objectifsStrategiques'])->get();
-        } else {
-            $piliers = collect(); // Pas d'accès pour les autres rôles
-        }
+        // Tous les utilisateurs peuvent voir tous les piliers
+        // Mais les permissions CRUD sont gérées dans la vue
+        $piliers = Pilier::with(['owner', 'objectifsStrategiques'])->get();
 
         return view('piliers.index', compact('piliers'));
     }
 
     public function create()
     {
-        $users = User::whereHas('role', function($query) {
-            $query->where('nom', 'admin_general');
-        })->get();
-
-        return view('piliers.create', compact('users'));
+        // Pas besoin d'users car les piliers n'ont pas d'owner
+        return view('piliers.create');
     }
 
     public function store(Request $request)
@@ -49,6 +44,7 @@ class PilierController extends Controller
             'code' => 'required|string|max:10|unique:piliers',
             'libelle' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'color' => 'nullable|string|regex:/^#[0-9A-Fa-f]{6}$/',
         ]);
 
         try {
@@ -56,32 +52,36 @@ class PilierController extends Controller
                 'code' => $request->code,
                 'libelle' => $request->libelle,
                 'description' => $request->description,
+                'color' => $request->color ?? '#007bff',
                 'owner_id' => null, // Pas d'owner pour les piliers
             ]);
 
-            // Vérifier si c'est une requête AJAX ou si le header Accept contient JSON
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            $message = 'Pilier créé avec succès !';
+            
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pilier créé avec succès !',
+                    'message' => $message,
                     'pilier' => $pilier
                 ]);
             }
 
             return redirect()->route('piliers.index')
-                ->with('success', 'Pilier créé avec succès !');
+                ->with('success', $message);
+                
         } catch (\Exception $e) {
-            // Vérifier si c'est une requête AJAX ou si le header Accept contient JSON
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            $message = 'Erreur lors de la création : ' . $e->getMessage();
+            
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erreur lors de la création : ' . $e->getMessage()
+                    'message' => $message
                 ], 500);
             }
 
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Erreur lors de la création : ' . $e->getMessage());
+                ->with('error', $message);
         }
     }
 
@@ -89,26 +89,9 @@ class PilierController extends Controller
     {
         $user = Auth::user();
         
-        // Vérifier les permissions
-        if (!$user->isAdminGeneral()) {
-            abort(403, 'Accès non autorisé');
-        }
-
+        // Tous les utilisateurs peuvent voir les détails des piliers
+        // Mais les permissions CRUD sont gérées dans la vue
         $pilier->load(['owner', 'objectifsStrategiques.owner', 'objectifsStrategiques.objectifsSpecifiques.owner']);
-
-        // Log pour débogage
-        Log::info('Pilier show - Objectifs stratégiques chargés', [
-            'pilier_id' => $pilier->id,
-            'pilier_code' => $pilier->code,
-            'objectifs_count' => $pilier->objectifsStrategiques->count(),
-            'objectifs_details' => $pilier->objectifsStrategiques->map(function($os) {
-                return [
-                    'id' => $os->id,
-                    'code' => $os->code,
-                    'libelle' => $os->libelle
-                ];
-            })->toArray()
-        ]);
 
         return view('piliers.show', compact('pilier'));
     }
@@ -121,67 +104,101 @@ class PilierController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
-        if (request()->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'pilier' => $pilier
-            ]);
-        }
-
-        $users = User::whereHas('role', function($query) {
-            $query->where('nom', 'admin_general');
-        })->get();
-
-        return view('piliers.edit', compact('pilier', 'users'));
+        // Pas besoin d'users car les piliers n'ont pas d'owner
+        return view('piliers.edit', compact('pilier'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Pilier $pilier)
     {
-        $user = Auth::user();
-        
-        if (!$user->isAdminGeneral()) {
-            abort(403, 'Accès non autorisé');
-        }
-
         $request->validate([
-            'code' => 'required|string|max:10|unique:piliers,code,' . $pilier->id,
+            'code' => 'required|string|max:50',
             'libelle' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'color' => 'nullable|string|max:7',
+            // SUPPRIMER owner_id de la validation car les piliers n'ont pas d'owner
         ]);
 
+        $user = Auth::user();
+        $validationService = app(\App\Services\ValidationService::class);
+
+        // Changement de couleur
+        if ($pilier->color != $request->color) {
+            try {
+                $validation = $validationService->createValidationRequest(
+                    'pilier',
+                    $pilier->id,
+                    $user,
+                    [
+                        'action' => 'change_color',
+                        'old_color' => $pilier->color,
+                        'new_color' => $request->color,
+                        'reason' => 'Modification de la couleur du pilier'
+                    ]
+                );
+
+                $message = 'Demande de validation créée. Vous recevrez une notification une fois approuvée.';
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => $message
+                    ]);
+                }
+
+                return redirect()->back()->with('success', $message);
+            } catch (\Exception $e) {
+                $message = $e->getMessage();
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $message
+                    ], 500);
+                }
+
+                return redirect()->back()->with('error', $message);
+            }
+        }
+
         try {
+            // Mise à jour directe si pas de validation requise
             $pilier->update([
                 'code' => $request->code,
                 'libelle' => $request->libelle,
                 'description' => $request->description,
-                'owner_id' => null, // Pas d'owner pour les piliers
+                'color' => $request->color,
             ]);
 
+            $message = 'Pilier mis à jour avec succès.';
+            
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pilier mis à jour avec succès !',
+                    'message' => $message,
                     'pilier' => $pilier
                 ]);
             }
 
-            return redirect()->route('piliers.index')
-                ->with('success', 'Pilier mis à jour avec succès !');
+            return redirect()->route('piliers.index')->with('success', $message);
+            
         } catch (\Exception $e) {
+            $message = 'Erreur lors de la mise à jour : ' . $e->getMessage();
+            
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erreur lors de la modification : ' . $e->getMessage()
+                    'message' => $message
                 ], 500);
             }
 
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Erreur lors de la modification : ' . $e->getMessage());
+            return redirect()->back()->with('error', $message);
         }
     }
 
-    public function destroy(Pilier $pilier)
+    public function destroy(Request $request, Pilier $pilier)
     {
         $user = Auth::user();
         
@@ -193,7 +210,32 @@ class PilierController extends Controller
         if ($pilier->objectifsStrategiques()->count() > 0) {
             $message = 'Impossible de supprimer ce pilier car il contient des objectifs stratégiques.';
             
-            if (request()->expectsJson()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message
+                ], 400);
+            }
+
+            return redirect()->route('piliers.index')
+                ->with('error', $message);
+        }
+
+        // Vérifier s'il y a des sous-actions liées (via la hiérarchie)
+        $hasSubActions = false;
+        foreach ($pilier->objectifsStrategiques as $objectifStrategique) {
+            foreach ($objectifStrategique->objectifsSpecifiques as $objectifSpecifique) {
+                if ($objectifSpecifique->actions()->count() > 0) {
+                    $hasSubActions = true;
+                    break 2;
+                }
+            }
+        }
+
+        if ($hasSubActions) {
+            $message = 'Impossible de supprimer ce pilier car il contient des actions et sous-actions.';
+            
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => $message
@@ -205,27 +247,33 @@ class PilierController extends Controller
         }
 
         try {
-            $pilier->update(['actif' => false]);
-
-            if (request()->expectsJson()) {
+            // Supprimer directement le pilier (pas de validation requise pour la suppression)
+            $pilier->delete();
+            
+            $message = 'Pilier supprimé avec succès.';
+            
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Pilier supprimé avec succès !'
+                    'message' => $message
                 ]);
             }
 
             return redirect()->route('piliers.index')
-                ->with('success', 'Pilier supprimé avec succès !');
+                ->with('success', $message);
+                
         } catch (\Exception $e) {
-            if (request()->expectsJson()) {
+            $message = 'Erreur lors de la suppression : ' . $e->getMessage();
+            
+            if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Erreur lors de la suppression : ' . $e->getMessage()
+                    'message' => $message
                 ], 500);
             }
 
             return redirect()->route('piliers.index')
-                ->with('error', 'Erreur lors de la suppression : ' . $e->getMessage());
+                ->with('error', $message);
         }
     }
 }

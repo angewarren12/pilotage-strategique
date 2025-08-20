@@ -162,36 +162,82 @@ class ActionController extends Controller
         return view('actions.edit', compact('action', 'objectifsSpecifiques', 'users'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Action $action)
     {
-        $user = Auth::user();
-        
-        if (!$user->canCreateAction()) {
-            abort(403, 'Accès non autorisé');
-        }
-
-        if ($user->isOwnerAction() && $action->owner_id !== $user->id) {
-            abort(403, 'Accès non autorisé');
-        }
-
         $request->validate([
-            'code' => 'required|string|max:10|unique:actions,code,' . $action->id,
+            'code' => 'required|string|max:50',
             'libelle' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'objectif_specifique_id' => 'required|exists:objectif_specifiques,id',
-            'owner_id' => 'nullable|exists:users,id',
+            'owner_id' => 'required|exists:users,id',
+            'date_echeance' => 'nullable|date',
+            'statut' => 'nullable|string|in:En cours,Terminé,En attente,Annulé',
         ]);
 
-        $action->update([
-            'code' => $request->code,
-            'libelle' => $request->libelle,
-            'description' => $request->description,
-            'objectif_specifique_id' => $request->objectif_specifique_id,
-            'owner_id' => $request->owner_id,
-        ]);
+        $user = Auth::user();
+        $validationService = app(\App\Services\ValidationService::class);
 
-        return redirect()->route('actions.index')
-            ->with('success', 'Action mise à jour avec succès !');
+        // Vérifier si des changements critiques nécessitent une validation
+        $requiresValidation = false;
+        $validationData = [];
+
+        // Changement de propriétaire
+        if ($action->owner_id != $request->owner_id) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_owner',
+                'old_owner_id' => $action->owner_id,
+                'new_owner_id' => $request->owner_id,
+                'reason' => 'Changement de propriétaire de l\'action'
+            ];
+        }
+
+        // Changement d'échéance
+        if ($action->date_echeance != $request->date_echeance) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_deadline',
+                'old_deadline' => $action->date_echeance ?? 'Non définie',
+                'new_deadline' => $request->date_echeance,
+                'reason' => 'Modification de l\'échéance de l\'action'
+            ];
+        }
+
+        // Changement de statut critique
+        if ($action->statut != $request->statut && in_array($request->statut, ['Terminé', 'Annulé'])) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_status',
+                'old_status' => $action->statut ?? 'Non défini',
+                'new_status' => $request->statut,
+                'reason' => 'Changement de statut critique de l\'action'
+            ];
+        }
+
+        // Si validation requise
+        if ($requiresValidation) {
+            try {
+                $validation = $validationService->createValidationRequest(
+                    'action',
+                    $action->id,
+                    $user,
+                    $validationData
+                );
+
+                return redirect()->back()->with('success', 
+                    'Demande de validation créée. Vous recevrez une notification une fois approuvée.'
+                );
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+
+        // Mise à jour directe si pas de validation requise
+        $action->update($request->all());
+
+        return redirect()->route('actions.index')->with('success', 'Action mise à jour avec succès.');
     }
 
     public function destroy(Action $action)

@@ -7,9 +7,10 @@ use App\Models\ObjectifStrategique;
 use App\Models\Pilier;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Added missing import
-use Illuminate\Support\Facades\Log; // Added missing import
-use App\Models\ObjectifSpecifique; // Added missing import
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\ObjectifSpecifique;
+use App\Notifications\ObjectifStrategiqueAssigned;
 
 class ObjectifStrategiqueController extends Controller
 {
@@ -17,15 +18,18 @@ class ObjectifStrategiqueController extends Controller
     {
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
-            if (!Auth::user()->canCreateObjectifStrategique()) {
+            /** @var User $user */
+            $user = Auth::user();
+            if (!$user->canCreateObjectifStrategique()) {
                 abort(403, 'Accès non autorisé');
             }
             return $next($request);
-        })->only(['create', 'store', 'edit', 'update', 'destroy']);
+        })->only(['create', 'store']);
     }
 
     public function index()
     {
+        /** @var User $user */
         $user = Auth::user();
         
         if ($user->isAdminGeneral()) {
@@ -41,6 +45,7 @@ class ObjectifStrategiqueController extends Controller
 
     public function create()
     {
+        /** @var User $user */
         $user = Auth::user();
         
         if (!$user->isAdminGeneral()) {
@@ -57,6 +62,7 @@ class ObjectifStrategiqueController extends Controller
 
     public function store(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
         
         if (!$user->isAdminGeneral()) {
@@ -64,8 +70,8 @@ class ObjectifStrategiqueController extends Controller
         }
 
         // Log pour débogage
-        \Log::info('Données reçues:', $request->all());
-        \Log::info('Début de la méthode store');
+        Log::info('Données reçues:', $request->all());
+        Log::info('Début de la méthode store');
 
         $request->validate([
             'code' => 'required|string|max:10',
@@ -80,13 +86,13 @@ class ObjectifStrategiqueController extends Controller
             'objectifs_specifiques.*.owner_id' => 'nullable|exists:users,id',
         ]);
 
-        \Log::info('Validation réussie');
+        Log::info('Validation réussie');
 
         try {
-            \Log::info('Début de la transaction');
-            \DB::beginTransaction();
+            Log::info('Début de la transaction');
+            DB::beginTransaction();
 
-            \Log::info('Création de l\'objectif stratégique avec les données:', [
+            Log::info('Création de l\'objectif stratégique avec les données:', [
                 'code' => $request->code,
                 'libelle' => $request->libelle,
                 'description' => $request->description,
@@ -102,11 +108,11 @@ class ObjectifStrategiqueController extends Controller
                 'owner_id' => $request->owner_id,
             ]);
 
-            \Log::info('Objectif stratégique créé avec succès, ID:', ['id' => $objectifStrategique->id]);
+            Log::info('Objectif stratégique créé avec succès, ID:', ['id' => $objectifStrategique->id]);
 
             // Créer les objectifs spécifiques si fournis
             if ($request->has('objectifs_specifiques') && is_array($request->objectifs_specifiques)) {
-                \Log::info('Création des objectifs spécifiques');
+                Log::info('Création des objectifs spécifiques');
                 foreach ($request->objectifs_specifiques as $objectifSpecifiqueData) {
                     if (!empty($objectifSpecifiqueData['libelle'])) {
                         ObjectifSpecifique::create([
@@ -120,17 +126,25 @@ class ObjectifStrategiqueController extends Controller
                 }
             }
 
-            \Log::info('Avant commit de la transaction');
-            \DB::commit();
-            \Log::info('Transaction commitée avec succès');
+            Log::info('Avant commit de la transaction');
+            DB::commit();
+            Log::info('Transaction commitée avec succès');
+
+            // Envoyer une notification à l'utilisateur assigné si un owner est spécifié
+            if ($request->owner_id) {
+                $owner = User::find($request->owner_id);
+                if ($owner) {
+                    $owner->notify(new ObjectifStrategiqueAssigned($objectifStrategique));
+                    Log::info('Notification envoyée à l\'utilisateur:', ['user_id' => $owner->id, 'user_name' => $owner->name]);
+                }
+            }
 
             // Vérifier si c'est une requête AJAX ou si le header Accept contient JSON
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
-                \Log::info('Retour de réponse JSON');
+            if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => true,
                     'message' => 'Objectif stratégique créé avec succès !',
-                    'objectif_strategique' => $objectifStrategique
+                    'objectif_strategique' => $objectifStrategique->load(['owner', 'pilier'])
                 ]);
             }
 
@@ -138,17 +152,14 @@ class ObjectifStrategiqueController extends Controller
                 ->with('success', 'Objectif stratégique créé avec succès !');
 
         } catch (\Exception $e) {
-            \Log::error('Erreur dans la méthode store:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+            Log::error('Erreur lors de la création de l\'objectif stratégique:', [
+                'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
-            \DB::rollback();
-            
-            // Vérifier si c'est une requête AJAX ou si le header Accept contient JSON
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+
+            DB::rollBack();
+
+            if ($request->expectsJson() || $request->header('Accept') === 'application/json') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Erreur lors de la création : ' . $e->getMessage()
@@ -163,47 +174,31 @@ class ObjectifStrategiqueController extends Controller
 
     public function show(ObjectifStrategique $objectifStrategique)
     {
+        /** @var User $user */
         $user = Auth::user();
         
-        // Log pour débogage
-        \Log::info('Méthode show ObjectifStrategique appelée', [
-            'objectif_id' => $objectifStrategique->id,
-            'objectif_code' => $objectifStrategique->code,
-            'objectif_libelle' => $objectifStrategique->libelle,
-            'pilier_id' => $objectifStrategique->pilier_id,
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'user_role' => $user->role ? $user->role->nom : 'Aucun rôle'
-        ]);
-        
-        // Charger les relations
-        $objectifStrategique->load(['owner', 'pilier', 'objectifsSpecifiques.owner', 'objectifsSpecifiques.actions.owner']);
+        // Vérifier les permissions
+        if (!$user->isAdminGeneral() && !$user->isOwnerOS()) {
+            abort(403, 'Accès non autorisé');
+        }
 
-        \Log::info('Relations chargées pour ObjectifStrategique', [
-            'objectif_id' => $objectifStrategique->id,
-            'has_pilier' => $objectifStrategique->pilier ? true : false,
-            'pilier_id' => $objectifStrategique->pilier ? $objectifStrategique->pilier->id : null,
-            'objectifs_specifiques_count' => $objectifStrategique->objectifsSpecifiques->count()
-        ]);
+        if ($user->isOwnerOS() && $objectifStrategique->owner_id !== $user->id) {
+            abort(403, 'Accès non autorisé');
+        }
 
-        // TEMPORAIRE : Permissions simplifiées pour débogage
-        // if (!$user->isAdminGeneral() && !$user->isOwnerOS()) {
-        //     abort(403, 'Accès non autorisé');
-        // }
-
-        // if ($user->isOwnerOS() && $objectifStrategique->owner_id !== $user->id) {
-        //     abort(403, 'Accès non autorisé');
-        // }
+        $objectifStrategique->load(['owner', 'pilier', 'objectifsSpecifiques.owner', 'objectifsSpecifiques.actions.owner', 'objectifsSpecifiques.actions.sousActions.owner']);
 
         return view('objectifs-strategiques.show', compact('objectifStrategique'));
     }
 
     public function edit(ObjectifStrategique $objectifStrategique)
     {
+        /** @var User $user */
         $user = Auth::user();
         
-        if (!$user->isAdminGeneral()) {
-            abort(403, 'Accès non autorisé');
+        // Vérifier les permissions : seul l'admin ou le owner peut éditer
+        if (!$user->canEditObjectifStrategique($objectifStrategique)) {
+            abort(403, 'Accès non autorisé. Seuls l\'administrateur général et le propriétaire de cet objectif stratégique peuvent le modifier.');
         }
 
         $piliers = Pilier::actif()->get();
@@ -216,17 +211,13 @@ class ObjectifStrategiqueController extends Controller
 
     public function update(Request $request, ObjectifStrategique $objectifStrategique)
     {
+        /** @var User $user */
         $user = Auth::user();
         
-        if (!$user->isAdminGeneral()) {
-            abort(403, 'Accès non autorisé');
+        // Vérifier les permissions : seul l'admin ou le owner peut modifier
+        if (!$user->canEditObjectifStrategique($objectifStrategique)) {
+            abort(403, 'Accès non autorisé. Seuls l\'administrateur général et le propriétaire de cet objectif stratégique peuvent le modifier.');
         }
-
-        // Log pour débogage
-        \Log::info('Méthode update ObjectifStrategique appelée', [
-            'objectif_id' => $objectifStrategique->id,
-            'request_data' => $request->all()
-        ]);
 
         $request->validate([
             'code' => 'required|string|max:10',
@@ -236,7 +227,56 @@ class ObjectifStrategiqueController extends Controller
             'owner_id' => 'nullable|exists:users,id',
         ]);
 
+        $validationService = app(\App\Services\ValidationService::class);
+
+        // Vérifier si des changements critiques nécessitent une validation
+        $requiresValidation = false;
+        $validationData = [];
+
+        // Changement de propriétaire
+        if ($objectifStrategique->owner_id != $request->owner_id) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_owner',
+                'old_owner_id' => $objectifStrategique->owner_id,
+                'new_owner_id' => $request->owner_id,
+                'reason' => 'Changement de propriétaire de l\'objectif stratégique'
+            ];
+        }
+
+        // Changement de pilier (impact structurel)
+        if ($objectifStrategique->pilier_id != $request->pilier_id) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_structure',
+                'old_pilier_id' => $objectifStrategique->pilier_id,
+                'new_pilier_id' => $request->pilier_id,
+                'reason' => 'Changement de pilier pour l\'objectif stratégique'
+            ];
+        }
+
+        // Si validation requise
+        if ($requiresValidation) {
+            try {
+                $validation = $validationService->createValidationRequest(
+                    'objectif_strategique',
+                    $objectifStrategique->id,
+                    $user,
+                    $validationData
+                );
+
+                return redirect()->back()->with('success', 
+                    'Demande de validation créée. Vous recevrez une notification une fois approuvée.'
+                );
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+
+        // Mise à jour directe si pas de validation requise
         try {
+            $oldOwnerId = $objectifStrategique->owner_id;
+            
             $objectifStrategique->update([
                 'code' => $request->code,
                 'libelle' => $request->libelle,
@@ -245,37 +285,18 @@ class ObjectifStrategiqueController extends Controller
                 'owner_id' => $request->owner_id,
             ]);
 
-            \Log::info('Objectif stratégique mis à jour avec succès', [
-                'objectif_id' => $objectifStrategique->id
-            ]);
-
-            // Vérifier si c'est une requête AJAX ou si le header Accept contient JSON
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Objectif stratégique mis à jour avec succès !',
-                    'objectif_strategique' => $objectifStrategique
-                ]);
+            // Envoyer une notification si le propriétaire a changé
+            if ($oldOwnerId != $request->owner_id && $request->owner_id) {
+                $newOwner = User::find($request->owner_id);
+                if ($newOwner) {
+                    $newOwner->notify(new ObjectifStrategiqueAssigned($objectifStrategique));
+                }
             }
 
             return redirect()->route('objectifs-strategiques.index')
                 ->with('success', 'Objectif stratégique mis à jour avec succès !');
 
         } catch (\Exception $e) {
-            \Log::error('Erreur dans la méthode update ObjectifStrategique:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
-            // Vérifier si c'est une requête AJAX ou si le header Accept contient JSON
-            if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Erreur lors de la modification : ' . $e->getMessage()
-                ], 500);
-            }
-
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Erreur lors de la modification : ' . $e->getMessage());
@@ -284,10 +305,12 @@ class ObjectifStrategiqueController extends Controller
 
     public function destroy(ObjectifStrategique $objectifStrategique)
     {
+        /** @var User $user */
         $user = Auth::user();
         
-        if (!$user->isAdminGeneral()) {
-            abort(403, 'Accès non autorisé');
+        // Vérifier les permissions : seul l'admin ou le owner peut supprimer
+        if (!$user->canDeleteObjectifStrategique($objectifStrategique)) {
+            abort(403, 'Accès non autorisé. Seuls l\'administrateur général et le propriétaire de cet objectif stratégique peuvent le supprimer.');
         }
 
         // Vérifier s'il y a des objectifs spécifiques liés
@@ -296,9 +319,27 @@ class ObjectifStrategiqueController extends Controller
                 ->with('error', 'Impossible de supprimer cet objectif stratégique car il contient des objectifs spécifiques.');
         }
 
-        $objectifStrategique->update(['actif' => false]);
+        // Créer une demande de validation pour la suppression
+        $validationService = app(\App\Services\ValidationService::class);
+        
+        try {
+            $validation = $validationService->createValidationRequest(
+                'objectif_strategique',
+                $objectifStrategique->id,
+                $user,
+                [
+                    'action' => 'delete_element',
+                    'element_name' => $objectifStrategique->libelle,
+                    'element_code' => $objectifStrategique->code,
+                    'reason' => 'Suppression de l\'objectif stratégique demandée'
+                ]
+            );
 
-        return redirect()->route('objectifs-strategiques.index')
-            ->with('success', 'Objectif stratégique supprimé avec succès !');
+            return redirect()->route('objectifs-strategiques.index')->with('success', 
+                'Demande de validation pour la suppression créée. Vous recevrez une notification une fois approuvée.'
+            );
+        } catch (\Exception $e) {
+            return redirect()->route('objectifs-strategiques.index')->with('error', $e->getMessage());
+        }
     }
 }

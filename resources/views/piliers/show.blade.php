@@ -28,11 +28,11 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <div class="row align-items-center">
-                        <div class="col-lg-8">
+        <div class="col-lg-8">
                             <div class="d-flex align-items-center mb-3">
                                 <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
                                     <i class="fas fa-layer-group text-white fs-4"></i>
-                                </div>
+                </div>
                                 <div>
                                     <h1 class="h2 mb-1 text-dark">{{ $pilier->libelle }}</h1>
                                     <div class="d-flex align-items-center">
@@ -41,16 +41,16 @@
                                             <i class="fas fa-bullseye me-1"></i>
                                             {{ $pilier->objectifsStrategiques->count() }} objectif{{ $pilier->objectifsStrategiques->count() > 1 ? 's' : '' }} stratégique{{ $pilier->objectifsStrategiques->count() > 1 ? 's' : '' }}
                                         </span>
-                                    </div>
-                                </div>
-                            </div>
-                            @if($pilier->description)
+                        </div>
+                    </div>
+                    </div>
+                    @if($pilier->description)
                                 <p class="text-muted mb-0 fs-6">{{ $pilier->description }}</p>
                             @endif
                         </div>
                         <div class="col-lg-4 text-lg-end">
                             <div class="d-flex flex-column align-items-lg-end">
-                                <div class="mb-3">
+                    <div class="mb-3">
                                     <div class="progress" style="height: 25px; width: 200px;">
                                         <div class="progress-bar bg-success" 
                                              role="progressbar" 
@@ -74,10 +74,10 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
         </div>
-    </div>
-
+        
     <!-- Statistiques -->
     <div class="row mb-4">
         <div class="col-md-3 col-sm-6 mb-3">
@@ -93,17 +93,17 @@
                 <div class="card-body text-center">
                     <div class="display-6 text-success mb-2">{{ $pilier->objectifsStrategiques->count() }}</div>
                     <h6 class="text-muted mb-0">Objectifs Stratégiques</h6>
-                </div>
-            </div>
-        </div>
+                            </div>
+                        </div>
+                    </div>
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
                     <div class="display-6 text-info mb-2">{{ $pilier->objectifsStrategiques->sum(function($os) { return $os->objectifsSpecifiques->count(); }) }}</div>
                     <h6 class="text-muted mb-0">Objectifs Spécifiques</h6>
-                </div>
-            </div>
-        </div>
+                            </div>
+                        </div>
+                        </div>
         <div class="col-md-3 col-sm-6 mb-3">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
@@ -122,12 +122,12 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 text-dark">
                             <i class="fas fa-bullseye me-2 text-success"></i>
-                            Objectifs Stratégiques
-                        </h5>
+                Objectifs Stratégiques
+            </h5>
                         <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createObjectifStrategiqueModal" onclick="preparerCreationOS({{ $pilier->id }})">
-                            <i class="fas fa-plus me-2"></i>
+                <i class="fas fa-plus me-2"></i>
                             Nouvel Objectif
-                        </button>
+            </button>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -169,7 +169,7 @@
                                                 </span>
                                             @else
                                                 <span class="badge bg-secondary">Non assigné</span>
-                                            @endif
+            @endif
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -183,7 +183,7 @@
                                                     </div>
                                                 </div>
                                                 <small class="text-muted">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
-                                            </div>
+        </div>
                                         </td>
                                         <td>
                                             <span class="badge bg-warning text-dark">
@@ -191,31 +191,31 @@
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="btn-group" role="group">
+                            <div class="btn-group" role="group">
                                                 <a href="{{ route('objectifs-strategiques.show', $objectifStrategique) }}" 
                                                    class="btn btn-outline-primary btn-sm" 
                                                    title="Voir détails">
-                                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="{{ route('objectifs-strategiques.edit', $objectifStrategique) }}" 
                                                    class="btn btn-outline-warning btn-sm" 
                                                    title="Modifier">
-                                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit"></i>
                                                 </a>
                                                 <button type="button" 
                                                         class="btn btn-outline-danger btn-sm" 
                                                         onclick="supprimerObjectifStrategique({{ $objectifStrategique->id }}, '{{ addslashes($objectifStrategique->libelle) }}')"
                                                         title="Supprimer">
                                                     <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
+                                </button>
+                            </div>
                                         </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
-                    @else
+                                    @else
                         <div class="text-center py-5">
                             <div class="mb-3">
                                 <i class="fas fa-bullseye fa-3x text-muted"></i>
@@ -225,7 +225,7 @@
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createObjectifStrategiqueModal" onclick="preparerCreationOS({{ $pilier->id }})">
                                 <i class="fas fa-plus me-2"></i>
                                 Créer le premier objectif
-                            </button>
+                                    </button>
                         </div>
                     @endif
                 </div>
@@ -352,22 +352,22 @@ function supprimerObjectifStrategique(id, libelle) {
     if (confirm(`Êtes-vous sûr de vouloir supprimer l'objectif stratégique "${libelle}" ?`)) {
         fetch(`/objectifs-strategiques/${id}`, {
             method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
                 showToast('success', 'Objectif stratégique supprimé avec succès !');
-                window.location.reload();
-            } else {
+            window.location.reload();
+        } else {
                 showToast('error', 'Erreur lors de la suppression : ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
             showToast('error', 'Erreur lors de la suppression.');
         });
     }

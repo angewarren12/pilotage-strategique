@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\SousAction;
-use App\Notifications\EcheanceApprochante;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 
 class CheckEcheances extends Command
@@ -33,30 +33,16 @@ class CheckEcheances extends Command
         
         $this->info("Vérification des échéances dans les {$days} prochains jours...");
         
-        // Récupérer les sous-actions avec échéance approchante
-        $sousActions = SousAction::actif()
-            ->whereNotNull('date_echeance')
-            ->where('date_echeance', '<=', $dateLimite)
-            ->where('date_echeance', '>=', Carbon::now())
-            ->where('taux_avancement', '<', 100)
-            ->with(['owner'])
-            ->get();
+        // Utiliser le service de notifications
+        $notificationService = app(NotificationService::class);
         
-        $count = 0;
+        // Vérifier les échéances approchantes
+        $notificationService->checkEcheancesApprochantes();
         
-        foreach ($sousActions as $sousAction) {
-            if ($sousAction->owner) {
-                $joursRestants = Carbon::now()->diffInDays($sousAction->date_echeance, false);
-                
-                // Envoyer la notification
-                $sousAction->owner->notify(new EcheanceApprochante($sousAction, $joursRestants));
-                
-                $this->line("Notification envoyée pour {$sousAction->code_complet} - {$sousAction->owner->name}");
-                $count++;
-            }
-        }
+        // Vérifier les délais dépassés
+        $notificationService->checkDelaisDepasses();
         
-        $this->info("{$count} notification(s) envoyée(s) avec succès.");
+        $this->info("Vérification des échéances terminée.");
         
         return 0;
     }

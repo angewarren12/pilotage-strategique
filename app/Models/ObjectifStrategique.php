@@ -14,7 +14,9 @@ class ObjectifStrategique extends Model
         'libelle',
         'description',
         'pilier_id',
-        'owner_id'
+        'owner_id',
+        'taux_avancement',
+        'actif'
     ];
 
     protected $casts = [
@@ -69,5 +71,50 @@ class ObjectifStrategique extends Model
     public function getCalculatedTauxAvancement()
     {
         return $this->getTauxAvancementAttribute();
+    }
+
+    /**
+     * Mettre à jour le taux d'avancement du pilier parent
+     */
+    public function updateTauxAvancement(): void
+    {
+        if ($this->pilier) {
+            $this->pilier->updateTauxAvancement();
+        }
+    }
+
+    /**
+     * Obtient le code complet (Pilier.OS)
+     */
+    public function getCodeCompletAttribute(): string
+    {
+        if ($this->pilier) {
+            return $this->pilier->code . '.' . $this->code;
+        }
+        return $this->code;
+    }
+
+    // Événements
+    protected static function booted()
+    {
+        static::saved(function ($objectifStrategique) {
+            // Mettre à jour le taux d'avancement du pilier parent
+            $objectifStrategique->updateTauxAvancement();
+            
+            // Vérifier si le taux d'avancement a changé (calculé automatiquement)
+            $currentTaux = $objectifStrategique->getTauxAvancementAttribute();
+            $oldTaux = $objectifStrategique->getOriginal('taux_avancement') ?? 0;
+            
+            if (abs($currentTaux - $oldTaux) > 0.01) { // Tolérance de 0.01%
+                // Créer une notification de changement d'avancement
+                app(\App\Services\NotificationService::class)->notifyAvancementChange(
+                    'objectif_strategique',
+                    $objectifStrategique->id,
+                    $oldTaux,
+                    $currentTaux,
+                    $objectifStrategique
+                );
+            }
+        });
     }
 }

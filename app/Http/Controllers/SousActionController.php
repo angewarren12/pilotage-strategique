@@ -195,6 +195,64 @@ class SousActionController extends Controller
             'date_realisation' => 'nullable|date',
         ]);
 
+        $validationService = app(\App\Services\ValidationService::class);
+
+        // Vérifier si des changements critiques nécessitent une validation
+        $requiresValidation = false;
+        $validationData = [];
+
+        // Changement de propriétaire
+        if ($sousAction->owner_id != $request->owner_id) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_owner',
+                'old_owner_id' => $sousAction->owner_id,
+                'new_owner_id' => $request->owner_id,
+                'reason' => 'Changement de propriétaire de la sous-action'
+            ];
+        }
+
+        // Changement d'échéance
+        if ($sousAction->date_echeance != $request->date_echeance) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'change_deadline',
+                'old_deadline' => $sousAction->date_echeance ?? 'Non définie',
+                'new_deadline' => $request->date_echeance,
+                'reason' => 'Modification de l\'échéance de la sous-action'
+            ];
+        }
+
+        // Changement de statut critique (marquage comme terminé)
+        if ($request->date_realisation && !$sousAction->date_realisation) {
+            $requiresValidation = true;
+            $validationData = [
+                'action' => 'mark_completed',
+                'old_status' => $sousAction->statut ?? 'En cours',
+                'new_status' => 'Terminé',
+                'reason' => 'Marquage de la sous-action comme terminée'
+            ];
+        }
+
+        // Si validation requise
+        if ($requiresValidation) {
+            try {
+                $validation = $validationService->createValidationRequest(
+                    'sous_action',
+                    $sousAction->id,
+                    $user,
+                    $validationData
+                );
+
+                return redirect()->back()->with('success', 
+                    'Demande de validation créée. Vous recevrez une notification une fois approuvée.'
+                );
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', $e->getMessage());
+            }
+        }
+
+        // Mise à jour directe si pas de validation requise
         $sousAction->update([
             'code' => $request->code,
             'libelle' => $request->libelle,
@@ -218,10 +276,28 @@ class SousActionController extends Controller
             abort(403, 'Accès non autorisé');
         }
 
-        $sousAction->update(['actif' => false]);
+        // Créer une demande de validation pour la suppression
+        $validationService = app(\App\Services\ValidationService::class);
+        
+        try {
+            $validation = $validationService->createValidationRequest(
+                'sous_action',
+                $sousAction->id,
+                $user,
+                [
+                    'action' => 'delete_element',
+                    'element_name' => $sousAction->libelle,
+                    'element_code' => $sousAction->code,
+                    'reason' => 'Suppression de la sous-action demandée'
+                ]
+            );
 
-        return redirect()->route('sous-actions.index')
-            ->with('success', 'Sous-action supprimée avec succès !');
+            return redirect()->route('sous-actions.index')->with('success', 
+                'Demande de validation pour la suppression créée. Vous recevrez une notification une fois approuvée.'
+            );
+        } catch (\Exception $e) {
+            return redirect()->route('sous-actions.index')->with('error', $e->getMessage());
+        }
     }
 
     // Méthode pour mettre à jour uniquement le taux d'avancement (AJAX)

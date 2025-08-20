@@ -91,11 +91,32 @@
             width: 280px;
             overflow-y: auto;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(0);
         }
 
         .sidebar.collapsed {
             width: 70px;
+            transform: translateX(0);
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+            box-shadow: none;
+        }
+
+        /* Animation de la sidebar */
+        .sidebar {
+            will-change: transform;
+        }
+
+        /* Style du bouton toggle quand la sidebar est masquée */
+        .sidebar-toggle.sidebar-hidden {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .sidebar-toggle.sidebar-hidden:hover {
+            background-color: rgba(255,255,255,0.2);
         }
 
         .sidebar-header {
@@ -144,11 +165,15 @@
             padding: 2rem;
             padding-top: calc(2rem + 80px); /* Ajouter l'espace pour la navbar */
             min-height: calc(100vh - 80px);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .main-content.expanded {
             margin-left: 70px;
+        }
+
+        .main-content.full-width {
+            margin-left: 0;
         }
 
         /* Cards */
@@ -859,6 +884,16 @@
             </a>
 
             <div class="navbar-nav ms-auto">
+                <!-- Centre de validations -->
+                <div class="nav-item me-3">
+                    <livewire:validation-center />
+                </div>
+                
+                <!-- Centre de notifications -->
+                <div class="nav-item me-3">
+                    <livewire:notification-center />
+                </div>
+                
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-user-circle me-1"></i>
@@ -897,15 +932,15 @@
                     </a>
                 </li>
                 
-                @if(Auth::user()->isAdminGeneral())
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('piliers.*') ? 'active' : '' }}" href="{{ route('piliers.index') }}">
                         <i class="fas fa-layer-group"></i>
                         <span>Piliers</span>
                     </a>
                 </li>
-                @endif
                 
+                {{-- Menus masqués pour tous les utilisateurs --}}
+                {{-- 
                 @if(Auth::user()->isAdminGeneral() || Auth::user()->isOwnerOS())
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('objectifs-strategiques.*') ? 'active' : '' }}" href="{{ route('objectifs-strategiques.index') }}">
@@ -939,6 +974,7 @@
                         <span>Sous-Actions</span>
                     </a>
                 </li>
+                --}}
                 
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('reporting') ? 'active' : '' }}" href="{{ route('reporting') }}">
@@ -947,14 +983,17 @@
                     </a>
                 </li>
                 
+                                {{-- Menu Utilisateurs masqué pour tous les utilisateurs --}}
+                {{-- 
                 @if(Auth::user()->isAdminGeneral())
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                         <i class="fas fa-users"></i>
                         <span>Utilisateurs</span>
                     </a>
-                            </li>
+                </li>
                 @endif
+                --}}
                     </ul>
                 </div>
     </div>
@@ -1064,6 +1103,90 @@
             
             return bsToast;
         }
+
+        // Gestion de la sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            // Récupérer l'état de la sidebar depuis le localStorage
+            const sidebarState = localStorage.getItem('sidebarState') || 'visible';
+            
+            // Appliquer l'état initial
+            if (sidebarState === 'hidden') {
+                sidebar.classList.add('hidden');
+                mainContent.classList.add('full-width');
+            }
+            
+            // Gérer le clic sur le bouton toggle
+            sidebarToggle.addEventListener('click', function() {
+                // Toggle de la sidebar
+                if (sidebar.classList.contains('hidden')) {
+                    // Afficher la sidebar
+                    sidebar.classList.remove('hidden');
+                    mainContent.classList.remove('full-width');
+                    sidebarToggle.classList.remove('sidebar-hidden');
+                    localStorage.setItem('sidebarState', 'visible');
+                    
+                    // Animation d'entrée fluide
+                    sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    sidebar.style.transform = 'translateX(0)';
+                    
+                    // Changer l'icône avec animation
+                    sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                    
+                    // Ajouter une classe pour l'animation
+                    sidebar.classList.add('sidebar-visible');
+                } else {
+                    // Masquer la sidebar
+                    sidebar.classList.add('hidden');
+                    mainContent.classList.add('full-width');
+                    sidebarToggle.classList.add('sidebar-hidden');
+                    localStorage.setItem('sidebarState', 'hidden');
+                    
+                    // Animation de sortie fluide
+                    sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                    sidebar.style.transform = 'translateX(-100%)';
+                    
+                    // Changer l'icône avec animation
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    
+                    // Retirer la classe d'animation
+                    sidebar.classList.remove('sidebar-visible');
+                }
+            });
+            
+            // Gestion responsive
+            function handleResize() {
+                if (window.innerWidth <= 768) {
+                    // Sur mobile, la sidebar est masquée par défaut
+                    sidebar.classList.add('hidden');
+                    mainContent.classList.add('full-width');
+                    sidebarToggle.classList.add('sidebar-hidden');
+                    sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                } else {
+                    // Sur desktop, restaurer l'état sauvegardé
+                    if (sidebarState === 'visible') {
+                        sidebar.classList.remove('hidden');
+                        mainContent.classList.remove('full-width');
+                        sidebarToggle.classList.remove('sidebar-hidden');
+                        sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                    } else {
+                        sidebar.classList.add('hidden');
+                        mainContent.classList.add('full-width');
+                        sidebarToggle.classList.add('sidebar-hidden');
+                        sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    }
+                }
+            }
+            
+            // Écouter les changements de taille d'écran
+            window.addEventListener('resize', handleResize);
+            
+            // Appliquer le comportement initial
+            handleResize();
+        });
     </script>
 
     @stack('scripts')

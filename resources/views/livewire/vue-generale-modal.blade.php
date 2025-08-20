@@ -12,7 +12,7 @@
                         <div>
                             <h5 class="modal-title mb-0">
                                 <strong>Vue Générale Hiérarchique</strong>
-                    </h5>
+                            </h5>
                             <small class="text-white-75">Vue d'ensemble interactive de tous les piliers et leurs éléments</small>
                         </div>
                     </div>
@@ -119,13 +119,13 @@
                                                 $globalProgress = $piliers->avg('taux_avancement');
                                             @endphp
                                             <div class="progress-bar bg-success" style="width: {{ $globalProgress }}%"></div>
-                                </div>
+                                        </div>
                                         <small class="text-muted">Progression globale: {{ number_format($globalProgress, 1) }}%</small>
-                                    </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
                     <!-- Tableau hiérarchique avec zoom -->
                     <div class="table-responsive vue-generale-table" style="max-height: 70vh; overflow-y: auto;" id="vueGeneraleTable">
@@ -177,264 +177,305 @@
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
-                                                                                 <th class="text-center">
-                                             <div class="row">
-                                                 <div class="col-3">Échéance</div>
-                                                 <div class="col-3">Date Réalisation</div>
-                                                 <div class="col-3">Écart</div>
-                                                 <div class="col-3">Progression</div>
-                                             </div>
-                                         </th>
+                                        <th class="text-center">
+                                            <div class="row">
+                                                <div class="col-3">Échéance</div>
+                                                <div class="col-3">Date Réalisation</div>
+                                                <div class="col-3">Écart</div>
+                                                <div class="col-3">Progression</div>
+                                            </div>
+                                        </th>
                                     </tr>
                                 </thead>
-                                                                 <tbody>
+                                <tbody>
                                     @foreach($piliers as $pilier)
                                         @php
+                                            // Calculer le nombre total de lignes pour ce pilier
                                             $pilierRowspan = 0;
                                             foreach($pilier->objectifsStrategiques as $os) {
                                                 foreach($os->objectifsSpecifiques as $ospec) {
                                                     foreach($ospec->actions as $action) {
-                                                        $pilierRowspan += $action->sousActions->count() ?: 1;
+                                                        $pilierRowspan += max($action->sousActions->count(), 1);
                                                     }
                                                 }
                                             }
                                             $pilierRowspan = max($pilierRowspan, 1);
                                         @endphp
 
-                                        @foreach($pilier->objectifsStrategiques as $objectifStrategique)
-                                            @php
-                                                $osRowspan = 0;
-                                                foreach($objectifStrategique->objectifsSpecifiques as $ospec) {
-                                                    foreach($ospec->actions as $action) {
-                                                        $osRowspan += $action->sousActions->count() ?: 1;
-                                                    }
-                                                }
-                                                $osRowspan = max($osRowspan, 1);
-                                            @endphp
-
-                                            @foreach($objectifStrategique->objectifsSpecifiques as $objectifSpecifique)
+                                        @if($pilier->objectifsStrategiques->count() > 0)
+                                            @foreach($pilier->objectifsStrategiques as $objectifStrategique)
                                                 @php
-                                                    $ospecRowspan = 0;
-                                                    foreach($objectifSpecifique->actions as $action) {
-                                                        $ospecRowspan += $action->sousActions->count() ?: 1;
+                                                    // Calculer le nombre de lignes pour cet objectif stratégique
+                                                    $osRowspan = 0;
+                                                    foreach($objectifStrategique->objectifsSpecifiques as $ospec) {
+                                                        foreach($ospec->actions as $action) {
+                                                            $osRowspan += max($action->sousActions->count(), 1);
+                                                        }
                                                     }
-                                                    $ospecRowspan = max($ospecRowspan, 1);
+                                                    $osRowspan = max($osRowspan, 1);
                                                 @endphp
 
-                                                @foreach($objectifSpecifique->actions as $action)
+                                                @foreach($objectifStrategique->objectifsSpecifiques as $objectifSpecifique)
                                                     @php
-                                                        $actionRowspan = $action->sousActions->count() ?: 1;
+                                                        // Calculer le nombre de lignes pour cet objectif spécifique
+                                                        $ospecRowspan = 0;
+                                                        foreach($objectifSpecifique->actions as $action) {
+                                                            $ospecRowspan += max($action->sousActions->count(), 1);
+                                                        }
+                                                        $ospecRowspan = max($ospecRowspan, 1);
                                                     @endphp
 
-                                                    @if($action->sousActions->count() > 0)
-                                                     @foreach($action->sousActions as $sousAction)
-                                                            <tr class="hierarchical-row" data-pilier="{{ $pilier->code }}" data-os="{{ $objectifStrategique->code }}" data-ospec="{{ $objectifSpecifique->code }}" data-action="{{ $action->code }}" data-sousaction="{{ $sousAction->code }}" data-progress="{{ $sousAction->taux_avancement }}">
-                                                                @if($loop->first && $action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first() && $objectifStrategique === $pilier->objectifsStrategiques->first())
-                                                                    <td class="table-primary hierarchical-cell" rowspan="{{ $pilierRowspan }}" data-level="pilier">
+                                                    @foreach($objectifSpecifique->actions as $action)
+                                                        @php
+                                                            $actionRowspan = max($action->sousActions->count(), 1);
+                                                        @endphp
+
+                                                        @if($action->sousActions->count() > 0)
+                                                            @foreach($action->sousActions as $sousAction)
+                                                                <tr class="hierarchical-row" data-pilier="{{ $pilier->code }}" data-os="{{ $objectifStrategique->code }}" data-ospec="{{ $objectifSpecifique->code }}" data-action="{{ $action->code }}" data-sousaction="{{ $sousAction->code }}" data-progress="{{ $sousAction->taux_avancement }}">
+                                                                    @if($loop->first && $action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first() && $objectifStrategique === $pilier->objectifsStrategiques->first())
+                                                                        <td class="hierarchical-cell" rowspan="{{ $pilierRowspan }}" data-level="pilier" 
+                                                                            style="background-color: {{ $pilier->color }}; color: white; border-left: 4px solid {{ $pilier->color }};">
+                                                                            <div class="fw-bold">{{ $pilier->code }}</div>
+                                                                            <div>{{ $pilier->libelle }}</div>
+                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                                <div class="progress-bar bg-white" 
+                                                                                     style="width: {{ $pilier->taux_avancement }}%"></div>
+                                                                            </div>
+                                                                            <small class="text-white-75">{{ number_format($pilier->taux_avancement, 1) }}%</small>
+                                                                            <div class="mt-1">
+                                                                                <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                    @endif
+
+                                                                    @if($loop->first && $action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first())
+                                                                        <td class="hierarchical-cell" rowspan="{{ $osRowspan }}" data-level="os"
+                                                                            style="background-color: {{ $pilier->getHierarchicalColor(1) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
+                                                                            <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}</div>
+                                                                            <div>{{ $objectifStrategique->libelle }}</div>
+                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                                <div class="progress-bar bg-white" 
+                                                                                     style="width: {{ $objectifStrategique->taux_avancement }}%"></div>
+                                                                            </div>
+                                                                            <small class="text-white-75">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
+                                                                            <div class="mt-1">
+                                                                                <span class="badge bg-white text-dark">{{ $objectifStrategique->owner->name ?? 'Non assigné' }}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                    @endif
+
+                                                                    @if($loop->first && $action === $objectifSpecifique->actions->first())
+                                                                        <td class="hierarchical-cell" rowspan="{{ $ospecRowspan }}" data-level="ospec"
+                                                                            style="background-color: {{ $pilier->getHierarchicalColor(2) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
+                                                                            <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}</div>
+                                                                            <div>{{ $objectifSpecifique->libelle }}</div>
+                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                                <div class="progress-bar bg-white" 
+                                                                                     style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
+                                                                            </div>
+                                                                            <small class="text-white-75">{{ number_format($objectifSpecifique->taux_avancement, 1) }}%</small>
+                                                                            <div class="mt-1">
+                                                                                <span class="badge bg-white text-dark">{{ $objectifSpecifique->owner->name ?? 'Non assigné' }}</span>
+                                                                            </div>
+                                                                        </td>
+                                                                    @endif
+
+                                                                    @if($loop->first)
+                                                                        <td class="hierarchical-cell" rowspan="{{ $actionRowspan }}" data-level="action" 
+                                                                            style="cursor: pointer; background-color: {{ $pilier->getHierarchicalColor(3) }}; color: white; border-left: 4px solid {{ $pilier->color }};" 
+                                                                            onclick="openActionComments({{ $action->id }})"
+                                                                            title="Cliquer pour ouvrir la discussion">
+                                                                            <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}</div>
+                                                                            <div>{{ $action->libelle }}</div>
+                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                                <div class="progress-bar bg-white" 
+                                                                                     style="width: {{ $action->taux_avancement }}%"></div>
+                                                                            </div>
+                                                                            <small class="text-white-75">{{ number_format($action->taux_avancement, 1) }}%</small>
+                                                                            <div class="mt-1 d-flex align-items-center justify-content-between">
+                                                                                <span class="badge bg-white text-dark">{{ $action->owner->name ?? 'Non assigné' }}</span>
+                                                                                <i class="fas fa-comments text-white" style="font-size: 0.8em;"></i>
+                                                                            </div>
+                                                                        </td>
+                                                                    @endif
+
+                                                                    <td class="hierarchical-cell" data-level="sousaction"
+                                                                        style="background-color: {{ $pilier->getHierarchicalColor(4) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
+                                                                        <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}.{{ $sousAction->code }}</div>
+                                                                        <div>{{ $sousAction->libelle }}</div>
+                                                                        <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress-bar bg-white" 
+                                                                                 style="width: {{ $sousAction->taux_avancement }}%"></div>
+                                                                        </div>
+                                                                        <small class="text-white-75">{{ number_format($sousAction->taux_avancement, 1) }}%</small>
+                                                                        <div class="mt-1">
+                                                                            <span class="badge bg-white text-dark">{{ $sousAction->owner->name ?? 'Non assigné' }}</span>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    <td>
+                                                                        <div class="row">
+                                                                            <div class="col-3">
+                                                                                <small class="text-muted">Échéance</small>
+                                                                                <div>{{ $sousAction->date_echeance ? Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') : 'Non définie' }}</div>
+                                                                            </div>
+                                                                            <div class="col-3">
+                                                                                <small class="text-muted">Date Réalisation</small>
+                                                                                <div>{{ $sousAction->date_realisation ? Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') : '-' }}</div>
+                                                                            </div>
+                                                                            <div class="col-3">
+                                                                                <small class="text-muted">Écart</small>
+                                                                                <div>
+                                                                                    @php
+                                                                                        $ecart = $this->calculateEcart($sousAction->date_echeance, $sousAction->date_realisation);
+                                                                                    @endphp
+                                                                                    @if($ecart)
+                                                                                        <span class="badge bg-{{ $sousAction->date_realisation ? 'success' : 'warning' }}">
+                                                                                            {{ $ecart }}
+                                                                                        </span>
+                                                                                    @else
+                                                                                        <span class="badge bg-secondary">-</span>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-3">
+                                                                                <small class="text-muted">Progression</small>
+                                                                                <div>
+                                                                                    <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 1) }}%</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @endforeach
+                                                        @else
+                                                            <tr class="hierarchical-row" data-pilier="{{ $pilier->code }}" data-os="{{ $objectifStrategique->code }}" data-ospec="{{ $objectifSpecifique->code }}" data-action="{{ $action->code }}" data-progress="{{ $action->taux_avancement }}">
+                                                                @if($action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first() && $objectifStrategique === $pilier->objectifsStrategiques->first())
+                                                                    <td class="hierarchical-cell" rowspan="{{ $pilierRowspan }}" data-level="pilier"
+                                                                        style="background-color: {{ $pilier->color }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                         <div class="fw-bold">{{ $pilier->code }}</div>
                                                                         <div>{{ $pilier->libelle }}</div>
-                                                                        <div class="progress mt-1" style="height: 6px;">
-                                                                            <div class="progress-bar bg-{{ $this->getProgressStatus($pilier->taux_avancement) }}" 
+                                                                        <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $pilier->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-muted">{{ number_format($pilier->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($pilier->taux_avancement, 1) }}%</small>
                                                                         <div class="mt-1">
-                                                                            <span class="badge bg-secondary">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
+                                                                            <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
-                                                             </td>
+                                                                    </td>
                                                                 @endif
 
-                                                                @if($loop->first && $action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first())
-                                                                    <td class="table-info hierarchical-cell" rowspan="{{ $osRowspan }}" data-level="os">
+                                                                @if($action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first())
+                                                                    <td class="hierarchical-cell" rowspan="{{ $osRowspan }}" data-level="os"
+                                                                        style="background-color: {{ $pilier->getHierarchicalColor(1) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                         <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}</div>
                                                                         <div>{{ $objectifStrategique->libelle }}</div>
-                                                                        <div class="progress mt-1" style="height: 6px;">
-                                                                            <div class="progress-bar bg-{{ $this->getProgressStatus($objectifStrategique->taux_avancement) }}" 
+                                                                        <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $objectifStrategique->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-muted">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
                                                                         <div class="mt-1">
-                                                                            <span class="badge bg-info">{{ $objectifStrategique->owner->name ?? 'Non assigné' }}</span>
+                                                                            <span class="badge bg-white text-dark">{{ $objectifStrategique->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
-                                                             </td>
+                                                                    </td>
                                                                 @endif
 
-                                                                @if($loop->first && $action === $objectifSpecifique->actions->first())
-                                                                    <td class="table-warning hierarchical-cell" rowspan="{{ $ospecRowspan }}" data-level="ospec">
+                                                                @if($action === $objectifSpecifique->actions->first())
+                                                                    <td class="hierarchical-cell" rowspan="{{ $ospecRowspan }}" data-level="ospec"
+                                                                        style="background-color: {{ $pilier->getHierarchicalColor(2) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                         <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}</div>
                                                                         <div>{{ $objectifSpecifique->libelle }}</div>
-                                                                        <div class="progress mt-1" style="height: 6px;">
-                                                                            <div class="progress-bar bg-{{ $this->getProgressStatus($objectifSpecifique->taux_avancement) }}" 
+                                                                        <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-muted">{{ number_format($objectifSpecifique->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($objectifSpecifique->taux_avancement, 1) }}%</small>
                                                                         <div class="mt-1">
-                                                                            <span class="badge bg-warning">{{ $objectifSpecifique->owner->name ?? 'Non assigné' }}</span>
+                                                                            <span class="badge bg-white text-dark">{{ $objectifSpecifique->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
-                                                             </td>
+                                                                    </td>
                                                                 @endif
 
-                                                                @if($loop->first)
-                                                                    <td class="table-success hierarchical-cell" rowspan="{{ $actionRowspan }}" data-level="action">
-                                                                        <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}</div>
-                                                                        <div>{{ $action->libelle }}</div>
-                                                                        <div class="progress mt-1" style="height: 6px;">
-                                                                            <div class="progress-bar bg-{{ $this->getProgressStatus($action->taux_avancement) }}" 
-                                                                                 style="width: {{ $action->taux_avancement }}%"></div>
-                                                                        </div>
-                                                                        <small class="text-muted">{{ number_format($action->taux_avancement, 1) }}%</small>
-                                                                        <div class="mt-1">
-                                                                            <span class="badge bg-success">{{ $action->owner->name ?? 'Non assigné' }}</span>
-                                                                        </div>
-                                                             </td>
-                                                                @endif
+                                                                <td class="hierarchical-cell" data-level="action"
+                                                                    style="cursor: pointer; background-color: {{ $pilier->getHierarchicalColor(3) }}; color: white; border-left: 4px solid {{ $pilier->color }};" 
+                                                                    onclick="openActionComments({{ $action->id }})"
+                                                                    title="Cliquer pour ouvrir la discussion">
+                                                                    <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}</div>
+                                                                    <div>{{ $action->libelle }}</div>
+                                                                    <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                        <div class="progress-bar bg-white" 
+                                                                             style="width: {{ $action->taux_avancement }}%"></div>
+                                                                    </div>
+                                                                    <small class="text-white-75">{{ number_format($action->taux_avancement, 1) }}%</small>
+                                                                    <div class="mt-1 d-flex align-items-center justify-content-between">
+                                                                        <span class="badge bg-white text-dark">{{ $action->owner->name ?? 'Non assigné' }}</span>
+                                                                        <i class="fas fa-comments text-white" style="font-size: 0.8em;"></i>
+                                                                    </div>
+                                                                </td>
 
                                                                 <td class="table-light hierarchical-cell" data-level="sousaction">
-                                                                    <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}.{{ $sousAction->code }}</div>
-                                                                    <div>{{ $sousAction->libelle }}</div>
-                                                                    <div class="progress mt-1" style="height: 6px;">
-                                                                        <div class="progress-bar bg-{{ $this->getProgressStatus($sousAction->taux_avancement) }}" 
-                                                                             style="width: {{ $sousAction->taux_avancement }}%"></div>
-                                                                    </div>
-                                                                    <small class="text-muted">{{ number_format($sousAction->taux_avancement, 1) }}%</small>
-                                                                    <div class="mt-1">
-                                                                        <span class="badge bg-light text-dark">{{ $sousAction->owner->name ?? 'Non assigné' }}</span>
-                                                                    </div>
-                                                             </td>
+                                                                    <div class="text-muted">Aucune sous-action</div>
+                                                                </td>
 
-                                                                                                                                 <td>
-                                                                     <div class="row">
-                                                                         <div class="col-3">
-                                                                             <small class="text-muted">Échéance</small>
-                                                                             <div>{{ $sousAction->date_echeance ? Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') : 'Non définie' }}</div>
-                                                                         </div>
-                                                                         <div class="col-3">
-                                                                             <small class="text-muted">Date Réalisation</small>
-                                                                             <div>{{ $sousAction->date_realisation ? Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') : '-' }}</div>
-                                                                         </div>
-                                                                         <div class="col-3">
-                                                                             <small class="text-muted">Écart</small>
-                                                                             <div>
-                                                                 @php
-                                                                     $ecart = $this->calculateEcart($sousAction->date_echeance, $sousAction->date_realisation);
-                                                                 @endphp
-                                                                                 @if($ecart)
-                                                                                     <span class="badge bg-{{ $sousAction->date_realisation ? 'success' : 'warning' }}">
-                                                                                         {{ $ecart }}
-                                                                                     </span>
-                                                                                 @else
-                                                                                     <span class="badge bg-secondary">-</span>
-                                                                                 @endif
-                                                                             </div>
-                                                                         </div>
-                                                                         <div class="col-3">
-                                                                             <small class="text-muted">Progression</small>
-                                                                             <div>
-                                                                                 <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 1) }}%</span>
-                                                                             </div>
-                                                                         </div>
-                                                                     </div>
-                                                             </td>
+                                                                <td>
+                                                                    <div class="row">
+                                                                        <div class="col-3">
+                                                                            <small class="text-muted">Échéance</small>
+                                                                            <div>-</div>
+                                                                        </div>
+                                                                        <div class="col-3">
+                                                                            <small class="text-muted">Date Réalisation</small>
+                                                                            <div>-</div>
+                                                                        </div>
+                                                                        <div class="col-3">
+                                                                            <small class="text-muted">Écart</small>
+                                                                            <div>
+                                                                                <span class="badge bg-secondary">-</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-3">
+                                                                            <small class="text-muted">Progression</small>
+                                                                            <div>
+                                                                                <span class="badge bg-primary">{{ number_format($action->taux_avancement, 1) }}%</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
                                                             </tr>
-                                                                     @endforeach
-                                                    @else
-                                                        <tr class="hierarchical-row" data-pilier="{{ $pilier->code }}" data-os="{{ $objectifStrategique->code }}" data-ospec="{{ $objectifSpecifique->code }}" data-action="{{ $action->code }}" data-progress="{{ $action->taux_avancement }}">
-                                                            @if($action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first() && $objectifStrategique === $pilier->objectifsStrategiques->first())
-                                                                <td class="table-primary hierarchical-cell" rowspan="{{ $pilierRowspan }}" data-level="pilier">
-                                                                    <div class="fw-bold">{{ $pilier->code }}</div>
-                                                                    <div>{{ $pilier->libelle }}</div>
-                                                                    <div class="progress mt-1" style="height: 6px;">
-                                                                        <div class="progress-bar bg-{{ $this->getProgressStatus($pilier->taux_avancement) }}" 
-                                                                             style="width: {{ $pilier->taux_avancement }}%"></div>
-                                                                    </div>
-                                                                    <small class="text-muted">{{ number_format($pilier->taux_avancement, 1) }}%</small>
-                                                                    <div class="mt-1">
-                                                                        <span class="badge bg-secondary">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
-                                                                    </div>
-                                                                </td>
-                                                            @endif
-
-                                                            @if($action === $objectifSpecifique->actions->first() && $objectifSpecifique === $objectifStrategique->objectifsSpecifiques->first())
-                                                                <td class="table-info hierarchical-cell" rowspan="{{ $osRowspan }}" data-level="os">
-                                                                    <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}</div>
-                                                                    <div>{{ $objectifStrategique->libelle }}</div>
-                                                                    <div class="progress mt-1" style="height: 6px;">
-                                                                        <div class="progress-bar bg-{{ $this->getProgressStatus($objectifStrategique->taux_avancement) }}" 
-                                                                             style="width: {{ $objectifStrategique->taux_avancement }}%"></div>
-                                                                    </div>
-                                                                    <small class="text-muted">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
-                                                                    <div class="mt-1">
-                                                                        <span class="badge bg-info">{{ $objectifStrategique->owner->name ?? 'Non assigné' }}</span>
-                                                                    </div>
-                                                                </td>
-                                                            @endif
-
-                                                            @if($action === $objectifSpecifique->actions->first())
-                                                                <td class="table-warning hierarchical-cell" rowspan="{{ $ospecRowspan }}" data-level="ospec">
-                                                                    <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}</div>
-                                                                    <div>{{ $objectifSpecifique->libelle }}</div>
-                                                                    <div class="progress mt-1" style="height: 6px;">
-                                                                        <div class="progress-bar bg-{{ $this->getProgressStatus($objectifSpecifique->taux_avancement) }}" 
-                                                                             style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
-                                                                    </div>
-                                                                    <small class="text-muted">{{ number_format($objectifSpecifique->taux_avancement, 1) }}%</small>
-                                                                    <div class="mt-1">
-                                                                        <span class="badge bg-warning">{{ $objectifSpecifique->owner->name ?? 'Non assigné' }}</span>
-                                                                    </div>
-                                                                </td>
-                                                            @endif
-
-                                                            <td class="table-success hierarchical-cell" data-level="action">
-                                                                <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}</div>
-                                                                <div>{{ $action->libelle }}</div>
-                                                                <div class="progress mt-1" style="height: 6px;">
-                                                                    <div class="progress-bar bg-{{ $this->getProgressStatus($action->taux_avancement) }}" 
-                                                                         style="width: {{ $action->taux_avancement }}%"></div>
-                                                                </div>
-                                                                <small class="text-muted">{{ number_format($action->taux_avancement, 1) }}%</small>
-                                                                <div class="mt-1">
-                                                                    <span class="badge bg-success">{{ $action->owner->name ?? 'Non assigné' }}</span>
-                                                                </div>
-                                                            </td>
-
-                                                            <td class="table-light hierarchical-cell" data-level="sousaction">
-                                                                <div class="text-muted">Aucune sous-action</div>
-                                                            </td>
-
-                                                                                                                         <td>
-                                                                 <div class="row">
-                                                                     <div class="col-3">
-                                                                         <small class="text-muted">Échéance</small>
-                                                                         <div>-</div>
-                                                                     </div>
-                                                                     <div class="col-3">
-                                                                         <small class="text-muted">Date Réalisation</small>
-                                                                         <div>-</div>
-                                                                     </div>
-                                                                     <div class="col-3">
-                                                                         <small class="text-muted">Écart</small>
-                                                                         <div>
-                                                                             <span class="badge bg-secondary">-</span>
-                                                                         </div>
-                                                                     </div>
-                                                                     <div class="col-3">
-                                                                         <small class="text-muted">Progression</small>
-                                                                         <div>
-                                                                             <span class="badge bg-primary">{{ number_format($action->taux_avancement, 1) }}%</span>
-                                                                         </div>
-                                                                     </div>
-                                                                 </div>
-                                                             </td>
-                                                         </tr>
-                                                    @endif
-                                                     @endforeach
-                                                 @endforeach
-                                             @endforeach
-                                         @endforeach
-                                 </tbody>
+                                                        @endif
+                                                    @endforeach
+                                                @endforeach
+                                            @endforeach
+                                        @else
+                                            <!-- Pilier sans Objectifs Stratégiques -->
+                                            <tr class="hierarchical-row" data-pilier="{{ $pilier->code }}" data-progress="{{ $pilier->taux_avancement }}">
+                                                <td class="hierarchical-cell" data-level="pilier" 
+                                                    style="background-color: {{ $pilier->color }}; color: white; border-left: 4px solid {{ $pilier->color }};">
+                                                    <div class="fw-bold">{{ $pilier->code }}</div>
+                                                    <div>{{ $pilier->libelle }}</div>
+                                                    <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                        <div class="progress-bar bg-white" 
+                                                             style="width: {{ $pilier->taux_avancement }}%"></div>
+                                                    </div>
+                                                    <small class="text-white-75">{{ number_format($pilier->taux_avancement, 1) }}%</small>
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center text-muted" colspan="5">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Aucun Objectif Stratégique défini
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
                             </table>
                         @endif
-                        </div>
+                    </div>
                 </div>
 
                 <!-- Footer du Modal -->
@@ -448,10 +489,10 @@
                             </small>
                         </div>
                         <div>
-                    <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                            <button type="button" class="btn btn-secondary" wire:click="closeModal">
                                 <i class="fas fa-times me-1"></i>
                                 Fermer
-                    </button>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -460,6 +501,9 @@
     </div>
     <div class="modal-backdrop fade show" style="z-index: 9998;"></div>
     @endif
+
+    <!-- Modal de commentaires des actions -->
+    <livewire:action-comments-modal />
 
     <style>
         .sticky-top {
@@ -833,5 +877,16 @@
                 }
             }
         });
+
+        // Fonction pour ouvrir le modal de commentaires
+        function openActionComments(actionId) {
+            console.log('🔍 [DEBUG] Ouverture du modal de commentaires pour l\'action:', actionId);
+            if (typeof Livewire !== 'undefined') {
+                Livewire.dispatch('openActionCommentsModal', { actionId: actionId });
+            } else {
+                console.error('❌ [ERROR] Livewire not initialized');
+                alert('Erreur: Livewire n\'est pas initialisé');
+            }
+        }
     </script>
 </div> 

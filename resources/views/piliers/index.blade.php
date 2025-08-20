@@ -80,6 +80,107 @@
         background: linear-gradient(90deg, #007bff, #6610f2);
         border-radius: 12px 12px 0 0;
     }
+    
+    /* Styles pour le sélecteur de couleur */
+    .color-palette {
+        margin-top: 10px;
+    }
+    
+    .color-option {
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    
+    .color-option:hover {
+        transform: scale(1.05);
+    }
+    
+    .color-option.selected {
+        transform: scale(1.1);
+    }
+    
+    /* Styles pour les notifications toast */
+    .toast-container {
+        z-index: 9999;
+    }
+    
+    .toast {
+        min-width: 300px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border: none;
+    }
+    
+    .toast.bg-success {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    }
+    
+    .toast.bg-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%) !important;
+    }
+    
+    .toast.bg-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+        color: #212529 !important;
+    }
+    
+    .toast.bg-info {
+        background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%) !important;
+    }
+    
+    .toast .toast-body {
+        padding: 1rem 1.25rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    .toast .btn-close {
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+    }
+    
+    .toast .btn-close:hover {
+        opacity: 1;
+    }
+    
+    /* Styles pour les boutons avec couleur dynamique */
+    .btn-dynamic-color {
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn-dynamic-color:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        filter: brightness(1.1);
+    }
+    
+    .btn-dynamic-color:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .color-preview {
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        border: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .color-option.selected .color-preview {
+        border-color: #333;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .color-name {
+        font-size: 12px;
+    }
 </style>
 <div class="container-fluid">
     <div class="row">
@@ -91,13 +192,21 @@
                     Gestion des Piliers
                 </h2>
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-info" onclick="openProjectPlanningModal()">
+                        <i class="fas fa-calendar-alt me-2"></i>Planning Global
+                    </button>
                     <button type="button" class="btn btn-info" onclick="openVueGeneraleModal()">
                         <i class="fas fa-chart-line me-2"></i>Vue Générale
                     </button>
+                    <button type="button" class="btn btn-warning" onclick="showColorPreview()">
+                        <i class="fas fa-palette me-2"></i>Aperçu Couleurs
+                    </button>
+                    @if(Auth::user()->isAdminGeneral())
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createPilierModal">
                         <i class="fas fa-plus me-2"></i>
                         Nouveau Pilier
                     </button>
+                    @endif
                 </div>
             </div>
 
@@ -125,7 +234,7 @@
                                     @foreach($piliers as $pilier)
                                     <tr>
                                         <td>
-                                            <span class="badge bg-primary fs-6">{{ $pilier->code }}</span>
+                                                                     <span class="badge fs-6" style="background: {{ $pilier->color ?? '#007bff' }}; color: {{ $pilier->getTextColor($pilier->color ?? '#007bff') }};">{{ $pilier->code }}</span>
                                         </td>
                                         <td>
                                             <strong>{{ $pilier->libelle }}</strong>
@@ -157,25 +266,23 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                                                                <button type="button" 
-                                                        class="btn btn-sm btn-outline-primary"
-                                                        onclick="openPilierModal({{ $pilier->id }})"
-                                                        title="Voir les détails">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                                                <!-- Bouton Vue hiérarchique - accessible à tous -->
                                                 <button type="button" 
                                                         class="btn btn-sm btn-outline-info"
                                                         onclick="openPilierHierarchiqueModal({{ $pilier->id }})"
                                                         title="Vue hiérarchique">
                                                     <i class="fas fa-sitemap"></i>
                                                 </button>
+                                                
+                                                <!-- Boutons d'édition et suppression - seulement pour les admins -->
+                                                @if(Auth::user()->isAdminGeneral())
                                                 <button type="button" class="btn btn-sm btn-outline-warning"
                                                         title="Modifier"
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#editPilierModal"
                                                         data-pilier-id="{{ $pilier->id }}"
                                                         data-pilier-code="{{ $pilier->code }}"
-                                                        data-pilier-libelle="{{ $pilier->libelle }}"
+                                                        data-bs-pilier-libelle="{{ $pilier->libelle }}"
                                                         data-pilier-description="{{ $pilier->description ?? '' }}"
                                                         onclick="chargerDonneesPilierEdit(this)">
                                                     <i class="fas fa-edit"></i>
@@ -185,6 +292,7 @@
                                                         onclick="supprimerPilier({{ $pilier->id }}, '{{ addslashes($pilier->libelle) }}')">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
@@ -209,6 +317,9 @@
     </div>
 </div>
 
+<!-- Conteneur pour les notifications toast -->
+<div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+
 <!-- Modal Créer Pilier -->
 <div class="modal fade" id="createPilierModal" tabindex="-1">
     <div class="modal-dialog">
@@ -230,7 +341,77 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Description optionnelle du pilier..."></textarea>
+                    </div>
+                    
+                    <!-- 🎨 Sélecteur de couleur -->
+                    <div class="mb-3">
+                        <label class="form-label">Couleur du Pilier</label>
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Cette couleur sera utilisée pour identifier visuellement ce pilier et tous ses éléments hiérarchiques
+                        </p>
+                        <div class="color-palette">
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#007bff">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                                            <span class="color-name">Bleu</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#28a745">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);">
+                                            <span class="color-name">Vert</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#dc3545">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                                            <span class="color-name">Rouge</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#ffc107">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                                            <span class="color-name">Jaune</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#6f42c1">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);">
+                                            <span class="color-name">Violet</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#fd7e14">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);">
+                                            <span class="color-name">Orange</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#20c997">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);">
+                                            <span class="color-name">Turquoise</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option" data-color="#e83e8c">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #e83e8c 0%, #d63384 100%);">
+                                            <span class="color-name">Rose</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="color" id="selected_color" value="#007bff">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -266,11 +447,81 @@
                         <label class="form-label">Description</label>
                         <textarea class="form-control" name="description" id="editPilierDescription" rows="3"></textarea>
                     </div>
+                    
+                    <!-- 🎨 Sélecteur de couleur pour l'édition -->
+                    <div class="mb-3">
+                        <label class="form-label">Couleur du Pilier</label>
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Cette couleur sera utilisée pour identifier visuellement ce pilier et tous ses éléments hiérarchiques
+                        </p>
+                        <div class="color-palette">
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#007bff">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                                            <span class="color-name">Bleu</span>
                 </div>
-                <div class="modal-footer">
+                </div>
+        </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#28a745">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);">
+                                            <span class="color-name">Vert</span>
+    </div>
+</div>
+            </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#dc3545">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+                                            <span class="color-name">Rouge</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#ffc107">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                                            <span class="color-name">Jaune</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#6f42c1">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);">
+                                            <span class="color-name">Violet</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#fd7e14">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);">
+                                            <span class="color-name">Orange</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#20c997">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);">
+                                            <span class="color-name">Turquoise</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <div class="color-option-edit" data-color="#e83e8c">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #e83e8c 0%, #d63384 100%);">
+                                            <span class="color-name">Rose</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="color" id="edit_selected_color" value="#007bff">
+                    </div>
+            </div>
+            <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
-                </div>
+            </div>
             </form>
         </div>
     </div>
@@ -860,7 +1111,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+<script>
         // Listener pour les toasts Livewire
         document.addEventListener('livewire:init', () => {
             Livewire.on('showToast', (event) => {
@@ -879,23 +1130,24 @@
 
         });
 
-        // Fonction pour ouvrir le modal Livewire
-        function openPilierModal(pilierId) {
-            console.log('🔍 [DEBUG] Tentative d\'ouverture du modal pour le pilier:', pilierId);
-            if (typeof Livewire !== 'undefined') {
-                console.log('✅ [DEBUG] Livewire est disponible, dispatch de l\'événement');
-                Livewire.dispatch('openPilierModal', { pilierId: pilierId });
-            } else {
-                console.error('❌ [ERROR] Livewire not initialized');
-                alert('Erreur: Livewire n\'est pas initialisé');
-            }
-        }
+        // Fonction pour ouvrir le modal Livewire - SUPPRIMÉE
 
         // Fonction pour ouvrir la Vue Générale
         function openVueGeneraleModal() {
             console.log('🔍 [DEBUG] Ouverture de la Vue Générale');
             if (typeof Livewire !== 'undefined') {
                 Livewire.dispatch('openVueGeneraleModal');
+            } else {
+                console.error('❌ [ERROR] Livewire not initialized');
+                alert('Erreur: Livewire n\'est pas initialisé');
+            }
+        }
+        
+        // Fonction pour ouvrir le modal Planning Global
+        function openProjectPlanningModal() {
+            console.log('📅 [DEBUG] Ouverture du Planning Global');
+            if (typeof Livewire !== 'undefined') {
+                Livewire.dispatch('openProjectPlanningModal');
             } else {
                 console.error('❌ [ERROR] Livewire not initialized');
                 alert('Erreur: Livewire n\'est pas initialisé');
@@ -1035,7 +1287,7 @@ function chargerDonneesPilier(pilierId, code, libelle, isRetour = false) {
                             <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">Aucun objectif stratégique</h5>
                             <p class="text-muted">Ce pilier n'a pas encore d'objectifs stratégiques.</p>
-                            <button type="button" class="btn btn-primary" onclick="ajouterObjectifStrategique(${pilierId})">
+                            <button type="button" class="btn btn-dynamic-color" onclick="ajouterObjectifStrategique(${pilierId})" style="background: ${data.color || '#007bff'}; border-color: ${data.color || '#007bff'}; color: white; font-weight: 600; padding: 12px 24px; font-size: 1.1rem;">
                                 <i class="fas fa-plus me-2"></i>
                                 Créer le premier objectif
                             </button>
@@ -1130,6 +1382,9 @@ function chargerDonneesPilier(pilierId, code, libelle, isRetour = false) {
             // Assigner le HTML au modal
             modalBody.innerHTML = modalHtml;
             
+            // Appliquer la couleur dynamique aux boutons
+            applyDynamicColorToButtons(data.color);
+            
             console.log('✅ [DEBUG] HTML assigné au modal avec succès');
         })
         .catch(error => {
@@ -1140,10 +1395,10 @@ function chargerDonneesPilier(pilierId, code, libelle, isRetour = false) {
                     <p class="mb-0">Détails: ${error.message}</p>
                     <button type="button" class="btn btn-primary mt-3" onclick="chargerDonneesPilier(${pilierId}, '${code}', '${libelle}')">
                         <i class="fas fa-redo me-2"></i>Réessayer
-                    </button>
-                </div>
-            `;
-        });
+                                        </button>
+                        </div>
+                    `;
+                });
 }
 
 
@@ -1179,6 +1434,8 @@ function retourNiveauPrecedent() {
 document.getElementById('createPilierForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
+    console.log('🚀 [DEBUG] Soumission du formulaire de création de pilier');
+    
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     
@@ -1188,6 +1445,14 @@ document.getElementById('createPilierForm').addEventListener('submit', function(
     
     const formData = new FormData(this);
     
+    // Log des données du formulaire
+    console.log('📋 [DEBUG] Données du formulaire:', {
+        code: formData.get('code'),
+        libelle: formData.get('libelle'),
+        description: formData.get('description'),
+        color: formData.get('color')
+    });
+    
     fetch('{{ route("piliers.store") }}', {
         method: 'POST',
         body: formData,
@@ -1196,29 +1461,58 @@ document.getElementById('createPilierForm').addEventListener('submit', function(
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 [DEBUG] Réponse reçue:', { status: response.status, statusText: response.statusText });
+        
+        // Vérifier si la réponse est OK
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+        }
+        
+        // Vérifier le type de contenu
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La réponse n\'est pas au format JSON');
+        }
+        
+        return response.json();
+    })
     .then(data => {
+        console.log('📊 [DEBUG] Données de réponse:', data);
+        
         if (data.success) {
             showToast('success', 'Pilier créé avec succès !');
-            window.location.reload();
+            
+            // Fermer la modale
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createPilierModal'));
+            modal.hide();
+            
+            // Recharger la page après un court délai
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             showToast('error', 'Erreur lors de la création : ' + data.message);
             // Restaurer le bouton
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            // NE PAS recharger la page en cas d'erreur
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
-        showToast('error', 'Erreur lors de la création.');
+        console.error('❌ [ERROR] Erreur lors de la création:', error);
+        showToast('error', 'Erreur lors de la création. Veuillez réessayer.');
         // Restaurer le bouton
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+        // NE PAS recharger la page en cas d'erreur
     });
 });
 
 document.getElementById('editPilierForm').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    console.log('✏️ [DEBUG] Soumission du formulaire de modification de pilier');
     
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.innerHTML;
@@ -1233,6 +1527,15 @@ document.getElementById('editPilierForm').addEventListener('submit', function(e)
     // Ajouter la méthode PUT pour Laravel
     formData.append('_method', 'PUT');
     
+    // Log des données du formulaire
+    console.log('📋 [DEBUG] Données du formulaire de modification:', {
+        pilierId: pilierId,
+        code: formData.get('code'),
+        libelle: formData.get('libelle'),
+        description: formData.get('description'),
+        color: formData.get('color')
+    });
+    
     fetch(`/piliers/${pilierId}`, {
         method: 'POST',
         body: formData,
@@ -1241,24 +1544,51 @@ document.getElementById('editPilierForm').addEventListener('submit', function(e)
             'Accept': 'application/json'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('📡 [DEBUG] Réponse reçue:', { status: response.status, statusText: response.statusText });
+        
+        // Vérifier si la réponse est OK
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP: ${response.status} ${response.statusText}`);
+        }
+        
+        // Vérifier le type de contenu
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('La réponse n\'est pas au format JSON');
+        }
+        
+        return response.json();
+    })
     .then(data => {
+        console.log('📊 [DEBUG] Données de réponse:', data);
+        
         if (data.success) {
             showToast('success', 'Pilier modifié avec succès !');
-            window.location.reload();
+            
+            // Fermer la modale
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editPilierModal'));
+            modal.hide();
+            
+            // Recharger la page après un court délai
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         } else {
             showToast('error', 'Erreur lors de la modification : ' + data.message);
             // Restaurer le bouton
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
+            // NE PAS recharger la page en cas d'erreur
         }
     })
     .catch(error => {
-        console.error('Erreur:', error);
-        showToast('error', 'Erreur lors de la modification.');
+        console.error('❌ [ERROR] Erreur lors de la modification:', error);
+        showToast('error', 'Erreur lors de la modification. Veuillez réessayer.');
         // Restaurer le bouton
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
+        // NE PAS recharger la page en cas d'erreur
     });
 });
 
@@ -1783,48 +2113,89 @@ document.getElementById('editSousActionForm').addEventListener('submit', functio
 });
 
 function supprimerPilier(pilierId, libelle) {
-    // Utiliser SweetAlert2 ou une confirmation plus moderne
-    if (confirm(`Êtes-vous sûr de vouloir supprimer le pilier "${libelle}" ?\n\nCette action est irréversible.`)) {
-        // Trouver le bouton de suppression et le désactiver
-        const deleteBtn = event.target.closest('button');
-        const originalHTML = deleteBtn.innerHTML;
-        
-        // Afficher l'indicateur de chargement
-        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        deleteBtn.disabled = true;
-        
-        // Créer un formulaire temporaire pour la suppression
-        const formData = new FormData();
-        formData.append('_method', 'DELETE');
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-        
-        fetch(`/piliers/${pilierId}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json'
-            }
-        })
+    console.log('🗑️ [DEBUG] Tentative de suppression du pilier:', pilierId, libelle);
+    
+    // Vérifier d'abord si le pilier a des objectifs stratégiques
+    fetch(`/api/piliers/${pilierId}/objectifs-strategiques`)
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                showToast('success', 'Pilier supprimé avec succès !');
-                window.location.reload();
-            } else {
-                showToast('error', 'Erreur lors de la suppression : ' + data.message);
-                // Restaurer le bouton
-                deleteBtn.innerHTML = originalHTML;
-                deleteBtn.disabled = false;
+            const hasObjectifs = data.objectifs_strategiques && data.objectifs_strategiques.length > 0;
+            
+            if (hasObjectifs) {
+                // Le pilier a des objectifs stratégiques - impossible de le supprimer
+                showToast('error', `Impossible de supprimer le pilier "${libelle}" car il contient des objectifs stratégiques.`);
+                return;
+            }
+            
+            // Vérifier s'il y a des sous-actions via la hiérarchie
+            let hasSubActions = false;
+            if (data.objectifs_strategiques) {
+                for (const objectif of data.objectifs_strategiques) {
+                    if (objectif.objectifs_specifiques_count > 0) {
+                        hasSubActions = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (hasSubActions) {
+                showToast('error', `Impossible de supprimer le pilier "${libelle}" car il contient des actions et sous-actions.`);
+                return;
+            }
+            
+            // Le pilier peut être supprimé - demander confirmation
+            if (confirm(`Êtes-vous sûr de vouloir supprimer le pilier "${libelle}" ?\n\n⚠️  ATTENTION : Cette action est irréversible !`)) {
+                // Trouver le bouton de suppression et le désactiver
+                const deleteBtn = document.querySelector(`button[onclick*="supprimerPilier(${pilierId}"]`);
+                const originalHTML = deleteBtn ? deleteBtn.innerHTML : '';
+                
+                // Afficher l'indicateur de chargement
+                if (deleteBtn) {
+                    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    deleteBtn.disabled = true;
+                }
+                
+                // Créer un formulaire temporaire pour la suppression
+                const formData = new FormData();
+                formData.append('_method', 'DELETE');
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                
+                fetch(`/piliers/${pilierId}`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('success', `Pilier "${libelle}" supprimé avec succès !`);
+                        window.location.reload();
+                    } else {
+                        showToast('error', 'Erreur lors de la suppression : ' + data.message);
+                        // Restaurer le bouton
+                        if (deleteBtn) {
+                            deleteBtn.innerHTML = originalHTML;
+                            deleteBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ [ERROR] Erreur lors de la suppression:', error);
+                    showToast('error', 'Erreur lors de la suppression.');
+                    // Restaurer le bouton
+                    if (deleteBtn) {
+                        deleteBtn.innerHTML = originalHTML;
+                        deleteBtn.disabled = false;
+                    }
+                });
             }
         })
         .catch(error => {
-            console.error('Erreur:', error);
-            showToast('error', 'Erreur lors de la suppression.');
-            // Restaurer le bouton
-            deleteBtn.innerHTML = originalHTML;
-            deleteBtn.disabled = false;
+            console.error('❌ [ERROR] Erreur lors de la vérification des objectifs:', error);
+            showToast('error', 'Erreur lors de la vérification des données du pilier.');
         });
-    }
 }
 
 // Fonction pour ajouter une sous-action
@@ -3490,30 +3861,77 @@ function rechargerDonneesPilier(pilierId, code, libelle) {
 
 
 
+// Fonction pour appliquer la couleur dynamique aux boutons
+function applyDynamicColorToButtons(pilierColor) {
+    const color = pilierColor || '#007bff';
+    
+    // Appliquer la couleur à tous les boutons qui ont besoin de la couleur dynamique
+    const buttons = document.querySelectorAll('.btn-dynamic-color');
+    buttons.forEach(button => {
+        button.style.background = color;
+        button.style.borderColor = color;
+        button.style.color = 'white';
+    });
+    
+    // Appliquer aussi aux boutons d'ajout d'objectifs stratégiques
+    const addButtons = document.querySelectorAll('button[onclick*="ajouterObjectifStrategique"]');
+    addButtons.forEach(button => {
+        if (button.classList.contains('btn-success') || button.classList.contains('btn-primary')) {
+            button.style.background = color;
+            button.style.borderColor = color;
+            button.style.color = 'white';
+        }
+    });
+}
+
 // Fonction pour afficher des notifications toast
 function showToast(type, message) {
-    // Créer un élément toast Bootstrap
+    // Définir les couleurs et icônes selon le type
+    const toastConfig = {
+        success: {
+            bgClass: 'bg-success',
+            icon: 'check-circle',
+            title: 'Succès'
+        },
+        error: {
+            bgClass: 'bg-danger',
+            icon: 'exclamation-circle',
+            title: 'Erreur'
+        },
+        warning: {
+            bgClass: 'bg-warning',
+            icon: 'exclamation-triangle',
+            title: 'Attention'
+        },
+        info: {
+            bgClass: 'bg-info',
+            icon: 'info-circle',
+            title: 'Information'
+        }
+    };
+    
+    const config = toastConfig[type] || toastConfig.info;
+    
+    // Créer un élément toast Bootstrap amélioré
     const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast align-items-center text-white ${config.bgClass} border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                    ${message}
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-${config.icon} me-2 fs-5"></i>
+                        <div>
+                            <strong class="me-2">${config.title}:</strong>
+                            ${message}
+                        </div>
+                    </div>
                 </div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     `;
     
-    // Créer un conteneur toast s'il n'existe pas
-    let toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        toastContainer.style.zIndex = '9999';
-        document.body.appendChild(toastContainer);
-    }
+    // Utiliser le conteneur toast existant
+    const toastContainer = document.getElementById('toast-container');
     
     // Ajouter le toast au conteneur
     toastContainer.insertAdjacentHTML('beforeend', toastHtml);
@@ -3524,7 +3942,7 @@ function showToast(type, message) {
     // Initialiser et afficher le toast
     const toast = new bootstrap.Toast(toastElement, {
         autohide: true,
-        delay: 3000
+        delay: 4000
     });
     
     toast.show();
@@ -3533,6 +3951,9 @@ function showToast(type, message) {
     toastElement.addEventListener('hidden.bs.toast', function() {
         toastElement.remove();
     });
+    
+    // Log pour le débogage
+    console.log(`🍞 [TOAST] ${type.toUpperCase()}: ${message}`);
 }
 
 // Fonction pour ajouter un objectif spécifique
@@ -3888,7 +4309,7 @@ function voirPilier(pilierId, code, libelle) {
                             <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">Aucun objectif stratégique</h5>
                             <p class="text-muted">Ce pilier n'a pas encore d'objectifs stratégiques.</p>
-                            <button type="button" class="btn btn-success" onclick="ajouterObjectifStrategique(${pilierId})">
+                            <button type="button" class="btn btn-dynamic-color" onclick="ajouterObjectifStrategique(${pilierId})" style="background: ${data.color || '#007bff'}; border-color: ${data.color || '#007bff'}; color: white; font-weight: 600; padding: 12px 24px; font-size: 1.1rem;">
                                 <i class="fas fa-plus me-2"></i>
                                 Créer le premier objectif
                             </button>
@@ -3972,6 +4393,9 @@ function voirPilier(pilierId, code, libelle) {
                     ${objectifsStrategiquesHtml}
                 </div>
             `;
+            
+            // Appliquer la couleur dynamique aux boutons
+            applyDynamicColorToButtons(data.color);
         })
         .catch(error => {
             console.error('❌ [ERROR] Erreur lors du chargement du pilier:', error);
@@ -4123,10 +4547,146 @@ document.addEventListener('livewire:init', () => {
     });
 });
 
+// JavaScript pour le sélecteur de couleur
+document.addEventListener('DOMContentLoaded', function() {
+    const colorOptions = document.querySelectorAll('.color-option');
+    const selectedColorInput = document.getElementById('selected_color');
+    
+    // Sélectionner la première couleur par défaut
+    if (colorOptions.length > 0) {
+        colorOptions[0].classList.add('selected');
+    }
+    
+    colorOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Retirer la sélection précédente
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Ajouter la sélection à l'option cliquée
+            this.classList.add('selected');
+            
+            // Mettre à jour la valeur cachée
+            const color = this.getAttribute('data-color');
+            if (selectedColorInput) {
+                selectedColorInput.value = color;
+            }
+        });
+    });
+    
+    // JavaScript pour le sélecteur de couleur d'édition
+    const colorOptionsEdit = document.querySelectorAll('.color-option-edit');
+    const editSelectedColorInput = document.getElementById('edit_selected_color');
+    
+    colorOptionsEdit.forEach(option => {
+        option.addEventListener('click', function() {
+            // Retirer la sélection précédente
+            colorOptionsEdit.forEach(opt => opt.classList.remove('selected'));
+            
+            // Ajouter la sélection à l'option cliquée
+            this.classList.add('selected');
+            
+            // Mettre à jour la valeur cachée
+            const color = this.getAttribute('data-color');
+            if (editSelectedColorInput) {
+                editSelectedColorInput.value = color;
+            }
+        });
+    });
+});
+
+// Fonction pour afficher l'aperçu des couleurs hiérarchiques
+function showColorPreview() {
+    const piliers = @json($piliers);
+    let previewHtml = '<div class="modal fade" id="colorPreviewModal" tabindex="-1">';
+    previewHtml += '<div class="modal-dialog modal-lg">';
+    previewHtml += '<div class="modal-content">';
+    previewHtml += '<div class="modal-header">';
+    previewHtml += '<h5 class="modal-title"><i class="fas fa-palette me-2"></i>Aperçu du Système de Couleurs Hiérarchiques</h5>';
+    previewHtml += '<button type="button" class="btn-close" data-bs-dismiss="modal"></button>';
+    previewHtml += '</div>';
+    previewHtml += '<div class="modal-body">';
+    previewHtml += '<p class="text-muted mb-4">Chaque pilier a sa propre couleur qui se propage dans toute sa hiérarchie avec des variations progressives.</p>';
+    
+    piliers.forEach(pilier => {
+        previewHtml += '<div class="card mb-3">';
+        previewHtml += '<div class="card-header" style="background: ' + (pilier.color || '#007bff') + '; color: white;">';
+        previewHtml += '<h6 class="mb-0">' + pilier.code + ' - ' + pilier.libelle + '</h6>';
+        previewHtml += '</div>';
+        previewHtml += '<div class="card-body">';
+        previewHtml += '<div class="row">';
+        
+        const levels = [
+            { name: 'Pilier', level: 0 },
+            { name: 'OS', level: 1 },
+            { name: 'OSP', level: 2 },
+            { name: 'Action', level: 3 },
+            { name: 'SA', level: 4 }
+        ];
+        
+        levels.forEach(level => {
+            const color = pilier.color || '#007bff';
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Calculer la variation selon le niveau
+            const factors = [1.0, 0.85, 0.7, 0.55, 0.4];
+            const factor = factors[level.level];
+            
+            const newR = Math.min(255, Math.round(r + (255 - r) * (1 - factor)));
+            const newG = Math.min(255, Math.round(g + (255 - g) * (1 - factor)));
+            const newB = Math.min(255, Math.round(b + (255 - b) * (1 - factor)));
+            
+            const hierarchicalColor = '#' + 
+                newR.toString(16).padStart(2, '0') + 
+                newG.toString(16).padStart(2, '0') + 
+                newB.toString(16).padStart(2, '0');
+            
+            const luminance = (0.299 * newR + 0.587 * newG + 0.114 * newB) / 255;
+            const textColor = luminance > 0.5 ? 'dark' : 'white';
+            
+            previewHtml += '<div class="col-md-2 mb-2">';
+            previewHtml += '<div class="text-center">';
+            previewHtml += '<div class="badge fs-6 mb-1" style="background: ' + hierarchicalColor + '; color: ' + textColor + '; padding: 8px 12px;">';
+            previewHtml += level.name;
+            previewHtml += '</div>';
+            previewHtml += '<div class="small text-muted">' + hierarchicalColor + '</div>';
+            previewHtml += '</div>';
+            previewHtml += '</div>';
+        });
+        
+        previewHtml += '</div>';
+        previewHtml += '</div>';
+        previewHtml += '</div>';
+    });
+    
+    previewHtml += '</div>';
+    previewHtml += '<div class="modal-footer">';
+    previewHtml += '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>';
+    previewHtml += '</div>';
+    previewHtml += '</div>';
+    previewHtml += '</div>';
+    previewHtml += '</div>';
+    
+    // Supprimer l'ancien modal s'il existe
+    const oldModal = document.getElementById('colorPreviewModal');
+    if (oldModal) {
+        oldModal.remove();
+    }
+    
+    // Ajouter le nouveau modal au body
+    document.body.insertAdjacentHTML('beforeend', previewHtml);
+    
+    // Afficher le modal
+    const modal = new bootstrap.Modal(document.getElementById('colorPreviewModal'));
+    modal.show();
+}
+
 </script>
 @endpush
 
-<!-- Composant Livewire pour le modal des détails du pilier -->
-        <livewire:pilier-details-modal-new />
+<!-- Composant Livewire pour le modal des détails du pilier - SUPPRIMÉ -->
         <livewire:vue-generale-modal />
-                            <livewire:pilier-hierarchique-modal wire:key="pilier-hierarchique-modal" id="pilier-hierarchique-modal" />
+        <livewire:pilier-hierarchique-modal wire:key="pilier-hierarchique-modal" id="pilier-hierarchique-modal" />
+        <livewire:project-planning-modal wire:key="project-planning-modal" id="project-planning-modal" />

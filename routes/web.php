@@ -11,6 +11,7 @@ use App\Http\Controllers\ObjectifSpecifiqueController;
 use App\Http\Controllers\ActionController;
 use App\Http\Controllers\SousActionController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ActivityController;
 use Illuminate\Http\Request;
 
 // Route d'accueil
@@ -48,6 +49,14 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/sous-actions/{sousAction}/taux-avancement', [SousActionController::class, 'updateTauxAvancement'])
         ->name('sous-actions.update-taux-avancement');
     
+    // Routes pour la gestion des activités
+    Route::get('/activities/{sousAction}/manage', [ActivityController::class, 'manage'])->name('activities.manage');
+    Route::post('/activities', [ActivityController::class, 'store'])->name('activities.store');
+    Route::get('/activities/{activity}/edit', [ActivityController::class, 'edit'])->name('activities.edit');
+    Route::put('/activities/{activity}', [ActivityController::class, 'update'])->name('activities.update');
+    Route::delete('/activities/{activity}', [ActivityController::class, 'destroy'])->name('activities.destroy');
+    Route::patch('/activities/{activity}/progress', [ActivityController::class, 'updateProgress'])->name('activities.update-progress');
+    
     // Routes pour la gestion des utilisateurs (Admin général uniquement)
     Route::resource('users', UserController::class);
     
@@ -66,6 +75,63 @@ Route::middleware(['auth'])->group(function () {
         Auth::logout();
         return redirect('/');
     })->name('logout');
+    
+    // Route de test pour les notifications (à supprimer en production)
+    Route::get('/test-notifications', function () {
+        if (!Auth::check()) {
+            return redirect('/login');
+        }
+        
+        $user = Auth::user();
+        $notifications = App\Models\Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('test-notifications', compact('notifications'));
+    })->name('test-notifications');
+
+    // Route de test pour les validations (à supprimer en production)
+    Route::get('/test-validations', function () {
+        if (!Auth::check()) {
+            return redirect('/login');
+        }
+        
+        $user = Auth::user();
+        $validationService = app(\App\Services\ValidationService::class);
+        $validations = $validationService->getPendingValidationsForUser($user);
+        $stats = $validationService->getValidationStats();
+        
+        return view('test-validations', compact('validations', 'stats'));
+    })->name('test-validations');
+
+    // Route de test pour créer une validation (à supprimer en production)
+    Route::get('/test-create-validation', function () {
+        if (!Auth::check()) {
+            return redirect('/login');
+        }
+        
+        $user = Auth::user();
+        $validationService = app(\App\Services\ValidationService::class);
+        
+        try {
+            // Créer une validation de test
+            $validation = $validationService->createValidationRequest(
+                'pilier',
+                1, // ID du premier pilier
+                $user,
+                [
+                    'action' => 'change_owner',
+                    'old_owner_id' => 1,
+                    'new_owner_id' => 2,
+                    'reason' => 'Test de validation - Changement de propriétaire'
+                ]
+            );
+            
+            return redirect()->back()->with('success', 'Validation de test créée avec succès ! ID: ' . $validation->id);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de la création de la validation : ' . $e->getMessage());
+        }
+    })->name('test-create-validation');
     
     // Route pour la vue générale
 Route::get('/vue-generale', function () {

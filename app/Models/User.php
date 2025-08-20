@@ -122,10 +122,7 @@ class User extends Authenticatable
         return $this->isOwnerPIL();
     }
 
-    public function canCreateSousAction(): bool
-    {
-        return $this->isOwnerAction();
-    }
+
 
     public function canUpdateSousAction(): bool
     {
@@ -150,5 +147,111 @@ class User extends Authenticatable
     public function canUpdateAction(): bool
     {
         return $this->isOwnerPIL() || $this->isOwnerOS() || $this->isAdminGeneral();
+    }
+
+    // Nouvelles méthodes de permissions pour les objectifs stratégiques
+    public function canEditObjectifStrategique(ObjectifStrategique $objectifStrategique): bool
+    {
+        return $this->isAdminGeneral() || $this->id === $objectifStrategique->owner_id;
+    }
+
+    public function canDeleteObjectifStrategique(ObjectifStrategique $objectifStrategique): bool
+    {
+        return $this->isAdminGeneral() || $this->id === $objectifStrategique->owner_id;
+    }
+
+    /**
+     * Vérifie si l'utilisateur peut créer une sous-action
+     */
+    public function canCreateSousAction($actionId): bool
+    {
+        // Admin général peut tout faire
+        if ($this->isAdminGeneral()) {
+            return true;
+        }
+        
+        // Vérifier si l'utilisateur est owner de l'action parent
+        $action = \App\Models\Action::find($actionId);
+        if ($action && $action->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Vérifier si l'utilisateur est owner de l'OSP parent
+        if ($action && $action->objectifSpecifique && $action->objectifSpecifique->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Vérifier si l'utilisateur est owner de l'OS parent
+        if ($action && $action->objectifSpecifique && $action->objectifSpecifique->objectifStrategique && $action->objectifSpecifique->objectifStrategique->owner_id === $this->id) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Vérifie si l'utilisateur peut éditer une sous-action
+     */
+    public function canEditSousAction(\App\Models\SousAction $sousAction): bool
+    {
+        // Admin général peut tout faire
+        if ($this->isAdminGeneral()) {
+            return true;
+        }
+        
+        // Owner de la sous-action peut l'éditer
+        if ($sousAction->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Owner de l'action parent peut l'éditer
+        if ($sousAction->action && $sousAction->action->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Owner de l'OSP parent peut l'éditer
+        if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Owner de l'OS parent peut l'éditer
+        if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->owner_id === $this->id) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Vérifie si l'utilisateur peut supprimer une sous-action
+     */
+    public function canDeleteSousAction(\App\Models\SousAction $sousAction): bool
+    {
+        // Admin général peut tout faire
+        if ($this->isAdminGeneral()) {
+            return true;
+        }
+        
+        // Owner de la sous-action peut la supprimer
+        if ($sousAction->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Owner de l'action parent peut la supprimer
+        if ($sousAction->action && $sousAction->action->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Owner de l'OSP parent peut la supprimer
+        if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->owner_id === $this->id) {
+            return true;
+        }
+        
+        // Owner de l'OS parent peut la supprimer
+        if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->owner_id === $this->id) {
+            return true;
+        }
+        
+        return false;
     }
 }
