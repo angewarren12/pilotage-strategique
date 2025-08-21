@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modal OS - Pilotage Stratégique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.success:hover {
+            background: #1e7e34;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .test-button.danger:hover {
+            background: #c82333;
+        }
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        .log-info { color: #007bff; }
+        .log-success { color: #28a745; }
+        .log-warning { color: #ffc107; }
+        .log-error { color: #dc3545; }
+        .log-debug { color: #6c757d; }
+        
+        /* Styles du modal de test */
+        .test-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+        }
+        .test-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 400px;
+            max-width: 600px;
+        }
+        .test-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+        }
+        .test-modal-title {
+            margin: 0;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .test-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .test-form-group {
+            margin-bottom: 20px;
+        }
+        .test-form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .test-form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .test-form-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .test-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .test-btn-secondary {
+            background: white;
+            color: #6c757d;
+            border: 2px solid #6c757d;
+        }
+        .test-btn-primary {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test du Modal de Création d'OS</h1>
+        <p>Cette page teste le fonctionnement du modal de création d'Objectif Stratégique.</p>
+        
+        <div class="test-buttons">
+            <button class="test-button" onclick="testModalOpen()">
+                🚀 Tester l'ouverture du modal
+            </button>
+            <button class="test-button success" onclick="testModalSuccess()">
+                ✅ Simuler un succès
+            </button>
+            <button class="test-button danger" onclick="testModalError()">
+                ❌ Simuler une erreur
+            </button>
+            <button class="test-button" onclick="clearLogs()">
+                🗑️ Effacer les logs
+            </button>
+        </div>
+        
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">📝 Logs de test - Prêt pour les tests</div>
+        </div>
+    </div>
+    
+    <!-- Modal de test -->
+    <div id="testOSModal" class="test-modal">
+        <div class="test-modal-content">
+            <div class="test-modal-header">
+                <h4 class="test-modal-title">
+                    <i class="fas fa-bullseye me-2"></i>
+                    Test Modal - Créer un Objectif Stratégique
+                </h4>
+                <button type="button" class="test-modal-close" onclick="closeTestModal()">
+                    <i class="fas fa-times">×</i>
+                </button>
+            </div>
+            
+            <form id="testOSForm">
+                <div class="test-form-group">
+                    <label class="test-form-label">Code *</label>
+                    <input type="text" name="code" class="test-form-input" required placeholder="Ex: OS1">
+                </div>
+                
+                <div class="test-form-group">
+                    <label class="test-form-label">Libellé *</label>
+                    <input type="text" name="libelle" class="test-form-input" required placeholder="Ex: Croissance des activités">
+                </div>
+                
+                <div class="test-form-group">
+                    <label class="test-form-label">Description</label>
+                    <textarea name="description" class="test-form-input" rows="4" placeholder="Description optionnelle..."></textarea>
+                </div>
+                
+                <div class="test-form-group">
+                    <label class="test-form-label">Owner</label>
+                    <select name="owner_id" class="test-form-input">
+                        <option value="">Sélectionner un owner</option>
+                        <option value="1">Admin Général</option>
+                        <option value="2">Owner OS</option>
+                        <option value="3">Owner Action</option>
+                    </select>
+                </div>
+                
+                <div class="test-form-footer">
+                    <button type="button" class="test-btn test-btn-secondary" onclick="closeTestModal()">
+                        Annuler
+                    </button>
+                    <button type="submit" class="test-btn test-btn-primary">
+                        Créer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Fonction de log
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Fonction pour effacer les logs
+        function clearLogs() {
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = '<div class="log-entry log-info">📝 Logs effacés</div>';
+        }
+        
+        // Fonction pour ouvrir le modal de test
+        function testModalOpen() {
+            log('🚀 Test d\'ouverture du modal...', 'info');
+            
+            // Simuler le comportement de la fonction openNewOSModal
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            function tryOpenModal() {
+                const modal = document.getElementById('testOSModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                    log('✅ Modal affiché avec succès !', 'success');
+                    
+                    // Focus sur le premier champ
+                    setTimeout(() => {
+                        const firstInput = modal.querySelector('input[name="code"]');
+                        if (firstInput) {
+                            firstInput.focus();
+                            log('🎯 Focus mis sur le champ Code', 'success');
+                        }
+                    }, 100);
+                } else {
+                    attempts++;
+                    if (attempts < maxAttempts) {
+                        log(`⏳ Modal non trouvé, nouvelle tentative ${attempts}/${maxAttempts} dans 100ms...`, 'warning');
+                        setTimeout(tryOpenModal, 100);
+                    } else {
+                        log('❌ Modal non trouvé après plusieurs tentatives !', 'error');
+                    }
+                }
+            }
+            
+            tryOpenModal();
+        }
+        
+        // Fonction pour fermer le modal de test
+        function closeTestModal() {
+            const modal = document.getElementById('testOSModal');
+            if (modal) {
+                modal.style.display = 'none';
+                log('🔒 Modal fermé', 'info');
+                
+                // Réinitialiser le formulaire
+                const form = document.getElementById('testOSForm');
+                if (form) form.reset();
+            }
+        }
+        
+        // Fonction pour simuler un succès
+        function testModalSuccess() {
+            log('🎉 Simulation d\'un succès de création d\'OS', 'success');
+            log('✅ Objectif stratégique créé avec succès', 'success');
+            log('📧 Notification envoyée à l\'owner', 'info');
+            log('🔄 Données du pilier rechargées', 'info');
+        }
+        
+        // Fonction pour simuler une erreur
+        function testModalError() {
+            log('💥 Simulation d\'une erreur', 'error');
+            log('❌ Modal non trouvé dans le DOM', 'error');
+            log('🔄 Tentative de fallback vers le modal Bootstrap', 'warning');
+            log('⚠️ Aucun modal de fallback disponible', 'warning');
+        }
+        
+        // Configuration du formulaire de test
+        document.getElementById('testOSForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            log('📝 Formulaire soumis', 'info');
+            
+            const formData = new FormData(e.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            
+            log(`📋 Données du formulaire: ${JSON.stringify(data)}`, 'debug');
+            log('✅ Création simulée avec succès !', 'success');
+            
+            // Fermer le modal
+            closeTestModal();
+        });
+        
+        // Fermer le modal en cliquant à l'extérieur
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('testOSModal');
+            if (modal && e.target === modal) {
+                closeTestModal();
+            }
+        });
+        
+        // Initialisation
+        log('🚀 Page de test initialisée', 'success');
+        log('💡 Cliquez sur "Tester l\'ouverture du modal" pour commencer', 'info');
+    </script>
+</body>
+</html>

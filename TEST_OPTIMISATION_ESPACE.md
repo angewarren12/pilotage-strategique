@@ -176,6 +176,3 @@ dateElements.forEach((element) => {
 
 **Test créé pour vérifier l'optimisation de l'espace du calendrier** ✅
 
-
-
-

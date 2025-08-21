@@ -11,24 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Ajouter taux_avancement à la table piliers
-        Schema::table('piliers', function (Blueprint $table) {
-            $table->decimal('taux_avancement', 5, 2)->default(0.00)->after('libelle');
-        });
-        
-        // Ajouter taux_avancement à la table objectif_strategiques
-        Schema::table('objectif_strategiques', function (Blueprint $table) {
-            $table->decimal('taux_avancement', 5, 2)->default(0.00)->after('libelle');
-        });
-        
-        // Ajouter taux_avancement à la table objectif_specifiques
-        Schema::table('objectif_specifiques', function (Blueprint $table) {
-            $table->decimal('taux_avancement', 5, 2)->default(0.00)->after('libelle');
-        });
-        
-        // Ajouter taux_avancement à la table actions
-        Schema::table('actions', function (Blueprint $table) {
-            $table->decimal('taux_avancement', 5, 2)->default(0.00)->after('libelle');
+        Schema::table('hierarchical_tables', function (Blueprint $table) {
+            //
         });
     }
 
@@ -37,24 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Supprimer taux_avancement de la table piliers
-        Schema::table('piliers', function (Blueprint $table) {
-            $table->dropColumn('taux_avancement');
-        });
-        
-        // Supprimer taux_avancement de la table objectif_strategiques
-        Schema::table('objectif_strategiques', function (Blueprint $table) {
-            $table->dropColumn('taux_avancement');
-        });
-        
-        // Supprimer taux_avancement de la table objectif_specifiques
-        Schema::table('objectif_specifiques', function (Blueprint $table) {
-            $table->dropColumn('taux_avancement');
-        });
-        
-        // Supprimer taux_avancement de la table actions
-        Schema::table('actions', function (Blueprint $table) {
-            $table->dropColumn('taux_avancement');
+        Schema::table('hierarchical_tables', function (Blueprint $table) {
+            //
         });
     }
 };

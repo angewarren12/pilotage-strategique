@@ -157,6 +157,3 @@
 
 **Testez toutes les fonctionnalités avant la mise en production !**
 
-
-
-

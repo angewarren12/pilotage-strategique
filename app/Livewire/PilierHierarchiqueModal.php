@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Notifications\ObjectifStrategiqueAssigned;
-use Illuminate\Support\Facades\Schema;
 
 class PilierHierarchiqueModal extends Component
 {
@@ -537,36 +536,7 @@ class PilierHierarchiqueModal extends Component
     // NOUVELLES MÉTHODES DE CRÉATION - NOMS DIFFÉRENTS
     public function openCreateOSModal()
     {
-        Log::info('🚀 [MODAL] openCreateOSModal appelée');
-        Log::info('📊 [MODAL] État avant ouverture', [
-            'showCreateObjectifForm' => $this->showCreateObjectifForm,
-            'pilier_id' => $this->pilier->id ?? 'null'
-        ]);
-        
         $this->showCreateObjectifForm = true;
-        
-        Log::info('✅ [MODAL] showCreateObjectifForm mis à true');
-        Log::info('📊 [MODAL] État après ouverture', [
-            'showCreateObjectifForm' => $this->showCreateObjectifForm
-        ]);
-        
-        // Dispatch un événement pour forcer l'affichage CSS du modal
-        $this->dispatch('force-modal-css', [
-            'type' => 'create-os',
-            'timestamp' => now()->timestamp
-        ]);
-        
-        // Dispatch un événement pour le debug
-        $this->dispatch('console.log', '🚀 [MODAL] openCreateOSModal - showCreateObjectifForm = true');
-        
-        // Forcer le re-rendu du composant de plusieurs façons
-        $this->dispatch('$refresh');
-        
-        // Attendre un peu puis forcer à nouveau
-        $this->dispatch('console.log', '🔄 [MODAL] Forçage du re-rendu...');
-        
-        // Vérifier que la propriété est bien à true
-        Log::info('🔍 [MODAL] Vérification finale - showCreateObjectifForm:', ['value' => $this->showCreateObjectifForm]);
     }
 
     public function closeCreateOSModal()
@@ -574,7 +544,7 @@ class PilierHierarchiqueModal extends Component
         $this->showCreateObjectifForm = false;
     }
 
-    public function saveNewOS($formData = null)
+    public function saveNewOS()
     {
         $this->dispatch('console.log', '🚀 [DEBUG] saveNewOS() appelée');
         
@@ -592,32 +562,28 @@ class PilierHierarchiqueModal extends Component
             }
 
             $this->dispatch('console.log', '✅ [DEBUG] Permissions OK, validation en cours...');
+            $this->dispatch('console.log', '📋 [DEBUG] Données à valider:', $this->newObjectifStrategique);
             
-            // Utiliser les données du formulaire Bootstrap ou les données Livewire
-            $data = $formData ?: $this->newObjectifStrategique;
-            $this->dispatch('console.log', '📋 [DEBUG] Données à valider:', $data);
-            
-            // Validation des données
-            $validatedData = $this->validate([
-                'data.code' => 'required|string|max:50',
-                'data.libelle' => 'required|string|max:255',
-                'data.description' => 'nullable|string',
-                'data.owner_id' => 'nullable|exists:users,id'
+            $this->validate([
+                'newObjectifStrategique.code' => 'required|string|max:50',
+                'newObjectifStrategique.libelle' => 'required|string|max:255',
+                'newObjectifStrategique.description' => 'nullable|string',
+                'newObjectifStrategique.owner_id' => 'nullable|exists:users,id'
             ]);
 
             $this->dispatch('console.log', '✅ [DEBUG] Validation OK, création en cours...');
             $this->dispatch('console.log', '🏗️ [DEBUG] Pilier ID:', $this->pilier->id);
 
-            $objectifStrategique = new ObjectifStrategique($validatedData['data']);
+            $objectifStrategique = new ObjectifStrategique($this->newObjectifStrategique);
             $objectifStrategique->pilier_id = $this->pilier->id;
             $objectifStrategique->save();
 
             $this->dispatch('console.log', '✅ [DEBUG] Objectif stratégique créé avec succès, ID:', $objectifStrategique->id);
 
             // Envoyer une notification à l'utilisateur assigné si un owner est spécifié
-            if ($validatedData['data']['owner_id']) {
-                $this->dispatch('console.log', '📧 [DEBUG] Envoi de notification à l\'utilisateur ID:', $validatedData['data']['owner_id']);
-                $owner = User::find($validatedData['data']['owner_id']);
+            if ($this->newObjectifStrategique['owner_id']) {
+                $this->dispatch('console.log', '📧 [DEBUG] Envoi de notification à l\'utilisateur ID:', $this->newObjectifStrategique['owner_id']);
+                $owner = User::find($this->newObjectifStrategique['owner_id']);
                 if ($owner) {
                     $this->dispatch('console.log', '👤 [DEBUG] Owner trouvé:', $owner->email);
                     $this->dispatch('console.log', '📧 [DEBUG] Envoi de la notification ObjectifStrategiqueAssigned...');
@@ -660,40 +626,32 @@ class PilierHierarchiqueModal extends Component
                     
                     $this->dispatch('console.log', '✅ [DEBUG] Notification personnalisée envoyée à l\'owner:', $owner->email);
                 } else {
-                    $this->dispatch('console.log', '⚠️ [DEBUG] Utilisateur owner non trouvé avec ID:', $validatedData['data']['owner_id']);
+                    $this->dispatch('console.log', '⚠️ [DEBUG] Utilisateur owner non trouvé avec ID:', $this->newObjectifStrategique['owner_id']);
                     Log::warning('Owner non trouvé lors de la création d\'objectif stratégique', [
-                        'owner_id_demande' => $validatedData['data']['owner_id'],
+                        'owner_id_demande' => $this->newObjectifStrategique['owner_id'],
                         'objectif_strategique_id' => $objectifStrategique->id
                     ]);
                 }
+            } else {
+                $this->dispatch('console.log', 'ℹ️ [DEBUG] Aucun owner défini, pas de notification');
+                Log::info('Aucun owner défini pour l\'objectif stratégique, pas de notification envoyée', [
+                    'objectif_strategique_id' => $objectifStrategique->id,
+                    'createur_id' => Auth::user()->id
+                ]);
             }
 
-            // Recharger les données du pilier
-            $this->chargerDonneesPilier($this->pilier->id);
-
-            // Réinitialiser le formulaire
-            $this->newObjectifStrategique = [
-                'code' => '',
-                'libelle' => '',
-                'description' => '',
-                'owner_id' => ''
-            ];
-
-            // Afficher un message de succès
-            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Objectif stratégique créé avec succès !']);
-
-            $this->dispatch('console.log', '🎉 [DEBUG] Création terminée avec succès !');
+            $this->showCreateObjectifForm = false;
+            $this->newObjectifStrategique = ['code' => '', 'libelle' => '', 'description' => '', 'owner_id' => ''];
+            $this->loadPilierData();
+            
+            $this->dispatch('console.log', '✅ [DEBUG] Envoi du toast de succès');
+            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Objectif stratégique créé avec succès']);
             
         } catch (\Exception $e) {
-            $this->dispatch('console.log', '❌ [DEBUG] Erreur lors de la création:', $e->getMessage());
-            Log::error('Erreur lors de la création d\'objectif stratégique', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Erreur lors de la création : ' . $e->getMessage()]);
+            $this->dispatch('console.log', '❌ [DEBUG] Exception dans saveNewOS:', $e->getMessage());
+            $this->dispatch('console.log', '❌ [DEBUG] Stack trace:', $e->getTraceAsString());
+            Log::error('Erreur lors de la création de l\'objectif stratégique', ['error' => $e->getMessage()]);
+            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Erreur lors de la création: ' . $e->getMessage()]);
         }
     }
 
@@ -970,14 +928,6 @@ class PilierHierarchiqueModal extends Component
 
     public function saveNewAction()
     {
-        // Vérification des permissions: Admin général OU owner de l'objectif stratégique parent OU owner de l'objectif spécifique parent
-        /** @var User $user */
-        $user = Auth::user();
-        if (!$user || !($user->isAdminGeneral() || ($this->selectedObjectifStrategique && $user->id === ($this->selectedObjectifStrategique->owner_id)) || ($this->selectedObjectifSpecifique && $user->id === ($this->selectedObjectifSpecifique->owner_id)))) {
-            $this->dispatch('showToast', ['type' => 'error', 'message' => "Accès non autorisé. Seul l'admin général, l'owner de l'objectif stratégique ou l'owner de l'objectif spécifique peut créer une action."]);
-            return;
-        }
-
         $this->validate([
             'newAction.code' => 'required|string|max:50',
             'newAction.libelle' => 'required|string|max:255',
@@ -986,31 +936,31 @@ class PilierHierarchiqueModal extends Component
         ]);
 
         try {
-            $this->dispatch('console.log', '🚀 [DEBUG] saveNewAction() appelée');
             $action = new Action($this->newAction);
             $action->objectif_specifique_id = $this->selectedObjectifSpecifique->id;
             $action->save();
 
-            // Notification au owner de l'action (si défini)
-            if (!empty($this->newAction['owner_id'])) {
+            // Envoyer une notification à l'owner de l'action
+            if ($this->newAction['owner_id']) {
+                /** @var \App\Models\User $owner */
                 $owner = User::find($this->newAction['owner_id']);
                 if ($owner) {
                     $notificationId = DB::table('notifications')->insertGetId([
                         'user_id' => $owner->id,
                         'type' => 'action_assigned',
                         'title' => 'Nouvelle action assignée',
-                        'message' => "Une nouvelle action vous a été assignée : " . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code . '.' . $action->code . ' - ' . $action->libelle,
+                        'message' => "Une nouvelle action vous a été assignée : {$action->code} - {$action->libelle}",
                         'data' => json_encode([
                             'action_id' => $action->id,
                             'action_code' => $action->code,
                             'action_libelle' => $action->libelle,
-                            'objectif_specifique_id' => $this->selectedObjectifSpecifique->id,
+                            'objectif_specifique_id' => $action->objectif_specifique_id,
                             'objectif_specifique_code' => $this->selectedObjectifSpecifique->code,
                             'objectif_strategique_id' => $this->selectedObjectifStrategique->id,
                             'objectif_strategique_code' => $this->selectedObjectifStrategique->code,
                             'pilier_id' => $this->pilier->id,
                             'pilier_code' => $this->pilier->code,
-                            'createur_id' => $user->id,
+                            'createur_id' => Auth::user()->id,
                         ]),
                         'priority' => 'normal',
                         'channel' => 'database',
@@ -1019,16 +969,23 @@ class PilierHierarchiqueModal extends Component
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
-                    Log::info('Notification (action) créée', ['notification_id' => $notificationId, 'owner_id' => $owner->id]);
-                    // Rafraîchir le centre de notifications
-                    $this->dispatch('refreshNotifications');
-                    $this->dispatch('notificationReceived');
+                    Log::info('Notification personnalisée créée pour l\'owner de l\'action:', [
+                        'notification_id' => $notificationId, 
+                        'owner_id' => $owner->id, 
+                        'owner_email' => $owner->email, 
+                        'action_id' => $action->id, 
+                        'action_code' => $action->code
+                    ]);
                 }
             }
 
             $this->showCreateActionForm = false;
             $this->newAction = ['code' => '', 'libelle' => '', 'description' => '', 'owner_id' => ''];
             $this->loadPilierData();
+            
+            // Rafraîchir le centre de notifications
+            $this->dispatch('refreshNotifications');
+            
             $this->dispatch('showToast', ['type' => 'success', 'message' => 'Action créée avec succès !']);
         } catch (\Exception $e) {
             Log::error('Erreur lors de la création de l\'action', ['error' => $e->getMessage()]);
@@ -1325,14 +1282,6 @@ class PilierHierarchiqueModal extends Component
                 'message' => 'Tous les taux parents ont été mis à jour avec succès'
             ]);
             
-            // Mettre à jour l'interface avec les nouveaux taux calculés
-            $this->dispatch('parent-taux-updated', [
-                'action_taux' => $nouveauTauxAction ?? 0,
-                'osp_taux' => $nouveauTauxOSP ?? 0,
-                'os_taux' => $nouveauTauxOS ?? 0,
-                'pilier_taux' => $nouveauTauxPilier ?? 0
-            ]);
-            
         } catch (\Exception $e) {
             Log::error('Erreur lors de la mise à jour des taux parents', ['error' => $e->getMessage()]);
             $this->dispatch('console.log', 'DEBUG: updateParentRates - ERREUR', [
@@ -1605,13 +1554,13 @@ class PilierHierarchiqueModal extends Component
         
         try {
             $this->dispatch('console.log', '📋 [DEBUG] Données d\'édition:', $this->editingObjectifStrategique);
-        
-        $this->validate([
-            'editingObjectifStrategique.code' => 'required|string|max:10',
-            'editingObjectifStrategique.libelle' => 'required|string|max:255',
-            'editingObjectifStrategique.description' => 'nullable|string',
-            'editingObjectifStrategique.owner_id' => 'nullable|exists:users,id',
-        ]);
+            
+            $this->validate([
+                'editingObjectifStrategique.code' => 'required|string|max:10',
+                'editingObjectifStrategique.libelle' => 'required|string|max:255',
+                'editingObjectifStrategique.description' => 'nullable|string',
+                'editingObjectifStrategique.owner_id' => 'nullable|exists:users,id',
+            ]);
 
             $this->dispatch('console.log', '✅ [DEBUG] Validation OK, recherche de l\'objectif...');
 
@@ -1824,736 +1773,11 @@ class PilierHierarchiqueModal extends Component
         $this->dispatch('console.log', '✅ Modal de création de sous-action fermé');
     }
 
-    // === MISE À JOUR TAUX D'AVANCEMENT DES ACTIVITÉS - COMMENTé TEMPORAIREMENT ===
-    // TODO: Réactiver quand on implémente la gestion des projets
-    
-    // === MISE À JOUR TAUX D'AVANCEMENT DES SOUS-ACTIONS DE TYPE NORMAL ===
-    public function updateSousActionTaux($sousActionId, $newTaux)
-    {
-        Log::info('🚀 [UPDATE] updateSousActionTaux appelée', [
-            'sousActionId' => $sousActionId,
-            'newTaux' => $newTaux,
-            'timestamp' => now()->format('Y-m-d H:i:s'),
-            'user_id' => Auth::user()->id
-        ]);
-        
-        try {
-            // Rechercher la sous-action
-            Log::info('🔍 [UPDATE] Recherche de la sous-action', ['sousActionId' => $sousActionId]);
-            $sousAction = SousAction::find($sousActionId);
-            
-            if (!$sousAction) {
-                Log::error('❌ [UPDATE] Sous-action non trouvée', ['sousActionId' => $sousActionId]);
-                $this->dispatch('showToast', ['type' => 'error', 'message' => 'Sous-action non trouvée']);
-                return;
-            }
-            
-            Log::info('✅ [UPDATE] Sous-action trouvée', [
-                'sousActionId' => $sousAction->id,
-                'libelle' => $sousAction->libelle,
-                'taux_actuel' => $sousAction->taux_avancement,
-                'owner_id' => $sousAction->owner_id
-            ]);
-            
-            // Toutes les sous-actions sont maintenant de type "normal"
-            // Pas besoin de vérifier le type
-            
-            // Vérifier les permissions
-            Log::info('🔐 [UPDATE] Vérification des permissions');
-            /** @var User $user */
-            $user = Auth::user();
-            Log::info('👤 [UPDATE] Utilisateur connecté', [
-                'user_id' => $user->id,
-                'is_admin' => $user->isAdminGeneral(),
-                'sous_action_owner' => $sousAction->owner_id
-            ]);
-            
-            if (!$user->isAdminGeneral() && 
-                $user->id !== $sousAction->owner_id &&
-                $user->id !== $sousAction->objectifSpecifique->owner_id &&
-                $user->id !== $sousAction->objectifSpecifique->objectifStrategique->owner_id) {
-                
-                Log::error('❌ [UPDATE] Permissions insuffisantes', [
-                    'user_id' => $user->id,
-                    'sous_action_owner' => $sousAction->owner_id,
-                    'objectif_specifique_owner' => $sousAction->objectifSpecifique->owner_id ?? 'null',
-                    'objectif_strategique_owner' => $sousAction->objectifSpecifique->objectifStrategique->owner_id ?? 'null'
-                ]);
-                $this->dispatch('showToast', ['type' => 'error', 'message' => 'Permissions insuffisantes']);
-                return;
-            }
-            
-            Log::info('✅ [UPDATE] Permissions vérifiées avec succès');
-            
-            // Mettre à jour le taux d'avancement
-            Log::info('💾 [UPDATE] Mise à jour de la sous-action', [
-                'ancien_taux' => $sousAction->taux_avancement,
-                'nouveau_taux' => $newTaux,
-                'date_realisation' => $newTaux == 100 ? now() : 'null'
-            ]);
-            
-            // Vérifier que la sous-action est bien un modèle Eloquent
-            Log::info('🔍 [UPDATE] Vérification du modèle', [
-                'class' => get_class($sousAction),
-                'exists' => $sousAction->exists,
-                'id' => $sousAction->id,
-                'fillable' => $sousAction->getFillable(),
-                'guarded' => $sousAction->getGuarded()
-            ]);
-            
-            // Activer le log des requêtes SQL
-            DB::enableQueryLog();
-            
-            try {
-                Log::info('💾 [UPDATE] Début de la mise à jour des propriétés');
-                
-                // Mettre à jour les propriétés une par une
-                $sousAction->taux_avancement = $newTaux;
-                Log::info('✅ [UPDATE] Propriété taux_avancement mise à jour', ['valeur' => $newTaux]);
-                
-                $sousAction->date_realisation = $newTaux == 100 ? now() : null;
-                Log::info('✅ [UPDATE] Propriété date_realisation mise à jour', ['valeur' => $sousAction->date_realisation]);
-                
-                // Vérifier les valeurs avant save()
-                Log::info('🔍 [UPDATE] Valeurs du modèle avant save()', [
-                    'taux_avancement' => $sousAction->taux_avancement,
-                    'date_realisation' => $sousAction->date_realisation,
-                    'isDirty' => $sousAction->isDirty(),
-                    'getDirty' => $sousAction->getDirty()
-                ]);
-                
-                Log::info('💾 [UPDATE] Appel de save()');
-                
-                try {
-                    // Vérifier la connexion à la base de données
-                    Log::info('🔌 [UPDATE] Test de connexion DB');
-                    DB::connection()->getPdo();
-                    Log::info('✅ [UPDATE] Connexion DB OK');
-                    
-                    // Tentative de save() avec gestion d'erreur maximale
-                    Log::info('💾 [UPDATE] Tentative de save()...');
-                    $result = $sousAction->save();
-                    Log::info('✅ [UPDATE] save() exécuté avec succès', ['resultat' => $result]);
-                    
-                } catch (\PDOException $e) {
-                    Log::error('❌ [UPDATE] Erreur PDO lors de save()', [
-                        'message' => $e->getMessage(),
-                        'code' => $e->getCode(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine()
-                    ]);
-                    throw $e;
-                } catch (\Exception $e) {
-                    Log::error('❌ [UPDATE] Erreur générale lors de save()', [
-                        'message' => $e->getMessage(),
-                        'class' => get_class($e),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine()
-                    ]);
-                    throw $e;
-                }
-                
-                // Vérifier les valeurs après save()
-                Log::info('🔍 [UPDATE] Valeurs du modèle après save()', [
-                    'taux_avancement' => $sousAction->taux_avancement,
-                    'date_realisation' => $sousAction->date_realisation,
-                    'isDirty' => $sousAction->isDirty()
-                ]);
-                
-                Log::info('✅ [UPDATE] Sous-action mise à jour avec succès');
-                
-            } catch (\Exception $e) {
-                Log::error('❌ [UPDATE] Erreur lors de la mise à jour', [
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                throw $e; // Relancer l'exception pour la gestion globale
-            }
-            
-            // Mettre à jour les taux des parents (objectif spécifique, objectif stratégique, pilier)
-            Log::info('🔄 [UPDATE] Début de la mise à jour des taux parents');
-            $this->updateParentTaux($sousAction);
-            
-            Log::info('✅ [UPDATE] Taux d\'avancement de la sous-action mis à jour avec succès');
-            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Taux d\'avancement mis à jour !']);
-            
-            // Recharger les données
-            Log::info('🔄 [UPDATE] Rechargement des données');
-            $this->loadPilierData();
-            
-            Log::info('✅ [UPDATE] Processus terminé avec succès');
-            
-            // Mettre à jour l'interface en temps réel
-            $this->dispatch('sous-action-updated', [
-                'sousActionId' => $sousAction->id,
-                'nouveauTaux' => $newTaux,
-                'nouvelleDateRealisation' => $sousAction->date_realisation
-            ]);
-            
-            // Rafraîchir les données pour l'affichage
-            $this->dispatch('refresh-hierarchical-data');
-            
-            Log::info('✅ [UPDATE] Sous-action mise à jour avec succès');
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [UPDATE] Erreur dans updateSousActionTaux', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
-                'sousActionId' => $sousActionId,
-                'newTaux' => $newTaux
-            ]);
-            
-            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Erreur lors de la mise à jour: ' . $e->getMessage()]);
-        }
-    }
 
     public function render()
     {
         return view('livewire.pilier-hierarchique-modal');
     }
 
-    // Méthode pour mettre à jour les taux des éléments parents
-    private function updateParentTaux($sousAction)
-    {
-        try {
-            Log::info('🔄 [PARENT] Début updateParentTaux', [
-                'sousActionId' => $sousAction->id,
-                'taux_sous_action' => $sousAction->taux_avancement
-            ]);
-            
-            // OPTIMISATION : Utiliser les relations déjà chargées au lieu de refaire des requêtes
-            $action = $sousAction->action;
-            if (!$action) {
-                Log::warning('⚠️ [PARENT] Action parent non trouvée', ['sousActionId' => $sousAction->id]);
-                return;
-            }
-            
-            // Calculer le taux de l'action basé sur ses sous-actions (POUR AFFICHAGE SEULEMENT)
-            $sousActions = $action->sousActions;
-            if ($sousActions->count() > 0) {
-                $totalTaux = $sousActions->sum('taux_avancement');
-                $nouveauTauxAction = round($totalTaux / $sousActions->count(), 2);
-                
-                Log::info('📊 [PARENT] Calcul du taux de l\'action (affichage)', [
-                    'action_id' => $action->id,
-                    'nombre_sous_actions' => $sousActions->count(),
-                    'total_taux' => $totalTaux,
-                    'nouveau_taux' => $nouveauTauxAction
-                ]);
-                
-                // NE PAS SAUVEGARDER - juste calculer pour l'affichage
-                // $action->taux_avancement = $nouveauTauxAction;
-                // $action->save();
-            }
-            
-            // Cascade vers l'Objectif Spécifique (POUR AFFICHAGE SEULEMENT)
-            $objectifSpecifique = $action->objectifSpecifique;
-            if ($objectifSpecifique) {
-                $actions = $objectifSpecifique->actions;
-                if ($actions->count() > 0) {
-                    $totalTaux = $actions->sum(function($action) {
-                        // Calculer le taux de chaque action basé sur ses sous-actions
-                        $sousActions = $action->sousActions;
-                        if ($sousActions->count() > 0) {
-                            return $sousActions->sum('taux_avancement') / $sousActions->count();
-                        }
-                        return 0;
-                    });
-                    $nouveauTauxOSP = round($totalTaux / $actions->count(), 2);
-                    
-                    Log::info('📊 [PARENT] Calcul du taux de l\'OSP (affichage)', [
-                        'osp_id' => $objectifSpecifique->id,
-                        'nombre_actions' => $actions->count(),
-                        'total_taux' => $totalTaux,
-                        'nouveau_taux' => $nouveauTauxOSP
-                    ]);
-                    
-                    // NE PAS SAUVEGARDER - juste calculer pour l'affichage
-                    // $objectifSpecifique->taux_avancement = $nouveauTauxOSP;
-                    // $objectifSpecifique->save();
-                }
-                
-                // Cascade vers l'Objectif Stratégique (POUR AFFICHAGE SEULEMENT)
-                $objectifStrategique = $objectifSpecifique->objectifStrategique;
-                if ($objectifStrategique) {
-                    $objectifsSpecifiques = $objectifStrategique->objectifsSpecifiques;
-                    if ($objectifsSpecifiques->count() > 0) {
-                        $totalTaux = $objectifsSpecifiques->sum(function($osp) {
-                            // Calculer le taux de chaque OSP basé sur ses actions
-                            $actions = $osp->actions;
-                            if ($actions->count() > 0) {
-                                return $actions->sum(function($action) {
-                                    $sousActions = $action->sousActions;
-                                    if ($sousActions->count() > 0) {
-                                        return $sousActions->sum('taux_avancement') / $sousActions->count();
-                                    }
-                                    return 0;
-                                }) / $actions->count();
-                            }
-                            return 0;
-                        });
-                        $nouveauTauxOS = round($totalTaux / $objectifsSpecifiques->count(), 2);
-                        
-                        Log::info('📊 [PARENT] Calcul du taux de l\'OS (affichage)', [
-                            'os_id' => $objectifStrategique->id,
-                            'nombre_osp' => $objectifsSpecifiques->count(),
-                            'total_taux' => $totalTaux,
-                            'nouveau_taux' => $nouveauTauxOS
-                        ]);
-                        
-                        // NE PAS SAUVEGARDER - juste calculer pour l'affichage
-                        // $objectifStrategique->taux_avancement = $nouveauTauxOS;
-                        // $objectifStrategique->save();
-                    }
-                    
-                    // Cascade vers le Pilier (POUR AFFICHAGE SEULEMENT)
-                    $pilier = $objectifStrategique->pilier;
-                    if ($pilier) {
-                        $objectifsStrategiques = $pilier->objectifsStrategiques;
-                        if ($objectifsStrategiques->count() > 0) {
-                            $totalTaux = $objectifsStrategiques->sum(function($os) {
-                                // Calculer le taux de chaque OS basé sur ses OSP
-                                $objectifsSpecifiques = $os->objectifsSpecifiques;
-                                if ($objectifsSpecifiques->count() > 0) {
-                                    return $objectifsSpecifiques->sum(function($osp) {
-                                        $actions = $osp->actions;
-                                        if ($actions->count() > 0) {
-                                            return $actions->sum(function($action) {
-                                                $sousActions = $action->sousActions;
-                                                if ($sousActions->count() > 0) {
-                                                    return $sousActions->sum('taux_avancement') / $sousActions->count();
-                                                }
-                                                return 0;
-                                            }) / $actions->count();
-                                        }
-                                        return 0;
-                                    }) / $objectifsSpecifiques->count();
-                                }
-                                return 0;
-                            });
-                            $nouveauTauxPilier = round($totalTaux / $objectifsStrategiques->count(), 2);
-                            
-                            Log::info('📊 [PARENT] Calcul du taux du pilier (affichage)', [
-                                'pilier_id' => $pilier->id,
-                                'nombre_os' => $objectifsStrategiques->count(),
-                                'total_taux' => $totalTaux,
-                                'nouveau_taux' => $nouveauTauxPilier
-                            ]);
-                            
-                            // NE PAS SAUVEGARDER - juste calculer pour l'affichage
-                            // $pilier->taux_avancement = $nouveauTauxPilier;
-                            // $pilier->save();
-                        }
-                    }
-                }
-            }
-            
-            Log::info('✅ [PARENT] updateParentTaux terminé avec succès (taux calculés pour affichage)');
-            
-            // Mettre à jour l'interface avec les nouveaux taux calculés
-            $this->dispatch('parent-taux-updated', [
-                'action_taux' => $nouveauTauxAction ?? 0,
-                'osp_taux' => $nouveauTauxOSP ?? 0,
-                'os_taux' => $nouveauTauxOS ?? 0,
-                'pilier_taux' => $nouveauTauxPilier ?? 0
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [PARENT] Erreur dans updateParentTaux', [
-                'sousActionId' => $sousAction->id,
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            throw $e;
-        }
-    }
 
-    // === MÉTHODE SIMPLE POUR LE SLIDER ===
-    public function updateSousActionTauxSimple($nouveauTaux)
-    {
-        Log::info('🚀 [SLIDER] updateSousActionTauxSimple appelée', [
-            'nouveauTaux' => $nouveauTaux,
-            'selectedSousAction' => $this->selectedSousAction ? $this->selectedSousAction->id : 'null',
-            'timestamp' => now()->format('Y-m-d H:i:s'),
-            'user_id' => Auth::user()->id,
-            'memory_usage' => memory_get_usage(true)
-        ]);
-        
-        try {
-            // Vérifier que selectedSousAction existe
-            if (!$this->selectedSousAction) {
-                Log::error('❌ [SLIDER] selectedSousAction est null');
-                $this->dispatch('showToast', ['type' => 'error', 'message' => 'Aucune sous-action sélectionnée']);
-                return;
-            }
-            
-            Log::info('✅ [SLIDER] selectedSousAction trouvé', [
-                'sousActionId' => $this->selectedSousAction->id,
-                'libelle' => $this->selectedSousAction->libelle,
-                'taux_actuel' => $this->selectedSousAction->taux_avancement,
-                'nouveau_taux' => $nouveauTaux
-            ]);
-            
-            // Appeler updateSousActionTaux
-            $this->updateSousActionTaux($this->selectedSousAction->id, $nouveauTaux);
-            
-            Log::info('✅ [SLIDER] updateSousActionTaux appelé avec succès');
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [SLIDER] Erreur dans updateSousActionTauxSimple', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Erreur lors de la mise à jour: ' . $e->getMessage()]);
-        }
-    }
-
-    public function chargerDonneesPilier()
-    {
-        try {
-            Log::info('Vue Hiérarchique - Début du chargement des données', ['pilier_id' => $this->pilierId]);
-            
-            // OPTIMISATION : Eager Loading de toutes les relations en une seule requête
-            $this->pilier = Pilier::with([
-                'objectifsStrategiques.objectifsSpecifiques.actions.sousActions' => function ($query) {
-                    $query->orderBy('code');
-                },
-                'objectifsStrategiques.objectifsSpecifiques.actions' => function ($query) {
-                    $query->orderBy('code');
-                },
-                'objectifsStrategiques.objectifsSpecifiques' => function ($query) {
-                    $query->orderBy('code');
-                },
-                'objectifsStrategiques' => function ($query) {
-                    $query->orderBy('code');
-                }
-            ])->findOrFail($this->pilierId);
-            
-            // CALCUL DYNAMIQUE DES TAUX pour l'affichage
-            $this->calculerTauxDynamiques();
-            
-            Log::info('Vue Hiérarchique - Données du pilier chargées', ['pilier_id' => $this->pilierId]);
-            
-        } catch (\Exception $e) {
-            Log::error('Erreur lors du chargement des données du pilier', [
-                'pilier_id' => $this->pilierId,
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
-            $this->dispatch('toast', [
-                'type' => 'error',
-                'message' => 'Erreur lors du chargement des données du pilier'
-            ]);
-        }
-    }
-    
-    /**
-     * Calcule dynamiquement tous les taux pour l'affichage
-     */
-    private function calculerTauxDynamiques()
-    {
-        if (!$this->pilier) return;
-        
-        foreach ($this->pilier->objectifsStrategiques as $os) {
-            // Calculer le taux de l'OS basé sur ses OSP
-            $totalTauxOS = 0;
-            $nombreOSP = $os->objectifsSpecifiques->count();
-            
-            if ($nombreOSP > 0) {
-                foreach ($os->objectifsSpecifiques as $osp) {
-                    // Calculer le taux de l'OSP basé sur ses actions
-                    $totalTauxOSP = 0;
-                    $nombreActions = $osp->actions->count();
-                    
-                    if ($nombreActions > 0) {
-                        foreach ($osp->actions as $action) {
-                            // Calculer le taux de l'action basé sur ses sous-actions
-                            $totalTauxAction = 0;
-                            $nombreSousActions = $action->sousActions->count();
-                            
-                            if ($nombreSousActions > 0) {
-                                $totalTauxAction = $action->sousActions->sum('taux_avancement') / $nombreSousActions;
-                            }
-                            
-                            // Ajouter le taux calculé à l'action (pour l'affichage)
-                            $action->taux_avancement_calcule = round($totalTauxAction, 2);
-                            $totalTauxOSP += $totalTauxAction;
-                        }
-                        
-                        $osp->taux_avancement_calcule = round($totalTauxOSP / $nombreActions, 2);
-                    }
-                    
-                    $totalTauxOS += $osp->taux_avancement_calcule ?? 0;
-                }
-                
-                $os->taux_avancement_calcule = round($totalTauxOS / $nombreOSP, 2);
-            }
-        }
-        
-        // Calculer le taux du pilier basé sur ses OS
-        $totalTauxPilier = 0;
-        $nombreOS = $this->pilier->objectifsStrategiques->count();
-        
-        if ($nombreOS > 0) {
-            $totalTauxPilier = $this->pilier->objectifsStrategiques->sum('taux_avancement_calcule') / $nombreOS;
-            $this->pilier->taux_avancement_calcule = round($totalTauxPilier, 2);
-        }
-    }
-
-    /**
-     * Met à jour la progression d'une sous-action via les boutons
-     */
-    public function updateProgressionBouton($sousActionId, $nouveauTaux)
-    {
-        try {
-            Log::info('🚀 [BOUTON] updateProgressionBouton appelée', [
-                'sousActionId' => $sousActionId,
-                'nouveauTaux' => $nouveauTaux,
-                'timestamp' => now(),
-                'user_id' => Auth::id(),
-                'memory_usage' => memory_get_usage()
-            ]);
-            
-            // Appeler la méthode existante
-            $this->updateSousActionTaux($sousActionId, $nouveauTaux);
-            
-            // LOGS DÉTAILLÉS DE TOUTE LA HIÉRARCHIE
-            $this->loggerHierarchieComplete($sousActionId);
-            
-            // Mettre à jour l'interface en temps réel
-            $this->dispatch('progression-updated', [
-                'sousActionId' => $sousActionId,
-                'nouveauTaux' => $nouveauTaux
-            ]);
-            
-            // Toast de confirmation
-            $this->dispatch('toast', [
-                'type' => 'success',
-                'message' => "Progression mise à jour à {$nouveauTaux}% !"
-            ]);
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [BOUTON] Erreur dans updateProgressionBouton', [
-                'sousActionId' => $sousActionId,
-                'nouveauTaux' => $nouveauTaux,
-                'error' => $e->getMessage()
-            ]);
-            
-            $this->dispatch('toast', [
-                'type' => 'error',
-                'message' => 'Erreur lors de la mise à jour de la progression'
-            ]);
-        }
-    }
-    
-    /**
-     * Log détaillé de toute la hiérarchie après mise à jour
-     */
-    private function loggerHierarchieComplete($sousActionId)
-    {
-        try {
-            // Récupérer la sous-action avec toutes ses relations
-            $sousAction = SousAction::with([
-                'action.objectifSpecifique.objectifStrategique.pilier'
-            ])->find($sousActionId);
-            
-            if (!$sousAction) {
-                Log::warning('⚠️ [HIERARCHIE] Sous-action non trouvée', ['sousActionId' => $sousActionId]);
-                return;
-            }
-            
-            // Calculer les taux actuels de toute la hiérarchie
-            $tauxHierarchie = $this->calculerTauxHierarchieComplete($sousAction);
-            
-            // LOGS DÉTAILLÉS
-            Log::info('📊 [HIERARCHIE] ===== MISE À JOUR COMPLÈTE ====', [
-                'timestamp' => now(),
-                'sous_action_id' => $sousActionId
-            ]);
-            
-            // 1. SOUS-ACTION
-            Log::info('🎯 [HIERARCHIE] SOUS-ACTION', [
-                'code' => $sousAction->code,
-                'libelle' => $sousAction->libelle,
-                'pourcentage' => $sousAction->taux_avancement . '%',
-                'taux_actuel' => $sousAction->taux_avancement
-            ]);
-            
-            // 2. ACTION PARENT
-            if ($sousAction->action) {
-                Log::info('⚡ [HIERARCHIE] ACTION PARENT', [
-                    'code' => $sousAction->action->code,
-                    'libelle' => $sousAction->action->libelle,
-                    'pourcentage' => $tauxHierarchie['action'] . '%',
-                    'taux_calcule' => $tauxHierarchie['action']
-                ]);
-            }
-            
-            // 3. OSP PARENT
-            if ($sousAction->action && $sousAction->action->objectifSpecifique) {
-                Log::info('🎯 [HIERARCHIE] OSP PARENT', [
-                    'code' => $sousAction->action->objectifSpecifique->code,
-                    'libelle' => $sousAction->action->objectifSpecifique->libelle,
-                    'pourcentage' => $tauxHierarchie['osp'] . '%',
-                    'taux_calcule' => $tauxHierarchie['osp']
-                ]);
-            }
-            
-            // 4. OS PARENT
-            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique) {
-                Log::info('🌟 [HIERARCHIE] OS PARENT', [
-                    'code' => $sousAction->action->objectifSpecifique->objectifStrategique->code,
-                    'libelle' => $sousAction->action->objectifSpecifique->objectifStrategique->libelle,
-                    'pourcentage' => $tauxHierarchie['os'] . '%',
-                    'taux_calcule' => $tauxHierarchie['os']
-                ]);
-            }
-            
-            // 5. PILIER PARENT
-            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->pilier) {
-                Log::info('🏗️ [HIERARCHIE] PILIER PARENT', [
-                    'code' => $sousAction->action->objectifSpecifique->objectifStrategique->pilier->code,
-                    'libelle' => $sousAction->action->objectifSpecifique->objectifStrategique->pilier->libelle,
-                    'pourcentage' => $tauxHierarchie['pilier'] . '%',
-                    'taux_calcule' => $tauxHierarchie['pilier']
-                ]);
-            }
-            
-            Log::info('📊 [HIERARCHIE] ===== FIN DES LOGS ====');
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [HIERARCHIE] Erreur dans loggerHierarchieComplete', [
-                'sousActionId' => $sousActionId,
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-        }
-    }
-    
-    /**
-     * Calcule les taux de toute la hiérarchie
-     */
-    private function calculerTauxHierarchieComplete($sousAction)
-    {
-        $taux = [
-            'action' => 0,
-            'osp' => 0,
-            'os' => 0,
-            'pilier' => 0
-        ];
-        
-        try {
-            // TAUX DE L'ACTION (moyenne des sous-actions)
-            if ($sousAction->action && $sousAction->action->sousActions) {
-                $sousActions = $sousAction->action->sousActions;
-                if ($sousActions->count() > 0) {
-                    $totalTaux = $sousActions->sum('taux_avancement');
-                    $taux['action'] = round($totalTaux / $sousActions->count(), 2);
-                }
-            }
-            
-            // TAUX DE L'OSP (moyenne des actions)
-            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->actions) {
-                $actions = $sousAction->action->objectifSpecifique->actions;
-                if ($actions->count() > 0) {
-                    $totalTaux = 0;
-                    foreach ($actions as $action) {
-                        $sousActions = $action->sousActions;
-                        if ($sousActions->count() > 0) {
-                            $totalTaux += $sousActions->sum('taux_avancement') / $sousActions->count();
-                        }
-                    }
-                    $taux['osp'] = round($totalTaux / $actions->count(), 2);
-                }
-            }
-            
-            // TAUX DE L'OS (moyenne des OSP)
-            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->objectifsSpecifiques) {
-                $objectifsSpecifiques = $sousAction->action->objectifSpecifique->objectifStrategique->objectifsSpecifiques;
-                if ($objectifsSpecifiques->count() > 0) {
-                    $totalTaux = 0;
-                    foreach ($objectifsSpecifiques as $osp) {
-                        $actions = $osp->actions;
-                        if ($actions->count() > 0) {
-                            $tauxOSP = 0;
-                            foreach ($actions as $action) {
-                                $sousActions = $action->sousActions;
-                                if ($sousActions->count() > 0) {
-                                    $tauxOSP += $sousActions->sum('taux_avancement') / $sousActions->count();
-                                }
-                            }
-                            $totalTaux += $tauxOSP / $actions->count();
-                        }
-                    }
-                    $taux['os'] = round($totalTaux / $objectifsSpecifiques->count(), 2);
-                }
-            }
-            
-            // TAUX DU PILIER (moyenne des OS)
-            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->pilier && $sousAction->action->objectifSpecifique->objectifStrategique->pilier->objectifsStrategiques) {
-                $objectifsStrategiques = $sousAction->action->objectifSpecifique->objectifStrategique->pilier->objectifsStrategiques;
-                if ($objectifsStrategiques->count() > 0) {
-                    $totalTaux = 0;
-                    foreach ($objectifsStrategiques as $os) {
-                        $objectifsSpecifiques = $os->objectifsSpecifiques;
-                        if ($objectifsSpecifiques->count() > 0) {
-                            $tauxOS = 0;
-                            foreach ($objectifsSpecifiques as $osp) {
-                                $actions = $osp->actions;
-                                if ($actions->count() > 0) {
-                                    $tauxOSP = 0;
-                                    foreach ($actions as $action) {
-                                        $sousActions = $action->sousActions;
-                                        if ($sousActions->count() > 0) {
-                                            $tauxOSP += $sousActions->sum('taux_avancement') / $sousActions->count();
-                                        }
-                                    }
-                                    $tauxOS += $tauxOSP / $actions->count();
-                                }
-                            }
-                            $totalTaux += $tauxOS / $objectifsSpecifiques->count();
-                        }
-                    }
-                    $taux['pilier'] = round($totalTaux / $objectifsStrategiques->count(), 2);
-                }
-            }
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [HIERARCHIE] Erreur dans calculerTauxHierarchieComplete', [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-        }
-        
-        return $taux;
-    }
-    
-    // Méthode de test pour forcer l'affichage
-    public function testModalDisplay()
-    {
-        Log::info('🧪 [TEST] testModalDisplay appelée');
-        
-        // Forcer la propriété à true
-        $this->showCreateObjectifForm = true;
-        
-        // Dispatch un événement personnalisé
-        $this->dispatch('modal-test-opened');
-        
-        // Forcer le re-rendu
-        $this->dispatch('$refresh');
-        
-        Log::info('🧪 [TEST] Modal forcé à true et re-rendu demandé');
-    }
-}
+} 

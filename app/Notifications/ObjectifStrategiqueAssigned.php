@@ -69,6 +69,3 @@ class ObjectifStrategiqueAssigned extends Notification implements ShouldQueue
     }
 }
 
-
-
-

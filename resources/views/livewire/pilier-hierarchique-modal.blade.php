@@ -93,7 +93,13 @@ use Illuminate\Support\Facades\Auth;
                                 <!-- Informations clés : Owner et Pourcentage -->
                                 <div class="view-info mt-3">
                                     <div class="row">
-                                        
+                                        <div class="col-md-6">
+                                            <div class="info-item">
+                                                <i class="fas fa-user me-2" style="color: {{ $pilier->getHierarchicalColor(0) }};"></i>
+                                                <strong>Owner :</strong> 
+                                                <span class="badge" style="background: {{ $pilier->getHierarchicalColor(0) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(0)) }};">{{ $pilier->owner ? $pilier->owner->name : 'Non assigné' }}</span>
+                                            </div>
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="info-item">
                                                 <i class="fas fa-percentage me-2" style="color: {{ $pilier->getHierarchicalColor(0) }};"></i>
@@ -110,7 +116,7 @@ use Illuminate\Support\Facades\Auth;
                                     <i class="fas fa-bullseye me-2" style="color: {{ $pilier->getHierarchicalColor(1) }};"></i>
                                     Détail de l'Objectif Stratégique {{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}
                                 </h3>
-                                <p class="text-muted mb-0">Gestion des objectifs Spécifiques et actions</p>
+                                <p class="text-muted mb-0">Gestion des objectifs spécifiques et actions</p>
                                 
                                 <!-- Informations clés : Owner et Pourcentage -->
                                 <div class="view-info mt-3">
@@ -194,7 +200,7 @@ use Illuminate\Support\Facades\Auth;
                                     <i class="fas fa-list-check me-2" style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
                                     Détail de la Sous-Action {{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}.{{ $selectedObjectifSpecifique->code }}.{{ $selectedAction->code }}.{{ $selectedSousAction->code }} - {{ $selectedSousAction->libelle }}
                                 </h3>
-                                <p class="text-muted mb-0">Suivi Détaillé et gestion de la progression</p>
+                                <p class="text-muted mb-0">Suivi détaillé et gestion de la progression</p>
                                 
                                 <!-- Informations clés : Owner et Pourcentage -->
                                 <div class="view-info mt-3">
@@ -276,7 +282,7 @@ use Illuminate\Support\Facades\Auth;
                             }
 
                             /* ======================================== */
-                            /* STYLES POUR LES ACTIVITéS */
+                            /* STYLES POUR LES ACTIVITÉS */
                             /* ======================================== */
                             
                             .activities-section {
@@ -455,30 +461,11 @@ use Illuminate\Support\Facades\Auth;
                                                     <i class="fas fa-layer-group me-2" style="color: {{ $pilier->getHierarchicalColor(1) }};"></i>
                                                     Objectifs Stratégiques
                                                 </h4>
-                                                
-                                                <!-- BADGE DE TEST VISIBLE -->
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <span class="badge" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
-                                                        <i class="fas fa-info-circle me-1"></i>
-                                                        showCreateObjectifForm: {{ $showCreateObjectifForm ? 'TRUE' : 'FALSE' }}
-                                                    </span>
-                                                    
-                                                                                                    <!-- BOUTON DE TEST -->
-                                                <button type="button" class="btn btn-sm btn-warning" wire:click="testModalDisplay" title="Test Modal">
-                                                    <i class="fas fa-flask me-1"></i>Test
-                                                </button>
-                                                
-                                                <!-- BOUTON BOOTSTRAP PUR (TEST) -->
-                                                <button type="button" class="btn btn-sm btn-info" onclick="openBootstrapModal()" title="Test Bootstrap">
-                                                    <i class="fas fa-rocket me-1"></i>Bootstrap Test
-                                                </button>
-                                                
                                                 @if(Auth::user()->isAdminGeneral())
-                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }}; border-color: {{ $pilier->getHierarchicalColor(1) }};" onclick="openNewOSModal()">
+                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }}; border-color: {{ $pilier->getHierarchicalColor(1) }};" wire:click="openCreateOSModal">
                                                     <i class="fas fa-plus me-2"></i>Créer un Objectif Stratégique
                                                 </button>
                                                 @endif
-                                                </div>
                                             </div>
                                             
                                             @if($pilier->objectifsStrategiques->count() > 0)
@@ -513,7 +500,7 @@ use Illuminate\Support\Facades\Auth;
                                                                 </td>
                                                                 <td>
                                                                     @if($objectifStrategique->owner)
-                                                                        <span class="badge" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
+                                                                        <span class="badge " style="background: {{ $pilier->getHierarchicalColor(2) }}; ">
                                                                             <i class="fas fa-user me-1"></i>
                                                                             {{ $objectifStrategique->owner->name }}
                                                                         </span>
@@ -542,17 +529,17 @@ use Illuminate\Support\Facades\Auth;
                                                                 </td>
                                                                 <td class="text-center">
                                                                     <div class="btn-group" role="group">
-                                                                        <!-- Bouton Voir Détails - accessible Ã  tous -->
+                                                                        <!-- Bouton Voir détails - accessible à tous -->
                                                                         <button type="button" class="btn btn-outline-primary btn-sm" 
                                                                                 wire:click="naviguerVersObjectifStrategique({{ $objectifStrategique->id }})"
-                                                                                title="Voir Détails"
+                                                                                title="Voir détails"
                                                                                 style="border-color: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getHierarchicalColor(1) }};">
                                                                             <i class="fas fa-eye"></i>
                                                                         </button>
                                                                         
                                                                         <!-- Boutons Modifier/Supprimer - seulement pour l'owner ET l'admin général -->
                                                                         @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $objectifStrategique->owner_id))
-                                                                                                                                <button type="button" 
+                                                                        <button type="button" 
                                                                 wire:click="setActionToEditObjectifStrategique({{ $objectifStrategique->id }})"
                                                                 class="btn btn-outline-warning btn-sm" 
                                                                 title="Modifier"
@@ -562,7 +549,7 @@ use Illuminate\Support\Facades\Auth;
                                                                         <button type="button" 
                                                                                 class="btn btn-outline-danger btn-sm" 
                                                                                 wire:click="deleteObjectifStrategique({{ $objectifStrategique->id }})"
-                                                                                onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cet Objectif Stratégique?')) return false;"
+                                                                                onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cet objectif stratégique ?')) return false;"
                                                                                 title="Supprimer"
                                                                                 style="border-color: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getHierarchicalColor(1) }};">
                                                                             <i class="fas fa-trash"></i>
@@ -578,12 +565,10 @@ use Illuminate\Support\Facades\Auth;
                                             @else
                                                 <div class="text-center py-5">
                                                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                                    <h5 class="text-muted">Aucun Objectif Stratégique
-                                                    </h5>
-                                                    <p class="text-muted">Commencez par créer votre premier Objectif Stratégique
-                                                    </p>
+                                                    <h5 class="text-muted">Aucun objectif stratégique</h5>
+                                                    <p class="text-muted">Commencez par créer votre premier objectif stratégique</p>
                                                     @if(Auth::user()->isAdminGeneral())
-                                                    <button type="button" class="btn btn-primary" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }}; border-color: {{ $pilier->getHierarchicalColor(2) }};" wire:click="showCreateObjectifForm">
+                                                    <button type="button" class="btn btn-primary" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }}; border-color: {{ $pilier->getHierarchicalColor(2) }};"wire:click="showCreateObjectifForm">
                                                         <i class="fas fa-plus me-2"></i>Créer le premier objectif
                                                     </button>
                                                     @endif
@@ -592,7 +577,7 @@ use Illuminate\Support\Facades\Auth;
                                         </div>
                                         
                                         <div class="col-md-4">
-                                            <!-- ðŸŽ¯ STATISTIQUES HIéRARCHIQUES DU PILIER -->
+                                            <!-- 🎯 STATISTIQUES HIÉRARCHIQUES DU PILIER -->
                                             <div class="hierarchy-stats-container">
                                                 <!-- PILIER (NIVEAU RACINE) -->
                                                 <div class="hierarchy-card root-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(0) }};">
@@ -682,7 +667,7 @@ use Illuminate\Support\Facades\Auth;
                                                                  </td>
                                                                  <td>
                                                                      @if($objectifSpecifique->owner)
-                                                                         <span class="badge" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
+                                                                         <span class="badge "style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
                                                                              <i class="fas fa-user me-1"></i>
                                                                              {{ $objectifSpecifique->owner->name }}
                                                                          </span>
@@ -695,7 +680,7 @@ use Illuminate\Support\Facades\Auth;
                                                                          <div class="progress me-2" style="width: 100px; height: 8px;">
                                                                         <div class="progress-bar bg-{{ $this->getProgressStatus($objectifSpecifique->taux_avancement) }}" 
                                                                                   role="progressbar" 
-                                                                                  style="background: {{ $pilier->getHierarchicalColor(2) }}; width: {{ $objectifSpecifique->taux_avancement }}%"
+                                                                                  style="width: {{ $objectifSpecifique->taux_avancement }}%"
                                                                                   aria-valuenow="{{ $objectifSpecifique->taux_avancement }}" 
                                                                                   aria-valuemin="0" 
                                                                                   aria-valuemax="100">
@@ -705,16 +690,16 @@ use Illuminate\Support\Facades\Auth;
                                                                     </div>
                                                                  </td>
                                                                  <td>
-                                                                     <span class="badge" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }}; border-color: {{ $pilier->getHierarchicalColor(2) }};">
+                                                                     <span class="badge " style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }}; border-color: {{ $pilier->getHierarchicalColor(2) }};">
                                                                          {{ $objectifSpecifique->actions->count() }}
                                                                      </span>
                                                                  </td>
                                                                  <td class="text-center">
                                                                      <div class="btn-group" role="group">
-                                                                         <!-- Bouton Voir Détails - accessible Ã  tous -->
+                                                                         <!-- Bouton Voir détails - accessible à tous -->
                                                                          <button type="button" class="btn btn-outline-info btn-sm" style="border-color: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};"
                                                                                  wire:click="naviguerVersObjectifSpecifique({{ $objectifSpecifique->id }})"
-                                                                                 title="Voir Détails">
+                                                                                 title="Voir détails">
                                                                              <i class="fas fa-eye" style="color: {{ $pilier->getHierarchicalColor(2) }};"></i>
                                                                          </button>
                                                                          
@@ -729,7 +714,7 @@ use Illuminate\Support\Facades\Auth;
                                                                          <button type="button" 
                                                                                  class="btn btn-outline-danger btn-sm" 
                                                                                  wire:click="deleteObjectifSpecifique({{ $objectifSpecifique->id }})"
-                                                                                 onclick="if(!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cet objectif spécifique ?')) return false;"
+                                                                                 onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cet objectif spécifique ?')) return false;"
                                                                                  title="Supprimer">
                                                                              <i class="fas fa-trash" style="color: {{ $pilier->getHierarchicalColor(2) }};"></i>
                                                                          </button>
@@ -756,7 +741,7 @@ use Illuminate\Support\Facades\Auth;
                                         </div>
                                         
                                         <div class="col-md-4">
-                                            <!-- ðŸŽ¯ HIERARCHIE DES STATISTIQUES PARENT -->
+                                            <!-- 🎯 HIERARCHIE DES STATISTIQUES PARENT -->
                                             <div class="hierarchy-stats-container">
                                                 
                                                 <!-- PILIER PARENT (NIVEAU 0) -->
@@ -796,7 +781,7 @@ use Illuminate\Support\Facades\Auth;
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -811,8 +796,7 @@ use Illuminate\Support\Facades\Auth;
                                                             <i class="fas fa-bullseye"></i>
                                                         </div>
                                                         <div class="hierarchy-info">
-                                                            <h6 class="mb-0">Objectif Stratégique
-</h6>
+                                                            <h6 class="mb-0">Objectif Stratégique</h6>
                                                             <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}</small>
                                                         </div>
                                                         <div class="hierarchy-arrow">
@@ -826,7 +810,7 @@ use Illuminate\Support\Facades\Auth;
                                                                 <div class="stat-label">Progression</div>
                                                             </div>
                                                             <div class="stat-item">
-                                                                <div class="stat-value" style="color: black;">{{ $selectedObjectifStrategique->objectifsSpecifiques->count() }}</div>
+                                                                <div class="stat-value" style="color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }};">{{ $selectedObjectifStrategique->objectifsSpecifiques->count() }}</div>
                                                                 <div class="stat-label">OSP</div>
                                                             </div>
                                                             <div class="stat-item">
@@ -842,7 +826,7 @@ use Illuminate\Support\Facades\Auth;
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -850,7 +834,7 @@ use Illuminate\Support\Facades\Auth;
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- OBJECTIF SPÃ‰CIFIQUE COURANT (NIVEAU 2) - AFFICHÃ‰ SEULEMENT SI SÃ‰LECTIONNÃ‰ ET DANS LA BONNE VUE -->
+                                                <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) - AFFICHÉ SEULEMENT SI SÉLECTIONNÉ ET DANS LA BONNE VUE -->
                                                 @if($selectedObjectifSpecifique && $currentView === 'objectifSpecifique')
                                                 <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
                                                     <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
@@ -943,12 +927,12 @@ use Illuminate\Support\Facades\Auth;
                                                                  </td>
                                                                  <td>
                                                                      @if($action->owner)
-                                                                         <span class="badge" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
+                                                                         <span class="badge "style="background: {{ $pilier->getHierarchicalColor(2) }}; ">
                                                                              <i class="fas fa-user me-1"></i>
                                                                              {{ $action->owner->name }}
                                                                          </span>
                                                                      @else
-                                                                         <span class="badge" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">Non assigné</span>
+                                                                         <span class="badge " style="background: {{ $pilier->getHierarchicalColor(2) }}; ">Non assigné</span>
                                                                      @endif
                                                                  </td>
                                                                  <td>
@@ -956,7 +940,7 @@ use Illuminate\Support\Facades\Auth;
                                                                          <div class="progress me-2" style="width: 100px; height: 8px;">
                                                                         <div class="progress-bar" 
                                                                                   role="progressbar" 
-                                                                                  style="width: {{ $action->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(3) }};color: {{$pilier->getTextColor($pilier->getHierarchicalColor(2)) }}"
+                                                                                  style="width: {{ $action->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(3) }};"
                                                                                   aria-valuenow="{{ $action->taux_avancement }}" 
                                                                                   aria-valuemin="0" 
                                                                                   aria-valuemax="100">
@@ -972,15 +956,12 @@ use Illuminate\Support\Facades\Auth;
                                                                  </td>
                                                                  <td class="text-center">
                                                                      <div class="btn-group" role="group">
-                                                                         <!-- Bouton Voir Détails - accessible Ã  tous -->
                                                                          <button type="button" class="btn btn-outline-warning btn-sm" 
                                                                                  wire:click="naviguerVersAction({{ $action->id }})"
-                                                                                 title="Voir Détails"
+                                                                                 title="Voir détails"
                                                                                  style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
                                                                              <i class="fas fa-eye"></i>
                                                                          </button>
-                                                                         
-                                                                         <!-- Boutons Modifier/Supprimer - seulement pour admin, owner OS parent, owner OSP parent ET owner Action -->
                                                                          @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id) || (Auth::user()->id == $action->owner_id))
                                                                          <button type="button" 
                                                                                  wire:click="setActionToEditAction({{ $action->id }})"
@@ -992,7 +973,7 @@ use Illuminate\Support\Facades\Auth;
                                                                          <button type="button" 
                                                                                  class="btn btn-outline-danger btn-sm" 
                                                                                  wire:click="deleteAction({{ $action->id }})"
-                                                                                 onclick="if(!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette action ?')) return false;"
+                                                                                 onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) return false;"
                                                                                  title="Supprimer"
                                                                                  style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
                                                                              <i class="fas fa-trash"></i>
@@ -1012,15 +993,15 @@ use Illuminate\Support\Facades\Auth;
                                                     <p class="text-muted">Commencez par créer votre première action</p>
                                                                             @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id))
                                                                             <button type="button" class="btn" style="background: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(3)) }}; border-color: {{ $pilier->getHierarchicalColor(3) }};" wire:click="openCreateActionModal">
-                            <i class="fas fa-plus me-2"></i>Créer la première action
-                        </button>
+                                <i class="fas fa-plus me-2"></i>Créer la première action
+                            </button>
                                                                             @endif
                                                 </div>
                                             @endif
                                         </div>
                                         
                                         <div class="col-md-4">
-                                             <!-- ðŸŽ¯ HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
+                                             <!-- 🎯 HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
                                             <div class="hierarchy-stats-container">
                                                 
                                                 <!-- PILIER PARENT (NIVEAU 0) -->
@@ -1055,13 +1036,12 @@ use Illuminate\Support\Facades\Auth;
                                                         <div class="hierarchy-progress">
                                                             <div class="progress" style="height: 6px; background: #e9ecef;">
                                                                 <div class="progress-bar" style="width: {{ $pilier->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(0) }};"></div>
-                                                            </div>
                                                          </div>
                                                      </div>
                                                         </div>
                                                     </div>
                                                     
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -1076,8 +1056,7 @@ use Illuminate\Support\Facades\Auth;
                                                             <i class="fas fa-bullseye"></i>
                                                      </div>
                                                         <div class="hierarchy-info">
-                                                            <h6 class="mb-0">Objectif Stratégique
-</h6>
+                                                            <h6 class="mb-0">Objectif Stratégique</h6>
                                                             <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}</small>
                                                  </div>
                                                         <div class="hierarchy-arrow">
@@ -1107,7 +1086,7 @@ use Illuminate\Support\Facades\Auth;
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -1115,7 +1094,7 @@ use Illuminate\Support\Facades\Auth;
                                             </div>
                                         </div>
                                              
-                                                                                           <!-- OBJECTIF SPÃ‰CIFIQUE COURANT (NIVEAU 2) -->
+                                                                                           <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) -->
                                                 <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
                                                   <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
                                                       <div class="hierarchy-icon">
@@ -1164,13 +1143,15 @@ use Illuminate\Support\Facades\Auth;
                                         <div class="col-md-8">
                                             <div class="d-flex justify-content-between align-items-center mb-4">
                                                 <h4 class="mb-0">
-                                                    <i class="fas fa-list-check me-2" style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
-                                                    Sous-actionss
+                                                    <i class="fas fa-list-check me-2 style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                    Sous-actions
                                                 </h4>
-                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openModalCreateSousAction" onclick="console.log('ðŸ–±ï¸ Clic sur bouton Créer une sous-action')">
+                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openModalCreateSousAction" onclick="console.log('🖱️ Clic sur bouton Créer une sous-action')">
                                                     <i class="fas fa-plus me-2"></i>Créer une Sous-action
                                                 </button>
-                                               
+                                                <button type="button" class="btn btn-sm ms-2" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="testLivewireConnection" onclick="console.log('🧪 Test Livewire')">
+                                                    <i class="fas fa-vial me-1"></i>Test
+                                                </button>
                                             </div>
                                             
                                             @if($selectedAction->sousActions->count() > 0)
@@ -1179,25 +1160,25 @@ use Illuminate\Support\Facades\Auth;
                                                          <thead style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
                                                              <tr>
                                                                 <th style="width: 10%;">
-                                                                    Code
+                                                                    <i class="fas fa-code me-1"></i>Code
                                                                 </th>
                                                                 <th style="width: 20%;">
-                                                                    Libellé
+                                                                    <i class="fas fa-tasks me-1"></i>Libellé
                                                                 </th>
                                                                 <th style="width: 8%;">
-                                                                    Type
+                                                                    <i class="fas fa-tag me-1"></i>Type
                                                                 </th>
                                                                 <th style="width: 18%;">
-                                                                    </i>Progression
+                                                                    <i class="fas fa-percentage me-1"></i>Progression
                                                                 </th>
                                                                 <th style="width: 15%;">
-                                                                    Owner
+                                                                    <i class="fas fa-user me-1"></i>Propriétaire
                                                                 </th>
                                                                 <th style="width: 17%;">
-                                                                    Echéance
+                                                                    <i class="fas fa-calendar me-1"></i>Échéance
                                                                 </th>
                                                                 <th style="width: 12%;">
-                                                                    Actions
+                                                                    <i class="fas fa-cogs me-1"></i>Actions
                                                                 </th>
                                                              </tr>
                                                          </thead>
@@ -1222,7 +1203,10 @@ use Illuminate\Support\Facades\Auth;
                                                                             <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
                                                                                 <i class="fas fa-tasks me-1"></i>Normal
                                                                             </span>
-                                                                       
+                                                                        @elseif($sousAction->type === 'projet')
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-project-diagram me-1"></i>Projet
+                                                                         </span>
                                                                      @else
                                                                             <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
                                                                                 <i class="fas fa-question me-1"></i>Non défini
@@ -1232,8 +1216,9 @@ use Illuminate\Support\Facades\Auth;
                                                                  <td>
                                                                         <div class="d-flex flex-column align-items-start">
                                                                             <div class="d-flex justify-content-between align-items-center w-100 mb-1">
-                                                                                <span class="badge fw-bold" style=" color: black;">
-                                                                                    {{ number_format($sousAction->taux_avancement, 1) }}%
+                                                                                <small class="text-muted">Progression</small>
+                                                                                <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                                    {{ number_format($sousAction->taux_avancement, 2) }}%
                                                                                 </span>
                                                                             </div>
                                                                             <div class="progress mb-2 progress-compact" style="width: 100%; background: #e9ecef;">
@@ -1246,11 +1231,21 @@ use Illuminate\Support\Facades\Auth;
                                                                     </div>
                                                                          </div>
                                                                             
+                                                                            <!-- Indicateur du type de calcul -->
+                                                                            @if($sousAction->type === 'projet')
+                                                                                <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};">
+                                                                                    <i class="fas fa-calculator me-1"></i>Auto-calculé
+                                                                                </small>
+                                                                            @else
+                                                                                <small class="text-muted">
+                                                                                    <i class="fas fa-hand-paper me-1"></i>Manuel
+                                                                                </small>
+                                                                            @endif
                                                                     </div>
                                                                  </td>
                                                                  <td>
                                                                      @if($sousAction->owner)
-                                                                            <span class="badge badge-enhanced"style="background: {{ $pilier->getHierarchicalColor(2) }}; ">
+                                                                            <span class="badge style="background: {{ $pilier->getHierarchicalColor(2) }}; " badge-enhanced">
                                                                              <i class="fas fa-user me-1"></i>
                                                                                 {{ Str::limit($sousAction->owner->name, 15) }}
                                                                          </span>
@@ -1262,7 +1257,7 @@ use Illuminate\Support\Facades\Auth;
                                                                         <div class="d-flex flex-column align-items-start">
                                                                             @if($sousAction->date_echeance)
                                                                                 <div class="mb-1">
-                                                                                    <i class="fas fa-calendar-alt" style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                                                    <i class="fas fa-calendar-alt style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
                                                                                     <span class="badge bg-info badge-enhanced">{{ \Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') }}</span>
                                                                                 </div>
                                                                             @else
@@ -1274,7 +1269,8 @@ use Illuminate\Support\Facades\Auth;
                                                                             
                                                                             @if($sousAction->taux_avancement == 100 && $sousAction->date_realisation)
                                                                                 <div>
-                                                                                   <small> <i class="fas fa-check-circle "style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}</small>
+                                                                                    <i class="fas fa-check-circle style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
+                                                                                    <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};"">Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}</small>
                                                                                 </div>
                                                                             @endif
                                                                         </div>
@@ -1284,8 +1280,8 @@ use Illuminate\Support\Facades\Auth;
                                                                             <!-- Bouton Voir -->
                                                                             <button type="button" 
                                                                                 class="btn btn-sm btn-outline-primary btn-action" 
-                                                                                title="Voir les Détails"
-                                                                                wire:click="naviguerVersSousAction({{ $sousAction->id }})" onclick="console.log('ðŸ'ï¸ Voir Détails sous-action {{ $sousAction->id }}')">
+                                                                                title="Voir les détails"
+                                                                                wire:click="naviguerVersSousAction({{ $sousAction->id }})" onclick="console.log('👁️ Voir détails sous-action {{ $sousAction->id }}')">
                                                                              <i class="fas fa-eye"></i>
                                                                          </button>
                                                                             
@@ -1297,19 +1293,19 @@ use Illuminate\Support\Facades\Auth;
                                                                              <i class="fas fa-edit"></i>
                                                                          </button>
                                                                             
-                                                                            <!-- Boutons Spécifiques au type Projet -->
+                                                                            <!-- Boutons spécifiques au type Projet -->
                                                                             @if($sousAction->type === 'projet')
                                                                          <button type="button" 
                                                                                     class="btn btn-sm btn-outline-info btn-action btn-projet" 
                                                                                     title="Calendrier d'activités"
-                                                                                    onclick="console.log('ðŸ"… Ouvrir calendrier pour sous-action {{ $sousAction->id }}')">
+                                                                                    onclick="console.log('📅 Ouvrir calendrier pour sous-action {{ $sousAction->id }}')">
                                                                                     <i class="fas fa-calendar-alt"></i>
                                                                                 </button>
                                                                                 
                                                                                 <button type="button" 
                                                                                     class="btn btn-sm btn-outline-secondary btn-action btn-projet" 
                                                                                     title="Diagramme de Gantt"
-                                                                                    onclick="console.log('ðŸ"Š Ouvrir Gantt pour sous-action {{ $sousAction->id }}')">
+                                                                                    onclick="console.log('📊 Ouvrir Gantt pour sous-action {{ $sousAction->id }}')">
                                                                                     <i class="fas fa-chart-bar"></i>
                                                                                 </button>
                                                                             @endif
@@ -1318,7 +1314,7 @@ use Illuminate\Support\Facades\Auth;
                                                                             <button type="button" 
                                                                                 class="btn btn-sm btn-outline-danger btn-action" 
                                                                                  wire:click="deleteSousAction({{ $sousAction->id }})"
-                                                                                 onclick="if(!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette sous-action ?')) return false;"
+                                                                                 onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette sous-action ?')) return false;"
                                                                                  title="Supprimer">
                                                                              <i class="fas fa-trash"></i>
                                                                          </button>
@@ -1334,17 +1330,15 @@ use Illuminate\Support\Facades\Auth;
                                                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                                     <h5 class="text-muted">Aucune sous-action</h5>
                                                     <p class="text-muted">Commencez par créer votre première sous-action</p>
-                                                                            @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id))
                                                                             <button type="button" class="btn style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openCreateSousActionModal">
                             <i class="fas fa-plus me-2"></i>Créer la première sous-action
                         </button>
-                                                                            @endif
                                                 </div>
                                             @endif
                                         </div>
                                         
                                         <div class="col-md-4">
-                                             <!-- ðŸŽ¯ HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
+                                             <!-- 🎯 HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
                                             <div class="hierarchy-stats-container">
                                                 
                                                 <!-- PILIER PARENT (NIVEAU 0) -->
@@ -1384,7 +1378,7 @@ use Illuminate\Support\Facades\Auth;
                                                         </div>
                                                     </div>
                                                     
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -1399,8 +1393,7 @@ use Illuminate\Support\Facades\Auth;
                                                             <i class="fas fa-bullseye"></i>
                                                      </div>
                                                         <div class="hierarchy-info">
-                                                            <h6 class="mb-0">Objectif Stratégique
-</h6>
+                                                            <h6 class="mb-0">Objectif Stratégique</h6>
                                                             <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}</small>
                                                  </div>
                                                         <div class="hierarchy-arrow">
@@ -1430,7 +1423,7 @@ use Illuminate\Support\Facades\Auth;
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -1438,7 +1431,7 @@ use Illuminate\Support\Facades\Auth;
                                             </div>
                                         </div>
                                              
-                                                                                           <!-- OBJECTIF SPÃ‰CIFIQUE COURANT (NIVEAU 2) -->
+                                                                                           <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) -->
                                                 <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
                                                   <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
                                                       <div class="hierarchy-icon">
@@ -1487,13 +1480,352 @@ use Illuminate\Support\Facades\Auth;
                                         <div class="col-md-8">
                                             <div class="d-flex justify-content-between align-items-center mb-4">
                                                 <h4 class="mb-0">
-                                                    <i class="fas fa-list-check me-2" style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                    <i class="fas fa-list-check me-2 style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
                                                     Sous-actions
                                                 </h4>
-                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openModalCreateSousAction" onclick="console.log('ðŸ–±ï¸ Clic sur bouton Créer une sous-action')">
+                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openModalCreateSousAction" onclick="console.log('🖱️ Clic sur bouton Créer une sous-action')">
                                                     <i class="fas fa-plus me-2"></i>Créer une Sous-action
                                                 </button>
-                                              
+                                                <button type="button" class="btn btn-sm ms-2" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="testLivewireConnection" onclick="console.log('🧪 Test Livewire')">
+                                                    <i class="fas fa-vial me-1"></i>Test
+                                                </button>
+                                            </div>
+                                            
+                                            @if($selectedAction->sousActions->count() > 0)
+                                                 <div class="table-responsive">
+                                                     <table class="table table-hover table-striped table-sous-actions">
+                                                         <thead style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                             <tr>
+                                                                 <th style="width: 10%;">
+                                                                    <i class="fas fa-code me-1"></i>Code
+                                                                </th>
+                                                                <th style="width: 20%;">
+                                                                    <i class="fas fa-tasks me-1"></i>Libellé
+                                                                </th>
+                                                                <th style="width: 8%;">
+                                                                    <i class="fas fa-tag me-1"></i>Type
+                                                                </th>
+                                                                <th style="width: 18%;">
+                                                                    <i class="fas fa-percentage me-1"></i>Progression
+                                                                </th>
+                                                                <th style="width: 15%;">
+                                                                    <i class="fas fa-user me-1"></i>Propriétaire
+                                                                </th>
+                                                                <th style="width: 17%;">
+                                                                    <i class="fas fa-calendar me-1"></i>Échéance
+                                                                </th>
+                                                                <th style="width: 12%;">
+                                                                    <i class="fas fa-cogs me-1"></i>Actions
+                                                                </th>
+                                                             </tr>
+                                                         </thead>
+                                                         <tbody>
+                                                    @foreach($selectedAction->sousActions as $sousAction)
+                                                             <tr>
+                                                                 <td>
+                                                                        <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                            {{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}.{{ $selectedObjectifSpecifique->code }}.{{ $selectedAction->code }}.{{ $sousAction->code }}
+                                                                        </span>
+                                                                 </td>
+                                                                 <td>
+                                                                        <div>
+                                                                     <strong class="text-dark">{{ $sousAction->libelle }}</strong>
+                                                                     @if($sousAction->description)
+                                                                                <br><small class="text-muted">{{ Str::limit($sousAction->description, 80) }}</small>
+                                                                     @endif
+                                                                        </div>
+                                                                 </td>
+                                                                 <td>
+                                                                        @if($sousAction->type === 'normal')
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-tasks me-1"></i>Normal
+                                                                            </span>
+                                                                        @elseif($sousAction->type === 'projet')
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-project-diagram me-1"></i>Projet
+                                                                         </span>
+                                                                     @else
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-question me-1"></i>Non défini
+                                                                            </span>
+                                                                     @endif
+                                                                 </td>
+                                                                 <td>
+                                                                        <div class="d-flex flex-column align-items-start">
+                                                                            <div class="d-flex justify-content-between align-items-center w-100 mb-1">
+                                                                                <small class="text-muted">Progression</small>
+                                                                                <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                                    {{ number_format($sousAction->taux_avancement, 2) }}%
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="progress mb-2 progress-compact" style="width: 100%; background: #e9ecef;">
+                                                                                <div class="progress-bar" 
+                                                                                     style="width: {{ $sousAction->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(4) }};"
+                                                                                  role="progressbar" 
+                                                                                  aria-valuenow="{{ $sousAction->taux_avancement }}" 
+                                                                                  aria-valuemin="0" 
+                                                                                  aria-valuemax="100">
+                                                                    </div>
+                                                                         </div>
+                                                                            
+                                                                            <!-- Indicateur du type de calcul -->
+                                                                            @if($sousAction->type === 'projet')
+                                                                                <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};">
+                                                                                    <i class="fas fa-calculator me-1"></i>Auto-calculé
+                                                                                </small>
+                                                                            @else
+                                                                                <small class="text-muted">
+                                                                                    <i class="fas fa-hand-paper me-1"></i>Manuel
+                                                                                </small>
+                                                                            @endif
+                                                                    </div>
+                                                                 </td>
+                                                                 <td>
+                                                                     @if($sousAction->owner)
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                             <i class="fas fa-user me-1"></i>
+                                                                                {{ Str::limit($sousAction->owner->name, 15) }}
+                                                                         </span>
+                                                                     @else
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">Non assigné</span>
+                                                                     @endif
+                                                                 </td>
+                                                                 <td>
+                                                                        <div class="d-flex flex-column align-items-start">
+                                                                            @if($sousAction->date_echeance)
+                                                                                <div class="mb-1">
+                                                                                    <i class="fas fa-calendar-alt style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
+                                                                                    <span class="badge bg-info badge-enhanced">{{ \Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') }}</span>
+                                                                                </div>
+                                                                            @else
+                                                                                <div class="mb-1">
+                                                                                    <i class="fas fa-calendar-alt text-muted column-icon"></i>
+                                                                                    <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">Non définie</span>
+                                                                                </div>
+                                                                            @endif
+                                                                            
+                                                                            @if($sousAction->taux_avancement == 100 && $sousAction->date_realisation)
+                                                                                <div>
+                                                                                    <i class="fas fa-check-circle style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
+                                                                                    <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};"">Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}</small>
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
+                                                                 </td>
+                                                                    <td>
+                                                                        <div class="d-flex gap-1">
+                                                                            <!-- Bouton Voir -->
+                                                                            <button type="button" 
+                                                                                class="btn btn-sm btn-outline-primary btn-action" 
+                                                                                title="Voir les détails"
+                                                                                wire:click="naviguerVersSousAction({{ $sousAction->id }})" onclick="console.log('👁️ Voir détails sous-action {{ $sousAction->id }}')">
+                                                                             <i class="fas fa-eye"></i>
+                                                                         </button>
+                                                                            
+                                                                            <!-- Bouton Modifier -->
+                                                                         <button type="button" 
+                                                                                class="btn btn-sm btn-outline-warning btn-action" 
+                                                                                 wire:click="setActionToEditSousAction({{ $sousAction->id }})"
+                                                                                 title="Modifier">
+                                                                             <i class="fas fa-edit"></i>
+                                                                         </button>
+                                                                            
+                                                                            <!-- Boutons spécifiques au type Projet -->
+                                                                            @if($sousAction->type === 'projet')
+                                                                         <button type="button" 
+                                                                                    class="btn btn-sm btn-outline-info btn-action btn-projet" 
+                                                                                    title="Calendrier d'activités"
+                                                                                    onclick="console.log('📅 Ouvrir calendrier pour sous-action {{ $sousAction->id }}')">
+                                                                                    <i class="fas fa-calendar-alt"></i>
+                                                                                </button>
+                                                                                
+                                                                                <button type="button" 
+                                                                                    class="btn btn-sm btn-outline-secondary btn-action btn-projet" 
+                                                                                    title="Diagramme de Gantt"
+                                                                                    onclick="console.log('📊 Ouvrir Gantt pour sous-action {{ $sousAction->id }}')">
+                                                                                    <i class="fas fa-chart-bar"></i>
+                                                                                </button>
+                                                                            @endif
+                                                                            
+                                                                            <!-- Bouton Supprimer -->
+                                                                            <button type="button" 
+                                                                                class="btn btn-sm btn-outline-danger btn-action" 
+                                                                                 wire:click="deleteSousAction({{ $sousAction->id }})"
+                                                                                 onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette sous-action ?')) return false;"
+                                                                                 title="Supprimer">
+                                                                             <i class="fas fa-trash"></i>
+                                                                         </button>
+                                                                    </div>
+                                                                 </td>
+                                                             </tr>
+                                                    @endforeach
+                                                         </tbody>
+                                                     </table>
+                                                </div>
+                                            @else
+                                                <div class="text-center py-5">
+                                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                                    <h5 class="text-muted">Aucune sous-action</h5>
+                                                    <p class="text-muted">Commencez par créer votre première sous-action</p>
+                                                                            <button type="button" class="btn style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openCreateSousActionModal">
+                            <i class="fas fa-plus me-2"></i>Créer la première sous-action
+                        </button>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        
+                                        <div class="col-md-4">
+                                             <!-- 🎯 HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
+                                            <div class="hierarchy-stats-container">
+                                                
+                                                <!-- PILIER PARENT (NIVEAU 0) -->
+                                                <div class="hierarchy-card parent-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(0) }};">
+                                                    <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(0) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(0)) }};">
+                                                        <div class="hierarchy-icon">
+                                                            <i class="fas fa-layer-group"></i>
+                                                </div>
+                                                        <div class="hierarchy-info">
+                                                            <h6 class="mb-0">Pilier Parent</h6>
+                                                            <small>{{ $pilier->code }} - {{ $pilier->libelle }}</small>
+                                                        </div>
+                                                        <div class="hierarchy-arrow">
+                                                            <i class="fas fa-chevron-down"></i>
+                                                     </div>
+                                                 </div>
+                                                    <div class="hierarchy-body">
+                                                        <div class="hierarchy-stats">
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ number_format($pilier->taux_avancement, 1) }}%</div>
+                                                                <div class="stat-label">Progression</div>
+                                                         </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $pilier->objectifsStrategiques->count() }}</div>
+                                                                <div class="stat-label">OS</div>
+                                                         </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $pilier->objectifsStrategiques->sum(function($os) { return $os->objectifsSpecifiques->count(); }) }}</div>
+                                                                <div class="stat-label">OSP</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="hierarchy-progress">
+                                                            <div class="progress" style="height: 6px; background: #e9ecef;">
+                                                                <div class="progress-bar" style="width: {{ $pilier->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(0) }};"></div>
+                                                         </div>
+                                                     </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
+                                                <div class="hierarchy-arrow-container">
+                                                    <div class="hierarchy-arrow-line"></div>
+                                                    <div class="hierarchy-arrow-head">
+                                                        <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                                
+                                                <!-- OBJECTIF STRATEGIQUE PARENT (NIVEAU 1) -->
+                                                <div class="hierarchy-card parent-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(1) }};">
+                                                    <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }};">
+                                                        <div class="hierarchy-icon">
+                                                            <i class="fas fa-bullseye"></i>
+                                                     </div>
+                                                        <div class="hierarchy-info">
+                                                            <h6 class="mb-0">Objectif Stratégique</h6>
+                                                            <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}</small>
+                                                 </div>
+                                                        <div class="hierarchy-arrow">
+                                                            <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                                    <div class="hierarchy-body">
+                                                        <div class="hierarchy-stats">
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</div>
+                                                                <div class="stat-label">Progression</div>
+                                                         </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifStrategique->objectifsSpecifiques->count() }}</div>
+                                                                <div class="stat-label">OSP</div>
+                                                </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifStrategique->objectifsSpecifiques->sum(function($ospec) { return $ospec->actions->count(); }) }}</div>
+                                                                <div class="stat-label">Actions</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="hierarchy-progress">
+                                                            <div class="progress" style="height: 6px; background: #e9ecef;">
+                                                                <div class="progress-bar" style="width: {{ $selectedObjectifStrategique->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(1) }};"></div>
+                                                            </div>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                             
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
+                                                <div class="hierarchy-arrow-container">
+                                                    <div class="hierarchy-arrow-line"></div>
+                                                    <div class="hierarchy-arrow-head">
+                                                        <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                             
+                                                                                           <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) -->
+                                                <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
+                                                  <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
+                                                      <div class="hierarchy-icon">
+                                                          <i class="fas fa-bullseye"></i>
+                                                     </div>
+                                                      <div class="hierarchy-info">
+                                                          <h6 class="mb-0">Objectif Spécifique</h6>
+                                                          <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}.{{ $selectedObjectifSpecifique->code }} - {{ $selectedObjectifSpecifique->libelle }}</small>
+                                                 </div>
+                                                      <div class="hierarchy-arrow">
+                                                          <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                                  <div class="hierarchy-body">
+                                                      <div class="hierarchy-stats">
+                                                          <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ number_format($selectedObjectifSpecifique->taux_avancement, 1) }}%</div>
+                                                              <div class="stat-label">Progression</div>
+                                                         </div>
+                                                          <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifSpecifique->actions->count() }}</div>
+                                                              <div class="stat-label">Actions</div>
+                                                          </div>
+                                                          <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifSpecifique->actions->sum(function($action) { return $action->sousActions->count(); }) }}</div>
+                                                              <div class="stat-label">Sous-Actions</div>
+                                                          </div>
+                                                      </div>
+                                                      <div class="hierarchy-progress">
+                                                            <div class="progress" style="height: 6px; background: #e9ecef;">
+                                                                <div class="progress-bar" style="width: {{ $selectedObjectifSpecifique->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(2) }};"></div>
+                                                            </div>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                             
+                            
+                            <!-- Vue Action -->
+                            @elseif($currentView === 'action')
+                                <div class="p-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                                <h4 class="mb-0">
+                                                    <i class="fas fa-list-check me-2 style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                    Sous-actions
+                                                </h4>
+                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openModalCreateSousAction" onclick="console.log('🖱️ Clic sur bouton Créer une sous-action')">
+                                                    <i class="fas fa-plus me-2"></i>Créer une Sous-action
+                                                </button>
+                                                <button type="button" class="btn btn-sm ms-2" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="testLivewireConnection" onclick="console.log('🧪 Test Livewire')">
+                                                    <i class="fas fa-vial me-1"></i>Test
+                                                </button>
                                                          </div>
                                             
                                             @if($selectedAction->sousActions->count() > 0)
@@ -1514,10 +1846,10 @@ use Illuminate\Support\Facades\Auth;
                                                                     <i class="fas fa-percentage me-1"></i>Progression
                                                                 </th>
                                                                 <th style="width: 15%;">
-                                                                    <i class="fas fa-user me-1"></i>Owner
+                                                                    <i class="fas fa-user me-1"></i>Propriétaire
                                                                 </th>
                                                                 <th style="width: 17%;">
-                                                                    Echéance
+                                                                    <i class="fas fa-calendar me-1"></i>Échéance
                                                                 </th>
                                                                 <th style="width: 12%;">
                                                                     <i class="fas fa-cogs me-1"></i>Actions
@@ -1560,7 +1892,7 @@ use Illuminate\Support\Facades\Auth;
                                                                             <div class="d-flex justify-content-between align-items-center w-100 mb-1">
                                                                                 <small class="text-muted">Progression</small>
                                                                                 <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
-                                                                                    {{ number_format($sousAction->taux_avancement, 1) }}%
+                                                                                    {{ number_format($sousAction->taux_avancement, 2) }}%
                                                                                 </span>
                                                      </div>
                                                                             <div class="progress mb-2 progress-compact" style="width: 100%; background: #e9ecef;">
@@ -1573,8 +1905,17 @@ use Illuminate\Support\Facades\Auth;
                                                  </div>
                                                          </div>
                                                                             
-                                                                           
-                                                </div>
+                                                                            <!-- Indicateur du type de calcul -->
+                                                                            @if($sousAction->type === 'projet')
+                                                                                <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};">
+                                                                                    <i class="fas fa-calculator me-1"></i>Auto-calculé
+                                                                                </small>
+                                                                            @else
+                                                                                <small class="text-muted">
+                                                                                    <i class="fas fa-hand-paper me-1"></i>Manuel
+                                                                                </small>
+                                                                            @endif
+                                                        </div>
                                                                  </td>
                                                                  <td>
                                                                         @if($sousAction->owner)
@@ -1590,31 +1931,31 @@ use Illuminate\Support\Facades\Auth;
                                                                         <div class="d-flex flex-column align-items-start">
                                                                             @if($sousAction->date_echeance)
                                                                                 <div class="mb-1">
-                                                                                    <i class="fas fa-calendar-alt "style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                                                    <i class="fas fa-calendar-alt style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
                                                                                     <span class="badge bg-info badge-enhanced">{{ \Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') }}</span>
-                                            </div>
+                                                    </div>
                                                                             @else
                                                                                 <div class="mb-1">
                                                                                     <i class="fas fa-calendar-alt text-muted column-icon"></i>
                                                                                     <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">Non définie</span>
-                                        </div>
+                                                </div>
                                                                             @endif
                                                                             
                                                                             @if($sousAction->taux_avancement == 100 && $sousAction->date_realisation)
                                                                                 <div>
-                                                                                    <i class="fas fa-check-circle "style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
-                                                                                    <small style="color: {{ $pilier->getHierarchicalColor(4) }};">Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}</small>
-                                    </div>
+                                                                                    <i class="fas fa-check-circle style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
+                                                                                    <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};"">Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}</small>
+                                            </div>
                                                                             @endif
-                                </div>
+                                        </div>
                                                                  </td>
                                                                     <td>
                                                                         <div class="d-flex gap-1">
                                                                             <!-- Bouton Voir -->
                                                                             <button type="button" 
                                                                                 class="btn btn-sm btn-outline-primary btn-action" 
-                                                                                title="Voir les Détails"
-                                                                                wire:click="naviguerVersSousAction({{ $sousAction->id }})" onclick="console.log('ðŸ'ï¸ Voir Détails sous-action {{ $sousAction->id }}')">
+                                                                                title="Voir les détails"
+                                                                                wire:click="naviguerVersSousAction({{ $sousAction->id }})" onclick="console.log('👁️ Voir détails sous-action {{ $sousAction->id }}')">
                                                                              <i class="fas fa-eye"></i>
                                                                          </button>
                                                                             
@@ -1626,19 +1967,19 @@ use Illuminate\Support\Facades\Auth;
                                                                              <i class="fas fa-edit"></i>
                                                                          </button>
                                                                             
-                                                                            <!-- Boutons Spécifiques au type Projet -->
+                                                                            <!-- Boutons spécifiques au type Projet -->
                                                                             @if($sousAction->type === 'projet')
                                                                          <button type="button" 
                                                                                     class="btn btn-sm btn-outline-info btn-action btn-projet" 
                                                                                     title="Calendrier d'activités"
-                                                                                    onclick="console.log('ðŸ"… Ouvrir calendrier pour sous-action {{ $sousAction->id }}')">
+                                                                                    onclick="console.log('📅 Ouvrir calendrier pour sous-action {{ $sousAction->id }}')">
                                                                                     <i class="fas fa-calendar-alt"></i>
                                                                                 </button>
                                                                                 
                                                                                 <button type="button" 
                                                                                     class="btn btn-sm btn-outline-secondary btn-action btn-projet" 
                                                                                     title="Diagramme de Gantt"
-                                                                                    onclick="console.log('ðŸ"Š Ouvrir Gantt pour sous-action {{ $sousAction->id }}')">
+                                                                                    onclick="console.log('📊 Ouvrir Gantt pour sous-action {{ $sousAction->id }}')">
                                                                                     <i class="fas fa-chart-bar"></i>
                                                                                 </button>
                                                                             @endif
@@ -1647,7 +1988,7 @@ use Illuminate\Support\Facades\Auth;
                                                                             <button type="button" 
                                                                                 class="btn btn-sm btn-outline-danger btn-action" 
                                                                                  wire:click="deleteSousAction({{ $sousAction->id }})"
-                                                                                 onclick="if(!confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette sous-action ?')) return false;"
+                                                                                 onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette sous-action ?')) return false;"
                                                                                  title="Supprimer">
                                                                              <i class="fas fa-trash"></i>
                                                                          </button>
@@ -1671,7 +2012,7 @@ use Illuminate\Support\Facades\Auth;
                                 </div>
                                         
                                         <div class="col-md-4">
-                                             <!-- ðŸŽ¯ HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
+                                             <!-- 🎯 HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
                                             <div class="hierarchy-stats-container">
                                                 
                                                 <!-- PILIER PARENT (NIVEAU 0) -->
@@ -1711,7 +2052,7 @@ use Illuminate\Support\Facades\Auth;
                                                         </div>
                                                     </div>
                                                     
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -1726,8 +2067,344 @@ use Illuminate\Support\Facades\Auth;
                                                             <i class="fas fa-bullseye"></i>
                                                      </div>
                                                         <div class="hierarchy-info">
-                                                            <h6 class="mb-0">Objectif Stratégique
-                                                            </h6>
+                                                            <h6 class="mb-0">Objectif Stratégique</h6>
+                                                            <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}</small>
+                                                 </div>
+                                                        <div class="hierarchy-arrow">
+                                                            <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                                    <div class="hierarchy-body">
+                                                        <div class="hierarchy-stats">
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</div>
+                                                                <div class="stat-label">Progression</div>
+                                                         </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifStrategique->objectifsSpecifiques->count() }}</div>
+                                                                <div class="stat-label">OSP</div>
+                                                </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifStrategique->objectifsSpecifiques->sum(function($ospec) { return $ospec->actions->count(); }) }}</div>
+                                                                <div class="stat-label">Actions</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="hierarchy-progress">
+                                                            <div class="progress" style="height: 6px; background: #e9ecef;">
+                                                                <div class="progress-bar" style="width: {{ $selectedObjectifStrategique->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(1) }};"></div>
+                                                            </div>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                             
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
+                                                <div class="hierarchy-arrow-container">
+                                                    <div class="hierarchy-arrow-line"></div>
+                                                    <div class="hierarchy-arrow-head">
+                                                        <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                             
+                                                                                           <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) -->
+                                                <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
+                                                  <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
+                                                      <div class="hierarchy-icon">
+                                                          <i class="fas fa-bullseye"></i>
+                                                     </div>
+                                                      <div class="hierarchy-info">
+                                                          <h6 class="mb-0">Objectif Spécifique</h6>
+                                                          <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}.{{ $selectedObjectifSpecifique->code }} - {{ $selectedObjectifSpecifique->libelle }}</small>
+                                                 </div>
+                                                      <div class="hierarchy-arrow">
+                                                          <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                                  <div class="hierarchy-body">
+                                                      <div class="hierarchy-stats">
+                                                          <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ number_format($selectedObjectifSpecifique->taux_avancement, 1) }}%</div>
+                                                              <div class="stat-label">Progression</div>
+                                                         </div>
+                                                          <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifSpecifique->actions->count() }}</div>
+                                                              <div class="stat-label">Actions</div>
+                                                          </div>
+                                                          <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $selectedObjectifSpecifique->actions->sum(function($action) { return $action->sousActions->count(); }) }}</div>
+                                                              <div class="stat-label">Sous-Actions</div>
+                                                          </div>
+                                                      </div>
+                                                      <div class="hierarchy-progress">
+                                                            <div class="progress" style="height: 6px; background: #e9ecef;">
+                                                                <div class="progress-bar" style="width: {{ $selectedObjectifSpecifique->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(2) }};"></div>
+                                                            </div>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                         </div>
+                                    </div>
+                                </div>
+                            
+                            
+                            <!-- Vue Action -->
+                            @elseif($currentView === 'action')
+                                <div class="p-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                                <h4 class="mb-0">
+                                                    <i class="fas fa-list-check me-2 style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                    Sous-actions
+                                                </h4>
+                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openModalCreateSousAction" onclick="console.log('🖱️ Clic sur bouton Créer une sous-action')">
+                                                    <i class="fas fa-plus me-2"></i>Créer une Sous-action
+                                                </button>
+                                                <button type="button" class="btn btn-sm ms-2" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="testLivewireConnection" onclick="console.log('🧪 Test Livewire')">
+                                                    <i class="fas fa-vial me-1"></i>Test
+                                                </button>
+                                                         </div>
+                                            
+                                            @if($selectedAction->sousActions->count() > 0)
+                                                 <div class="table-responsive">
+                                                     <table class="table table-hover table-striped table-sous-actions">
+                                                         <thead style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                             <tr>
+                                                                 <th style="width: 10%;">
+                                                                    <i class="fas fa-code me-1"></i>Code
+                                                                </th>
+                                                                <th style="width: 20%;">
+                                                                    <i class="fas fa-tasks me-1"></i>Libellé
+                                                                </th>
+                                                                <th style="width: 8%;">
+                                                                    <i class="fas fa-tag me-1"></i>Type
+                                                                </th>
+                                                                <th style="width: 18%;">
+                                                                    <i class="fas fa-percentage me-1"></i>Progression
+                                                                </th>
+                                                                <th style="width: 15%;">
+                                                                    <i class="fas fa-user me-1"></i>Propriétaire
+                                                                </th>
+                                                                <th style="width: 17%;">
+                                                                    <i class="fas fa-calendar me-1"></i>Échéance
+                                                                </th>
+                                                                <th style="width: 12%;">
+                                                                    <i class="fas fa-cogs me-1"></i>Actions
+                                                                </th>
+                                                             </tr>
+                                                         </thead>
+                                                         <tbody>
+                                                    @foreach($selectedAction->sousActions as $sousAction)
+                                                             <tr>
+                                                                 <td>
+                                                                        <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                            {{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}.{{ $selectedObjectifSpecifique->code }}.{{ $selectedAction->code }}.{{ $sousAction->code }}
+                                                                        </span>
+                                                                 </td>
+                                                                 <td>
+                                                         <div>
+                                                                     <strong class="text-dark">{{ $sousAction->libelle }}</strong>
+                                                                     @if($sousAction->description)
+                                                                                <br><small class="text-muted">{{ Str::limit($sousAction->description, 80) }}</small>
+                                                                     @endif
+                                                         </div>
+                                                                 </td>
+                                                                 <td>
+                                                                        @if($sousAction->type === 'normal')
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-tasks me-1"></i>Normal
+                                                                            </span>
+                                                                        @elseif($sousAction->type === 'projet')
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-project-diagram me-1"></i>Projet
+                                                                         </span>
+                                                                     @else
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-question me-1"></i>Non défini
+                                                                            </span>
+                                                                     @endif
+                                                                 </td>
+                                                                 <td>
+                                                                        <div class="d-flex flex-column align-items-start">
+                                                                            <div class="d-flex justify-content-between align-items-center w-100 mb-1">
+                                                             <small class="text-muted">Progression</small>
+                                                                                <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                                    {{ number_format($sousAction->taux_avancement, 2) }}%
+                                                                                </span>
+                                                         </div>
+                                                                            <div class="progress mb-2 progress-compact" style="width: 100%; background: #e9ecef;">
+                                                                                <div class="progress-bar" 
+                                                                                     style="width: {{ $sousAction->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(4) }};"
+                                                                                  role="progressbar" 
+                                                                                  aria-valuenow="{{ $sousAction->taux_avancement }}" 
+                                                                                  aria-valuemin="0" 
+                                                                                  aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                                            
+                                                                            <!-- Indicateur du type de calcul -->
+                                                                            @if($sousAction->type === 'projet')
+                                                                                <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};">
+                                                                                    <i class="fas fa-calculator me-1"></i>Auto-calculé
+                                                                                </small>
+                                                                            @else
+                                                                                <small class="text-muted">
+                                                                                    <i class="fas fa-hand-paper me-1"></i>Manuel
+                                                                                </small>
+                                                                            @endif
+                                                </div>
+                                                                 </td>
+                                                                 <td>
+                                                                        @if($sousAction->owner)
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
+                                                                                <i class="fas fa-user me-1"></i>
+                                                                                {{ Str::limit($sousAction->owner->name, 15) }}
+                                                                            </span>
+                                                                        @else
+                                                                            <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">Non assigné</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex flex-column align-items-start">
+                                                                            @if($sousAction->date_echeance)
+                                                                                <div class="mb-1">
+                                                                                    <i class="fas fa-calendar-alt style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
+                                                                                    <span class="badge bg-info badge-enhanced">{{ \Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') }}</span>
+                                            </div>
+                                                                            @else
+                                                                                <div class="mb-1">
+                                                                                    <i class="fas fa-calendar-alt text-muted column-icon"></i>
+                                                                                    <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">Non définie</span>
+                                        </div>
+                                                                            @endif
+                                                                            
+                                                                            @if($sousAction->taux_avancement == 100 && $sousAction->date_realisation)
+                                                                                <div>
+                                                                                    <i class="fas fa-check-circle style="color: {{ $pilier->getHierarchicalColor(4) }};""></i>
+                                                                                    <small class="style="color: {{ $pilier->getHierarchicalColor(4) }};"">Réalisé le {{ \Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') }}</small>
+                                    </div>
+                                                                            @endif
+                                </div>
+                                                                 </td>
+                                                                    <td>
+                                                                        <div class="d-flex gap-1">
+                                                                            <!-- Bouton Voir -->
+                                                                            <button type="button" 
+                                                                                class="btn btn-sm btn-outline-primary btn-action" 
+                                                                                title="Voir les détails"
+                                                                                wire:click="naviguerVersSousAction({{ $sousAction->id }})" onclick="console.log('👁️ Voir détails sous-action {{ $sousAction->id }}')">
+                                                                             <i class="fas fa-eye"></i>
+                                                                         </button>
+                                                                            
+                                                                            <!-- Bouton Modifier -->
+                                                                         <button type="button" 
+                                                                                class="btn btn-sm btn-outline-warning btn-action" 
+                                                                                 wire:click="setActionToEditSousAction({{ $sousAction->id }})"
+                                                                                 title="Modifier">
+                                                                             <i class="fas fa-edit"></i>
+                                                                         </button>
+                                                                            
+                                                                            <!-- Boutons spécifiques au type Projet -->
+                                                                            @if($sousAction->type === 'projet')
+                                                                         <button type="button" 
+                                                                                    class="btn btn-sm btn-outline-info btn-action btn-projet" 
+                                                                                    title="Calendrier d'activités"
+                                                                                    onclick="console.log('📅 Ouvrir calendrier pour sous-action {{ $sousAction->id }}')">
+                                                                                    <i class="fas fa-calendar-alt"></i>
+                                                                                </button>
+                                                                                
+                                                                                <button type="button" 
+                                                                                    class="btn btn-sm btn-outline-secondary btn-action btn-projet" 
+                                                                                    title="Diagramme de Gantt"
+                                                                                    onclick="console.log('📊 Ouvrir Gantt pour sous-action {{ $sousAction->id }}')">
+                                                                                    <i class="fas fa-chart-bar"></i>
+                                                                                </button>
+                                                                            @endif
+                                                                            
+                                                                            <!-- Bouton Supprimer -->
+                                                                            <button type="button" 
+                                                                                class="btn btn-sm btn-outline-danger btn-action" 
+                                                                                 wire:click="deleteSousAction({{ $sousAction->id }})"
+                                                                                 onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette sous-action ?')) return false;"
+                                                                                 title="Supprimer">
+                                                                             <i class="fas fa-trash"></i>
+                                                                         </button>
+                                    </div>
+                                                                 </td>
+                                                             </tr>
+                                                    @endforeach
+                                                         </tbody>
+                                                     </table>
+                                                </div>
+                                            @else
+                                                <div class="text-center py-5">
+                                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                                    <h5 class="text-muted">Aucune sous-action</h5>
+                                                    <p class="text-muted">Commencez par créer votre première sous-action</p>
+                                                                            <button type="button" class="btn style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}; border-color: {{ $pilier->getHierarchicalColor(4) }};" wire:click="openCreateSousActionModal">
+                            <i class="fas fa-plus me-2"></i>Créer la première sous-action
+                        </button>
+                                                </div>
+                                            @endif
+                                </div>
+                                        
+                                        <div class="col-md-4">
+                                             <!-- 🎯 HIERARCHIE COMPLETE DES STATISTIQUES PARENT -->
+                                            <div class="hierarchy-stats-container">
+                                                
+                                                <!-- PILIER PARENT (NIVEAU 0) -->
+                                                <div class="hierarchy-card parent-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(0) }};">
+                                                    <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(0) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(0)) }};">
+                                                        <div class="hierarchy-icon">
+                                                            <i class="fas fa-layer-group"></i>
+                                                </div>
+                                                        <div class="hierarchy-info">
+                                                            <h6 class="mb-0">Pilier Parent</h6>
+                                                            <small>{{ $pilier->code }} - {{ $pilier->libelle }}</small>
+                                                        </div>
+                                                        <div class="hierarchy-arrow">
+                                                            <i class="fas fa-chevron-down"></i>
+                                                     </div>
+                                                 </div>
+                                                    <div class="hierarchy-body">
+                                                        <div class="hierarchy-stats">
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ number_format($pilier->taux_avancement, 1) }}%</div>
+                                                                <div class="stat-label">Progression</div>
+                                                         </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $pilier->objectifsStrategiques->count() }}</div>
+                                                                <div class="stat-label">OS</div>
+                                                         </div>
+                                                            <div class="stat-item">
+                                                                <div class="stat-value" style="color: #333;">{{ $pilier->objectifsStrategiques->sum(function($os) { return $os->objectifsSpecifiques->count(); }) }}</div>
+                                                                <div class="stat-label">OSP</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="hierarchy-progress">
+                                                            <div class="progress" style="height: 6px; background: #e9ecef;">
+                                                                <div class="progress-bar" style="width: {{ $pilier->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(0) }};"></div>
+                                                         </div>
+                                                     </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
+                                                <div class="hierarchy-arrow-container">
+                                                    <div class="hierarchy-arrow-line"></div>
+                                                    <div class="hierarchy-arrow-head">
+                                                        <i class="fas fa-chevron-down"></i>
+                                                         </div>
+                                                         </div>
+                                                
+                                                <!-- OBJECTIF STRATEGIQUE PARENT (NIVEAU 1) -->
+                                                <div class="hierarchy-card parent-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(1) }};">
+                                                    <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }};">
+                                                        <div class="hierarchy-icon">
+                                                            <i class="fas fa-bullseye"></i>
+                                                     </div>
+                                                        <div class="hierarchy-info">
+                                                            <h6 class="mb-0">Objectif Stratégique</h6>
                                                             <small>{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }} - {{ $selectedObjectifStrategique->libelle }}</small>
                                                  </div>
                                                         <div class="hierarchy-arrow">
@@ -1757,7 +2434,7 @@ use Illuminate\Support\Facades\Auth;
                                                     </div>
                                                 </div>
                                                 
-                                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                                 <div class="hierarchy-arrow-container">
                                                     <div class="hierarchy-arrow-line"></div>
                                                     <div class="hierarchy-arrow-head">
@@ -1765,7 +2442,7 @@ use Illuminate\Support\Facades\Auth;
                                             </div>
                                         </div>
                                              
-                                                                                           <!-- OBJECTIF SPéCIFIQUE COURANT (NIVEAU 2) -->
+                                                                                           <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) -->
                                                 <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
                                                   <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
                                                       <div class="hierarchy-icon">
@@ -1806,7 +2483,7 @@ use Illuminate\Support\Facades\Auth;
                                     </div>
                                 </div>
                                 
-                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                 <div class="hierarchy-arrow-container">
                                     <div class="hierarchy-arrow-line"></div>
                                     <div class="hierarchy-arrow-head">
@@ -1851,7 +2528,7 @@ use Illuminate\Support\Facades\Auth;
                                     </div>
                                 </div>
                                 
-                                <!-- FLÃˆCHE HIéRARCHIQUE -->
+                                <!-- FLÈCHE HIÉRARCHIQUE -->
                                 <div class="hierarchy-arrow-container">
                                     <div class="hierarchy-arrow-line"></div>
                                     <div class="hierarchy-arrow-head">
@@ -1901,7 +2578,7 @@ use Illuminate\Support\Facades\Auth;
                             <!-- Vue Sous-Action -->
                             @elseif($currentView === 'sousAction')
                                 <div class="p-4">
-                                    <!-- En-tÃªte avec navigation -->
+                                    <!-- En-tête avec navigation -->
                                     <div class="d-flex justify-content-between align-items-center mb-4">
                                         <div>
                                             <h4 class="mb-1">
@@ -1922,7 +2599,7 @@ use Illuminate\Support\Facades\Auth;
                                             <button type="button" class="btn btn-outline-primary btn-sm" wire:click="setActionToEditSousAction({{ $selectedSousAction->id }})">
                                                 <i class="fas fa-edit me-1"></i>Modifier
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger btn-sm" wire:click="deleteSousAction({{ $selectedSousAction->id }})" onclick="return confirm('ÃŠtes-vous sÃ»r de vouloir supprimer cette sous-action ?')">
+                                            <button type="button" class="btn btn-outline-danger btn-sm" wire:click="deleteSousAction({{ $selectedSousAction->id }})" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette sous-action ?')">
                                                 <i class="fas fa-trash me-1"></i>Supprimer
                                             </button>
                                         </div>
@@ -1953,61 +2630,42 @@ use Illuminate\Support\Facades\Auth;
                                                         </div>
                                                     @endif
                                                     
-                                                    <!-- ContrÃ´le de progression en temps réel -->
+                                                    <!-- Contrôle de progression en temps réel -->
                                                     <div class="mb-4">
                                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                                             <h6 class="text-muted mb-0">Progression</h6>
-                                                            
+                                                            <span class="badge fs-6" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                <span wire:loading.remove wire:target="updateSousActionTaux">
+                                                                    {{ $selectedSousAction->taux_avancement }}%
+                                                                </span>
+                                                                <span wire:loading wire:target="updateSousActionTaux" class="text-white">
+                                                                    <i class="fas fa-sync-alt fa-spin me-1"></i>Mise à jour...
+                                                                </span>
+                                                            </span>
                                                         </div>
-                                                        
-                                                        
-                                                        @if($selectedSousAction->type === 'normal')
-                                                            <!-- Boutons de progression pour les sous-actions normales -->
-                                                            <div class="progression-buttons mb-3">
-                                                                <div class="d-flex justify-content-between mb-2">
-                                                                    <button type="button" 
-                                                                            class="btn btn-outline-secondary btn-sm progression-btn {{ ($selectedSousAction->taux_avancement ?? 0) == 0 ? 'active' : '' }}"
-                                                                            wire:click="updateProgressionBouton({{ $selectedSousAction->id ?? 0 }}, 0)"
-                                                                            style="min-width: 60px; transition: all 0.3s ease;">
-                                                                        0%
-                                                                    </button>
-                                                                    <button type="button" 
-                                                                            class="btn btn-outline-secondary btn-sm progression-btn {{ ($selectedSousAction->taux_avancement ?? 0) >= 25 && ($selectedSousAction->taux_avancement ?? 0) < 50 ? 'active' : '' }}"
-                                                                            wire:click="updateProgressionBouton({{ $selectedSousAction->id ?? 0 }}, 25)"
-                                                                            style="min-width: 60px; transition: all 0.3s ease;">
-                                                                        25%
-                                                                    </button>
-                                                                    <button type="button" 
-                                                                            class="btn btn-outline-secondary btn-sm progression-btn {{ ($selectedSousAction->taux_avancement ?? 0) >= 50 && ($selectedSousAction->taux_avancement ?? 0) < 75 ? 'active' : '' }}"
-                                                                            wire:click="updateProgressionBouton({{ $selectedSousAction->id ?? 0 }}, 50)"
-                                                                            style="min-width: 60px; transition: all 0.3s ease;">
-                                                                        50%
-                                                                    </button>
-                                                                    <button type="button" 
-                                                                            class="btn btn-outline-secondary btn-sm progression-btn {{ ($selectedSousAction->taux_avancement ?? 0) >= 75 && ($selectedSousAction->taux_avancement ?? 0) < 100 ? 'active' : '' }}"
-                                                                            wire:click="updateProgressionBouton({{ $selectedSousAction->id ?? 0 }}, 75)"
-                                                                            style="min-width: 60px; transition: all 0.3s ease;">
-                                                                        75%
-                                                                    </button>
-                                                                    <button type="button" 
-                                                                            class="btn btn-outline-secondary btn-sm progression-btn {{ ($selectedSousAction->taux_avancement ?? 0) == 100 ? 'active' : '' }}"
-                                                                            wire:click="updateProgressionBouton({{ $selectedSousAction->id ?? 0 }}, 100)"
-                                                                            style="min-width: 60px; transition: all 0.3s ease;">
-                                                                        100%
-                                                                    </button>
-                                                                </div>
-                                                                
-                                                                <!-- Barre de progression visuelle -->
-                                                                <div class="progress mb-2" style="height: 20px; border-radius: 10px;">
-                                                                    <div class="progress-bar bg-gradient-primary" 
+                                                        <div class="progress mb-2" style="height: 12px; background: #e9ecef;">
+                                                            <div class="progress-bar" 
+                                                                 style="width: {{ $selectedSousAction->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(4) }};"
                                                                  role="progressbar" 
-                                                                         style="width: {{ $selectedSousAction->taux_avancement ?? 0 }}%; background: {{ $pilier->getHierarchicalColor(4) }}; transition: width 0.5s ease;"
-                                                                         aria-valuenow="{{ $selectedSousAction->taux_avancement ?? 0 }}" 
+                                                                 aria-valuenow="{{ $selectedSousAction->taux_avancement }}" 
                                                                  aria-valuemin="0" 
                                                                  aria-valuemax="100">
-                                                                        <strong class="text-white">{{ $selectedSousAction->taux_avancement ?? 0 }}%</strong>
                                                             </div>
                                                         </div>
+                                                        
+                                                        @if($selectedSousAction->type === 'normal')
+                                                            <!-- Slider de progression pour les sous-actions normales -->
+                                                            <input type="range" 
+                                                                   class="form-range" 
+                                                                       min="0" max="100" step="5"
+                                                                       value="{{ $selectedSousAction->taux_avancement }}"
+                                                                   wire:change="updateSousActionTauxSimple($event.target.value)"
+                                                                   style="height: 8px;"
+                                                                   oninput="console.log('🔄 Slider moved to:', this.value)"
+                                                                   onchange="console.log('✅ Slider changed to:', this.value)">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <small class="text-muted">0%</small>
+                                                                <small class="text-muted">100%</small>
                                                                 </div>
                                                         @else
                                                             <!-- Progression automatique pour les projets -->
@@ -2015,17 +2673,17 @@ use Illuminate\Support\Facades\Auth;
                                                                 <div class="alert alert-info mb-0">
                                                                     <i class="fas fa-info-circle me-2"></i>
                                                                     <strong>Progression automatique</strong><br>
-                                                                    <small>Le taux d'avancement est calculé automatiquement Ã  partir des activités du projet</small>
+                                                                    <small>Le taux d'avancement est calculé automatiquement à partir des activités du projet</small>
                                                             </div>
                                                             </div>
                                                         @endif
                                                     </div>
 
-                                                    <!-- Informations Détaillées -->
+                                                    <!-- Informations détaillées -->
                                                     <div class="row">
                                                         <div class="col-md-6">
                                                             <div class="info-item mb-3">
-                                                                <h6 class="text-muted mb-1">Owner</h6>
+                                                                <h6 class="text-muted mb-1">Propriétaire</h6>
                                                                 <div class="d-flex align-items-center">
                                                                     <i class="fas fa-user me-2" style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
                                                                     <span class="fw-bold">{{ $selectedSousAction->owner->name ?? 'Non assigné' }}</span>
@@ -2043,7 +2701,7 @@ use Illuminate\Support\Facades\Auth;
                                                                     @elseif($selectedSousAction->taux_avancement >= 50)
                                                                         <i class="fas fa-pause me-1"></i>En pause
                                                                     @else
-                                                                        <i class="fas fa-play me-1"></i>Ã€ démarrer
+                                                                        <i class="fas fa-play me-1"></i>À démarrer
                                                                     @endif
                                                                 </span>
                                                             </div>
@@ -2082,7 +2740,7 @@ use Illuminate\Support\Facades\Auth;
 
                                                             @if($selectedSousAction->date_echeance)
                                                         <div class="info-item">
-                                                            <h6 class="text-muted mb-1">écart</h6>
+                                                            <h6 class="text-muted mb-1">Écart</h6>
                                                             @php
                                                                 $ecart = $this->calculateEcart($selectedSousAction->date_echeance, $selectedSousAction->date_realisation);
                                                                 $ecartClass = $ecart ? 'success' : 'warning';
@@ -2097,18 +2755,107 @@ use Illuminate\Support\Facades\Auth;
                                                         </div>
                                                     </div>
 
-                                            <!-- Carte redondante supprimée - Les informations sont déjà affichées dans la carte principale ci-dessus -->
-                                                            
-                                                                                                                                                                                    <!-- SECTION DES ACTIVITÉS SUPPRIMéE TEMPORAIREMENT - TOUTES LES SOUS-ACTIONS SONT DE TYPE NORMAL -->
+                                                    <!-- ONGLET ACTIVITÉS POUR SOUS-ACTIONS DE TYPE PROJET -->
+                                                    @if($selectedSousAction->type === 'projet')
+                                                        <div class="activities-section mt-4">
+                                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                                <h6 class="text-muted mb-0">
+                                                                    <i class="fas fa-tasks me-2" style="color: {{ $pilier->getHierarchicalColor(4) }};"></i>
+                                                                    Activités du projet
+                                                                </h6>
+                                                                <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(3)) }}; border-color: {{ $pilier->getHierarchicalColor(3) }};" wire:click="openCreateActivityModal">
+                                                                    <i class="fas fa-plus me-1"></i>Nouvelle activité
+                                                                </button>
+                                                </div>
+
+                                                            <!-- Liste des activités -->
+                                                            @if($selectedSousAction->activities && $selectedSousAction->activities->count() > 0)
+                                                                <div class="activities-list">
+                                                                    @foreach($selectedSousAction->activities as $activity)
+                                                                        <div class="activity-card mb-3 p-3 border rounded" style="border-left: 4px solid {{ $activity->priorite_color }} !important;">
+                                                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                                <div class="flex-grow-1">
+                                                                                    <h6 class="mb-1 fw-bold">{{ $activity->titre }}</h6>
+                                                                                    @if($activity->description)
+                                                                                        <p class="text-muted small mb-2">{{ $activity->description }}</p>
+                                                                                    @endif
+                                            </div>
+                                                                                <div class="activity-actions">
+                                                                                    <button type="button" class="btn btn-outline-primary btn-sm me-1" wire:click="openEditActivityModal({{ $activity->id }})">
+                                                                                        <i class="fas fa-edit"></i>
+                                                                                    </button>
+                                                                                    <button type="button" class="btn btn-outline-danger btn-sm" wire:click="deleteActivity({{ $activity->id }})" onclick="return confirm('Supprimer cette activité ?')">
+                                                                                        <i class="fas fa-trash"></i>
+                                                                                    </button>
+                                        </div>
                                     </div>
                                                                             
+                                                                            <div class="row">
+                                                                                <div class="col-md-6">
+                                                                                    <div class="activity-info">
+                                                                                        <small class="text-muted d-block">
+                                                                                            <i class="fas fa-calendar me-1"></i>
+                                                                                            {{ \Carbon\Carbon::parse($activity->date_debut)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($activity->date_fin)->format('d/m/Y') }}
+                                                                                        </small>
+                                                                                        <small class="text-muted d-block">
+                                                                                            <i class="fas fa-clock me-1"></i>
+                                                                                            {{ $activity->duree_estimee }}h
+                                                                                        </small>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="col-md-6">
+                                                                                    <div class="activity-status">
+                                                                                        <span class="badge me-2" style="background: {{ $activity->priorite_color }}; color: white;">
+                                                                                            {{ ucfirst($activity->priorite) }}
+                                                                                        </span>
+                                                                                        <span class="badge" style="background: {{ $activity->statut_color }}; color: white;">
+                                                                                            {{ $activity->statuts_list[$activity->statut] ?? ucfirst($activity->statut) }}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
                                                                             
+                                                                            <!-- Progression de l'activité -->
+                                                                            <div class="activity-progress mt-3">
+                                                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                                    <small class="text-muted">Progression</small>
+                                                                                    <small class="fw-bold">{{ $activity->taux_avancement }}%</small>
+                                                                                </div>
+                                                                                <div class="progress mb-2" style="height: 8px;">
+                                                                                    <div class="progress-bar" style="width: {{ $activity->taux_avancement }}%; background: {{ $activity->priorite_color }};"></div>
+                                                                                </div>
+                                                                                <div class="d-flex justify-content-between">
+                                                                                    <small class="text-muted">0%</small>
+                                                                                    <small class="text-muted">100%</small>
+                                                                                </div>
+                                                                                <input type="range" 
+                                                                                       class="form-range mt-2" 
+                                                                                       min="0" max="100" step="5"
+                                                                                       value="{{ $activity->taux_avancement }}"
+                                                                                       wire:change="updateActivityTaux({{ $activity->id }}, $event.target.value)"
+                                                                                       style="height: 6px;">
+                                                                            </div>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            @else
+                                                                <div class="text-center py-4">
+                                                                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                                                    <p class="text-muted">Aucune activité créée pour ce projet</p>
+                                                                    <p class="text-muted small">Créez votre première activité pour commencer le suivi</p>
                                 </div>
                             @endif
                         </div>
+                    @endif
                 </div>
 
+                        </div>
+
+                                           
+                        </div>
+                    </div>
+                </div>
+                            @endif
             </div>
                     @endif
                 </div>
@@ -2129,7 +2876,7 @@ use Illuminate\Support\Facades\Auth;
             transition: all 0.3s ease;
         }
 
-        /* Styles pour la page Détail sous-action */
+        /* Styles pour la page détail sous-action */
         .hierarchy-impact-item {
             padding: 12px;
             border-radius: 8px;
@@ -2385,7 +3132,7 @@ use Illuminate\Support\Facades\Auth;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     
-    /* IcÃ´nes dans les colonnes */
+    /* Icônes dans les colonnes */
     .column-icon {
         color: #6c757d;
         margin-right: 6px;
@@ -2553,307 +3300,63 @@ use Illuminate\Support\Facades\Auth;
         }
     </script>
 
-    <!-- SCRIPT POUR FORCER LE RE-RENDU -->
-    <script>
-        document.addEventListener('livewire:init', () => {
-            // Écouter l'événement de forçage CSS automatique
-            Livewire.on('force-modal-css', (data) => {
-                console.log('🎯 [AUTO] Événement force-modal-css reçu:', data);
-                
-                // Attendre que le DOM soit mis à jour
-                setTimeout(() => {
-                    console.log('🎯 [AUTO] Forçage automatique de l\'affichage du modal...');
-                    forceModalDisplay();
-                }, 100);
-            });
-            
-            Livewire.on('console.log', (data) => {
-                console.log('📝 [LIVEWIRE]', data);
-            });
-        });
-        
-        // ===== NOUVEAU MODAL INDÉPENDANT =====
-        
-        // Ouvrir le nouveau modal
-        function openNewOSModal() {
-            console.log('🚀 [NEW MODAL] Ouverture du nouveau modal de création d\'OS...');
-            const modal = document.getElementById('newCreateOSModal');
-            if (modal) {
-                modal.style.display = 'block';
-                console.log('✅ [NEW MODAL] Modal affiché avec succès !');
-                
-                // Focus sur le premier champ
-                setTimeout(() => {
-                    const firstInput = modal.querySelector('input[name="code"]');
-                    if (firstInput) firstInput.focus();
-                }, 100);
-            } else {
-                console.error('❌ [NEW MODAL] Modal non trouvé !');
-            }
-        }
-        
-        // Fermer le nouveau modal
-        function closeNewOSModal() {
-            console.log('🔒 [NEW MODAL] Fermeture du nouveau modal...');
-            const modal = document.getElementById('newCreateOSModal');
-            if (modal) {
-                modal.style.display = 'none';
-                console.log('✅ [NEW MODAL] Modal fermé avec succès !');
-                
-                // Réinitialiser le formulaire
-                const form = document.getElementById('newCreateOSForm');
-                if (form) form.reset();
-            }
-        }
-        
-        // Configuration du nouveau formulaire
-        function setupNewOSForm() {
-            console.log('🔄 [NEW MODAL] Configuration du nouveau formulaire...');
-            
-            const form = document.getElementById('newCreateOSForm');
-            if (form) {
-                console.log('✅ [NEW MODAL] Formulaire trouvé, ajout de l\'écouteur d\'événement...');
-                
-                // Supprimer l'ancien écouteur s'il existe
-                form.removeEventListener('submit', handleNewOSSubmit);
-                
-                // Ajouter le nouvel écouteur
-                form.addEventListener('submit', handleNewOSSubmit);
-                
-                console.log('✅ [NEW MODAL] Écouteur d\'événement ajouté avec succès !');
-            } else {
-                console.warn('⚠️ [NEW MODAL] Formulaire non trouvé, nouvelle tentative dans 100ms...');
-                setTimeout(setupNewOSForm, 100);
-            }
-        }
-        
-        // Gestion de la soumission du nouveau formulaire
-        function handleNewOSSubmit(e) {
-            e.preventDefault();
-            console.log('🚀 [NEW MODAL] Soumission du nouveau formulaire...');
-            
-            const formData = new FormData(e.target);
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
-            
-            console.log('📋 [NEW MODAL] Données du formulaire:', data);
-            
-            // Appeler la méthode Livewire
-            const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
-            console.log('🔄 [NEW MODAL] Appel de la méthode Livewire saveNewOS...');
-            window.Livewire.find(wireId).call('saveNewOS', data);
-            
-            // Fermer le modal immédiatement
-            closeNewOSModal();
-            
-            console.log('✅ [NEW MODAL] Formulaire soumis avec succès !');
-        }
-        
-        // Fermer le modal en cliquant à l'extérieur
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('newCreateOSModal');
-            if (modal && e.target === modal) {
-                closeNewOSModal();
-            }
-        });
-        
-        // Initialisation du nouveau formulaire
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupNewOSForm);
-        } else {
-            setupNewOSForm();
-        }
-        
-        // Écouter les événements Livewire
-        document.addEventListener('livewire:init', setupNewOSForm);
-        
-        // ===== ANCIEN MODAL BOOTSTRAP (GARDÉ POUR COMPATIBILITÉ) =====
-        
-        // Configuration du formulaire de création d'objectif stratégique
-        function setupObjectifStrategiqueForm() {
-            console.log('🔄 [BOOTSTRAP] Configuration du formulaire de création d\'OS...');
-            
-            const form = document.getElementById('createObjectifStrategiqueForm');
-            if (form) {
-                console.log('✅ [BOOTSTRAP] Formulaire trouvé, ajout de l\'écouteur d\'événement...');
-                
-                // Supprimer l'ancien écouteur s'il existe
-                form.removeEventListener('submit', handleObjectifStrategiqueSubmit);
-                
-                // Ajouter le nouvel écouteur
-                form.addEventListener('submit', handleObjectifStrategiqueSubmit);
-                
-                console.log('✅ [BOOTSTRAP] Écouteur d\'événement ajouté avec succès !');
-            } else {
-                console.warn('⚠️ [BOOTSTRAP] Formulaire non trouvé, nouvelle tentative dans 100ms...');
-                setTimeout(setupObjectifStrategiqueForm, 100);
-            }
-        }
-        
-        // Gestion de la soumission du formulaire
-        function handleObjectifStrategiqueSubmit(e) {
-            e.preventDefault();
-            console.log('🚀 [BOOTSTRAP] Soumission du formulaire de création d\'OS...');
-            
-            const formData = new FormData(e.target);
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
-            
-            console.log('📋 [BOOTSTRAP] Données du formulaire:', data);
-            
-            // Appeler la méthode Livewire
-            const wireId = document.querySelector('[wire\\:id]').getAttribute('wire:id');
-            console.log('🔄 [BOOTSTRAP] Appel de la méthode Livewire saveNewOS...');
-            window.Livewire.find(wireId).call('saveNewOS', data);
-            
-            // Fermer le modal après soumission (méthode sécurisée avec délai)
-            setTimeout(() => {
-                console.log('🔄 [BOOTSTRAP] Tentative de fermeture du modal après délai...');
-                
-                try {
-                    const modalElement = document.getElementById('createObjectifStrategiqueModal');
-                    if (modalElement) {
-                        // Méthode 1: Via l'instance Bootstrap
-                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
-                        if (modalInstance) {
-                            modalInstance.hide();
-                            console.log('✅ [BOOTSTRAP] Modal fermé via instance Bootstrap');
-                        } else {
-                            // Méthode 2: Via l'API Bootstrap directement
-                            const newModal = new bootstrap.Modal(modalElement);
-                            newModal.hide();
-                            console.log('✅ [BOOTSTRAP] Modal fermé via nouvelle instance');
-                        }
-                    } else {
-                        console.warn('⚠️ [BOOTSTRAP] Élément modal non trouvé');
-                    }
-                } catch (modalError) {
-                    console.warn('⚠️ [BOOTSTRAP] Erreur lors de la fermeture du modal:', modalError);
-                    // Méthode 3: Fermeture manuelle via CSS
-                    const modalElement = document.getElementById('createObjectifStrategiqueModal');
-                    if (modalElement) {
-                        modalElement.style.display = 'none';
-                        modalElement.classList.remove('show');
-                        document.body.classList.remove('modal-open');
-                        const backdrop = document.querySelector('.modal-backdrop');
-                        if (backdrop) backdrop.remove();
-                        console.log('✅ [BOOTSTRAP] Modal fermé via instance Bootstrap');
-                    }
-                }
-            }, 500); // Attendre 500ms pour que Bootstrap soit prêt
-            
-            console.log('✅ [BOOTSTRAP] Formulaire soumis avec succès !');
-        }
-        
-        // Initialisation
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupObjectifStrategiqueForm);
-        } else {
-            setupObjectifStrategiqueForm();
-        }
-        
-                // Écouter les événements Livewire
-        document.addEventListener('livewire:init', setupObjectifStrategiqueForm);
-    </script>
-
-    <!-- ===== MODALS DE CRéATION ET D'éDITION ===== -->
+    <!-- ===== MODALS DE CRÉATION ET D'ÉDITION ===== -->
     
-    <!-- MODAL BOOTSTRAP PUR (TEST) -->
-    <div class="modal fade" id="bootstrapTestModal" tabindex="-1" aria-labelledby="bootstrapTestModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- Modal Créer Objectif Stratégique -->
+    @if($showCreateObjectifForm)
+    <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header" style="background: #007bff; color: white;">
-                    <h5 class="modal-title" id="bootstrapTestModalLabel">
-                        <i class="fas fa-rocket me-2"></i>
-                        Test Modal Bootstrap
+                <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }};">
+                    <h5 class="modal-title">
+                        <i class="fas fa-bullseye me-2"></i>
+                        Créer un Objectif Stratégique
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeCreateOSModal"></button>
                 </div>
-                <div class="modal-body">
-                    <p>🎉 <strong>SUCCÈS !</strong> Ce modal Bootstrap fonctionne parfaitement !</p>
-                    <p>Si vous voyez ce message, le problème n'est PAS avec Bootstrap, mais avec Livewire.</p>
-                    <hr>
-                    <p><strong>Diagnostic :</strong></p>
-                    <ul>
-                        <li>✅ Bootstrap : Fonctionne</li>
-                        <li>❌ Livewire : Ne re-rend pas le composant</li>
-                        <li>🔧 Solution : Forcer le re-rendu Livewire</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    <button type="button" class="btn btn-primary" onclick="console.log('🎯 Modal Bootstrap fonctionne !')">Confirmer</button>
-                </div>
+                <form wire:submit.prevent="saveNewOS">
+                    <div class="modal-body">
+                        @csrf
+                        <div class="mb-3">
+                            <label class="form-label">Code *</label>
+                            <input type="text" class="form-control" wire:model="newObjectifStrategique.code" required>
+                            @error('newObjectifStrategique.code') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Libellé *</label>
+                            <input type="text" class="form-control" wire:model="newObjectifStrategique.libelle" required>
+                            @error('newObjectifStrategique.libelle') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" wire:model="newObjectifStrategique.description" rows="3"></textarea>
+                            @error('newObjectifStrategique.description') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Owner</label>
+                            <select class="form-select" wire:model="newObjectifStrategique.owner_id">
+                                <option value="">Sélectionner un owner</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('newObjectifStrategique.owner_id') <span class="text-danger">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="closeCreateOSModal">Annuler</button>
+                        <button type="submit" class="btn" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }}; border-color: {{ $pilier->getHierarchicalColor(1) }};">
+                            <i class="fas fa-save me-2"></i>Créer
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    
-    <!-- Modal Créer Objectif Stratégique (BOOTSTRAP PUR) -->
-    <!-- NOUVEAU MODAL CRÉER OBJECTIF STRATÉGIQUE (INDÉPENDANT) -->
-    @if($pilier)
-    <div id="newCreateOSModal" class="custom-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999;">
-        <div class="modal-content-custom" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; min-width: 500px; max-width: 600px; max-height: 80vh; overflow-y: auto;">
-            
-            <!-- HEADER -->
-            <div class="modal-header-custom" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid {{ $pilier->getHierarchicalColor(1) }};">
-                <h4 style="margin: 0; color: {{ $pilier->getHierarchicalColor(1) }}; font-weight: bold;">
-                    <i class="fas fa-bullseye me-2"></i>
-                    Créer un Objectif Stratégique
-                </h4>
-                <button type="button" onclick="closeNewOSModal()" style="background: none; border: none; font-size: 24px; color: #666; cursor: pointer; padding: 5px;">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <!-- FORMULAIRE -->
-            <form id="newCreateOSForm">
-                <input type="hidden" name="pilier_id" value="{{ $pilier->id }}">
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Code *</label>
-                    <input type="text" name="code" required style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;" placeholder="Ex: OS1">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Libellé *</label>
-                    <input type="text" name="libelle" required style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;" placeholder="Ex: Croissance des activités">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Description</label>
-                    <textarea name="description" rows="4" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; resize: vertical;" placeholder="Description optionnelle..."></textarea>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 25px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Owner</label>
-                    <select name="owner_id" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;">
-                        <option value="">Sélectionner un owner</option>
-                        @foreach($users as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <!-- BOUTONS -->
-                <div class="modal-footer-custom" style="display: flex; justify-content: flex-end; gap: 15px; padding-top: 20px; border-top: 1px solid #eee;">
-                    <button type="button" onclick="closeNewOSModal()" style="padding: 12px 24px; border: 2px solid #6c757d; background: white; color: #6c757d; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                        <i class="fas fa-times me-2"></i>Annuler
-                    </button>
-                    <button type="submit" style="padding: 12px 24px; border: none; background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }}; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                        <i class="submit-btn-text">Créer</i>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 
-    <!-- Modal éditer Objectif Stratégique
- -->
+    <!-- Modal Éditer Objectif Stratégique -->
     @if($showEditObjectifStrategiqueForm)
     <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
@@ -2862,7 +3365,6 @@ use Illuminate\Support\Facades\Auth;
                     <h5 class="modal-title">
                         <i class="fas fa-edit me-2"></i>
                         Modifier l'Objectif Stratégique
-
                     </h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="hideEditObjectifForm"></button>
                 </div>
@@ -2962,7 +3464,7 @@ use Illuminate\Support\Facades\Auth;
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 
-    <!-- Modal éditer Objectif Spécifique -->
+    <!-- Modal Éditer Objectif Spécifique -->
     @if($showEditObjectifSpecifiqueForm)
     <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
@@ -3070,7 +3572,7 @@ use Illuminate\Support\Facades\Auth;
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 
-    <!-- Modal éditer Action -->
+    <!-- Modal Éditer Action -->
     @if($showEditActionForm)
     <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
@@ -3182,7 +3684,7 @@ use Illuminate\Support\Facades\Auth;
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 
-    <!-- Modal éditer Objectif Spécifique -->
+    <!-- Modal Éditer Objectif Spécifique -->
     @if($showEditObjectifSpecifiqueForm)
     <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
@@ -3290,7 +3792,7 @@ use Illuminate\Support\Facades\Auth;
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 
-    <!-- Modal éditer Action -->
+    <!-- Modal Éditer Action -->
     @if($showEditActionForm)
     <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
@@ -3413,7 +3915,7 @@ use Illuminate\Support\Facades\Auth;
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <strong>Type Projet :</strong> Cette sous-action aura un calendrier d'activités, un diagramme de Gantt et des notifications automatiques.
-                                <br><small>Le taux d'avancement sera calculé automatiquement Ã  partir des activités.</small>
+                                <br><small>Le taux d'avancement sera calculé automatiquement à partir des activités.</small>
                             </div>
                         @endif
                     </div>
@@ -3436,7 +3938,7 @@ use Illuminate\Support\Facades\Auth;
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 
-    <!-- Modal éditer Sous-Action -->
+    <!-- Modal Éditer Sous-Action -->
     @if($showEditSousActionForm)
     <div class="modal fade show" style="display: block; z-index: 10000;" tabindex="-1" data-bs-backdrop="static">
         <div class="modal-dialog">
@@ -3510,7 +4012,7 @@ use Illuminate\Support\Facades\Auth;
                         @elseif($editingSousAction['type'] === 'projet')
                             <div class="alert alert-info">
                                 <i class="fas fa-info-circle me-2"></i>
-                                <strong>Type Projet :</strong> Le taux d'avancement est calculé automatiquement Ã  partir des activités.
+                                <strong>Type Projet :</strong> Le taux d'avancement est calculé automatiquement à partir des activités.
                                 <br><small>Utilisez le calendrier d'activités pour gérer la progression.</small>
                             </div>
                         @endif
@@ -3526,7 +4028,7 @@ use Illuminate\Support\Facades\Auth;
         </div>
     </div>
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
-                <!-- Script pour capturer les logs de débogage et gérer les mises Ã  jour en temps réel -->
+                <!-- Script pour capturer les logs de débogage et gérer les mises à jour en temps réel -->
                 <script>
                     document.addEventListener('livewire:init', () => {
                         // Capture des logs de débogage
@@ -3534,12 +4036,12 @@ use Illuminate\Support\Facades\Auth;
                             console.log(message, data);
                         });
 
-                                    // Gestion des mises Ã  jour en temps réel des taux
+                                    // Gestion des mises à jour en temps réel des taux
             Livewire.on('tauxMisAJour', (data) => {
-                console.log('ðŸ"„ événement tauxMisAJour reÃ§u:', data);
+                console.log('🔄 Événement tauxMisAJour reçu:', data);
                 
                 if (data.cascadeComplete) {
-                    // Mise Ã  jour instantanée de tous les pourcentages
+                    // Mise à jour instantanée de tous les pourcentages
                     updateAllPercentages(data);
                     
                     // Notification de succès
@@ -3548,42 +4050,41 @@ use Illuminate\Support\Facades\Auth;
             });
                     });
 
-                            // FONCTION - Mise Ã  jour instantanée de tous les pourcentages
+                            // FONCTION - Mise à jour instantanée de tous les pourcentages
         function updateAllPercentages(data) {
-            console.log('ðŸ"„ Mise Ã  jour instantanée de tous les pourcentages');
+            console.log('🔄 Mise à jour instantanée de tous les pourcentages');
             
-            // Mettre Ã  jour le pourcentage de l'action parente
+            // Mettre à jour le pourcentage de l'action parente
             if (data.tauxAction !== null) {
                 updateProgressBar('action', data.tauxAction);
             }
 
-            // Mettre Ã  jour le pourcentage de l'Objectif Spécifique
+            // Mettre à jour le pourcentage de l'objectif spécifique
             if (data.tauxOS !== null) {
                 updateProgressBar('objectif-specifique', data.tauxOS);
             }
 
-            // Mettre Ã  jour le pourcentage de l'Objectif Stratégique
-
+            // Mettre à jour le pourcentage de l'objectif stratégique
             if (data.tauxOST !== null) {
                 updateProgressBar('objectif-strategique', data.tauxOST);
             }
 
-            // Mettre Ã  jour le pourcentage du pilier
+            // Mettre à jour le pourcentage du pilier
             if (data.tauxPilier !== null) {
                 updateProgressBar('pilier', data.tauxPilier);
             }
 
-            console.log('âœ… Tous les pourcentages mis Ã  jour instantanément');
+            console.log('✅ Tous les pourcentages mis à jour instantanément');
         }
 
-        // FONCTION - Mise Ã  jour d'une barre de progression spécifique
+        // FONCTION - Mise à jour d'une barre de progression spécifique
         function updateProgressBar(type, newPercentage) {
             const progressBar = document.querySelector(`[data-progress-type="${type}"] .progress-bar`);
             if (progressBar) {
                 progressBar.style.width = `${newPercentage}%`;
                 progressBar.textContent = `${newPercentage}%`;
                 
-                // Mettre Ã  jour aussi le texte du pourcentage
+                // Mettre à jour aussi le texte du pourcentage
                 const percentageText = progressBar.closest('.progress-container').querySelector('.percentage-text');
                 if (percentageText) {
                     percentageText.textContent = `${newPercentage}%`;
@@ -3591,38 +4092,37 @@ use Illuminate\Support\Facades\Auth;
             }
         }
 
-        // Fonction pour mettre Ã  jour les barres de progression (ancienne version)
+        // Fonction pour mettre à jour les barres de progression (ancienne version)
         function updateProgressBars(data) {
-            // Mise Ã  jour de la barre de progression de l'action
+            // Mise à jour de la barre de progression de l'action
             const actionProgress = document.querySelector('.hierarchy-impact-item:nth-child(1) .progress-bar');
             if (actionProgress) {
                 actionProgress.style.width = data.actionTaux + '%';
                 actionProgress.parentElement.nextElementSibling.textContent = data.actionTaux + '%';
             }
 
-            // Mise Ã  jour de la barre de progression de l'Objectif Spécifique
+            // Mise à jour de la barre de progression de l'objectif spécifique
             const osProgress = document.querySelector('.hierarchy-impact-item:nth-child(2) .progress-bar');
             if (osProgress) {
                 osProgress.style.width = data.objectifSpecifiqueTaux + '%';
                 osProgress.parentElement.nextElementSibling.textContent = data.objectifSpecifiqueTaux + '%';
             }
 
-            // Mise Ã  jour de la barre de progression de l'Objectif Stratégique
-
+            // Mise à jour de la barre de progression de l'objectif stratégique
             const ostProgress = document.querySelector('.hierarchy-impact-item:nth-child(3) .progress-bar');
             if (ostProgress) {
                 ostProgress.style.width = data.objectifStrategiqueTaux + '%';
                 ostProgress.parentElement.nextElementSibling.textContent = data.objectifStrategiqueTaux + '%';
             }
 
-            // Mise Ã  jour de la barre de progression du pilier
+            // Mise à jour de la barre de progression du pilier
             const pilierProgress = document.querySelector('.hierarchy-impact-item:nth-child(4) .progress-bar');
             if (pilierProgress) {
                 pilierProgress.style.width = data.pilierTaux + '%';
                 pilierProgress.parentElement.nextElementSibling.textContent = data.pilierTaux + '%';
             }
 
-            // Mise Ã  jour des statistiques
+            // Mise à jour des statistiques
             const actionStat = document.querySelector('.stat-item:nth-child(2) h4');
             if (actionStat) {
                 actionStat.textContent = data.actionTaux + '%';
@@ -3638,13 +4138,13 @@ use Illuminate\Support\Facades\Auth;
                 <div class="toast show" role="alert">
                     <div class="toast-header" style="background: {{ $pilier->getHierarchicalColor(0) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(0)) }};">
                         <i class="fas fa-check-circle me-2"></i>
-                        <strong class="me-auto">âœ… Mise Ã  jour réussie !</strong>
+                        <strong class="me-auto">✅ Mise à jour réussie !</strong>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
                     </div>
                     <div class="toast-body">
-                        <p class="mb-1">Sous-action mise Ã  jour : <strong>${data.nouveauTaux}%</strong></p>
+                        <p class="mb-1">Sous-action mise à jour : <strong>${data.nouveauTaux}%</strong></p>
                         <small class="text-muted">
-                            ðŸš€ Tous les taux parents ont été recalculés automatiquement !
+                            🚀 Tous les taux parents ont été recalculés automatiquement !
                         </small>
                     </div>
                 </div>
@@ -3659,7 +4159,7 @@ use Illuminate\Support\Facades\Auth;
             }, 5000);
         }
 
-        // Fonction pour afficher une notification de mise Ã  jour (ancienne version)
+        // Fonction pour afficher une notification de mise à jour (ancienne version)
         function showUpdateNotification(data) {
             // Créer une notification toast personnalisée
             const toast = document.createElement('div');
@@ -3669,11 +4169,11 @@ use Illuminate\Support\Facades\Auth;
                 <div class="toast show" role="alert">
                     <div class="toast-header" style="background: {{ $pilier->getHierarchicalColor(0) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(0)) }};">
                         <i class="fas fa-sync-alt me-2"></i>
-                        <strong class="me-auto">Mise Ã  jour en temps réel</strong>
+                        <strong class="me-auto">Mise à jour en temps réel</strong>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
                     </div>
                     <div class="toast-body">
-                        <p class="mb-1">Sous-action mise Ã  jour : <strong>${data.newTaux}%</strong></p>
+                        <p class="mb-1">Sous-action mise à jour : <strong>${data.newTaux}%</strong></p>
                         <small class="text-muted">
                             Impact sur la hiérarchie : Action (${data.actionTaux}%), OS (${data.objectifSpecifiqueTaux}%), 
                             OSt (${data.objectifStrategiqueTaux}%), Pilier (${data.pilierTaux}%)
@@ -3709,7 +4209,7 @@ use Illuminate\Support\Facades\Auth;
     </div>
 
     <!-- ======================================== -->
-    <!-- MODALS POUR LA GESTION DES ACTIVITéS -->
+    <!-- MODALS POUR LA GESTION DES ACTIVITÉS -->
     <!-- ======================================== -->
 
     <!-- Modal de création d'activité -->
@@ -3777,7 +4277,7 @@ use Illuminate\Support\Facades\Auth;
                                     <div class="mb-3">
                                         <label for="statut" class="form-label">Statut *</label>
                                         <select class="form-select" id="statut" wire:model="newActivity.statut" required>
-                                            <option value="a_faire">Ã€ faire</option>
+                                            <option value="a_faire">À faire</option>
                                             <option value="en_cours">En cours</option>
                                             <option value="termine">Terminé</option>
                                             <option value="bloque">Bloqué</option>
@@ -3795,7 +4295,7 @@ use Illuminate\Support\Facades\Auth;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="owner_id" class="form-label">Assigné Ã </label>
+                                        <label for="owner_id" class="form-label">Assigné à</label>
                                         <select class="form-select" id="owner_id" wire:model="newActivity.owner_id">
                                             <option value="">Sélectionner un utilisateur</option>
                                             @foreach($users as $user)
@@ -3896,7 +4396,7 @@ use Illuminate\Support\Facades\Auth;
                                         <div class="mb-3">
                                             <label for="edit_statut" class="form-label">Statut *</label>
                                             <select class="form-select" id="edit_statut" wire:model="editingActivity.statut" required>
-                                                <option value="a_faire">Ã€ faire</option>
+                                                <option value="a_faire">À faire</option>
                                                 <option value="en_cours">En cours</option>
                                                 <option value="termine">Terminé</option>
                                                 <option value="bloque">Bloqué</option>
@@ -3915,7 +4415,7 @@ use Illuminate\Support\Facades\Auth;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="edit_owner_id" class="form-label">Assigné à </label>
+                                        <label for="edit_owner_id" class="form-label">Assigné à</label>
                                         <select class="form-select" id="edit_owner_id" wire:model="editingActivity.owner_id">
                                             <option value="">Sélectionner un utilisateur</option>
                                             @foreach($users as $user)
@@ -3942,7 +4442,7 @@ use Illuminate\Support\Facades\Auth;
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" wire:click="closeEditActivityModal">Annuler</button>
                         <button type="submit" class="btn btn-primary" form="edit-activity-form">
-                            <i class="fas fa-save me-1"></i>Mettre Ã  jour
+                            <i class="fas fa-save me-1"></i>Mettre à jour
                         </button>
                     </div>
                 </div>
@@ -3953,6 +4453,3 @@ use Illuminate\Support\Facades\Auth;
     <div class="modal-backdrop fade show" style="z-index: 9999;"></div>
     @endif
 </div> 
-
-
-

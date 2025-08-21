@@ -14,8 +14,8 @@ class Pilier extends Model
         'code',
         'libelle',
         'description',
-        'taux_avancement',
-        'actif'
+        'owner_id',
+        'color'
     ];
 
     protected $casts = [

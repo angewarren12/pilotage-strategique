@@ -157,6 +157,3 @@ De nouvelles fonctionnalités ont été ajoutées pour permettre la création d'
 
 **Développé pour améliorer la productivité et l'expérience utilisateur** 🚀
 
-
-
-

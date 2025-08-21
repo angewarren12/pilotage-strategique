@@ -76,86 +76,17 @@ class SousAction extends Model
         return $ecart;
     }
 
-    /**
-     * Met à jour le statut automatiquement basé sur le taux et la date d'échéance
-     */
     public function updateStatut(): void
     {
-        $nouveauStatut = $this->determinerStatut();
-        
-        if ($this->statut !== $nouveauStatut) {
-            $this->statut = $nouveauStatut;
-            Log::info('🔄 [STATUT] Statut mis à jour', [
-                'sous_action_id' => $this->id,
-                'ancien_statut' => $this->statut,
-                'nouveau_statut' => $nouveauStatut,
-                'taux_avancement' => $this->taux_avancement,
-                'date_echeance' => $this->date_echeance
-            ]);
-        }
-    }
-    
-    /**
-     * Détermine le statut basé sur le taux et la date d'échéance
-     */
-    private function determinerStatut(): string
-    {
-        $taux = $this->taux_avancement ?? 0;
-        $dateEcheance = $this->date_echeance;
-        $aujourdhui = now();
-        
-        // Règles de statut
-        if ($taux == 0) {
-            return 'à_démarrer';
-        }
-        
-        if ($taux == 100) {
-            return 'termine';
-        }
-        
-        if ($taux > 0 && $taux < 100) {
-            // Vérifier si la date d'échéance est atteinte
-            if ($dateEcheance && $aujourdhui->gt($dateEcheance)) {
-                return 'en_retard';
+        if ($this->taux_avancement >= 100) {
+            $this->statut = 'termine';
+        } elseif ($this->date_echeance && Carbon::now()->gt($this->date_echeance)) {
+            $this->statut = 'en_retard';
         } else {
-                return 'en_cours';
-            }
+            $this->statut = 'en_cours';
         }
         
-        // Par défaut
-        return 'à_démarrer';
-    }
-    
-    /**
-     * Vérifie si la sous-action est en retard
-     */
-    public function isEnRetard(): bool
-    {
-        return $this->statut === 'en_retard';
-    }
-    
-    /**
-     * Vérifie si la sous-action est terminée
-     */
-    public function isTerminee(): bool
-    {
-        return $this->statut === 'termine';
-    }
-    
-    /**
-     * Vérifie si la sous-action est en cours
-     */
-    public function isEnCours(): bool
-    {
-        return $this->statut === 'en_cours';
-    }
-    
-    /**
-     * Vérifie si la sous-action est à démarrer
-     */
-    public function isADemarrer(): bool
-    {
-        return $this->statut === 'à_démarrer';
+        $this->save();
     }
 
     public function updateTauxAvancement(): void
@@ -409,169 +340,54 @@ class SousAction extends Model
     // Événements
     protected static function booted()
     {
-        // ÉVÉNEMENT SAVING - MISE À JOUR DU STATUT ET ÉCART
         static::saving(function ($sousAction) {
-            // Éviter la boucle infinie en vérifiant si on est déjà en train de sauvegarder
-            // Utiliser les vraies méthodes Laravel
-            if ($sousAction->exists && !$sousAction->isDirty(['statut', 'ecart_jours'])) {
-                return; // Éviter la boucle
-            }
-            
-            // Calculer l'écart seulement si la date d'échéance a changé
-            if ($sousAction->isDirty(['date_echeance', 'date_realisation']) || $sousAction->isDirty('taux_avancement')) {
+            // Calculer l'écart et mettre à jour le statut
             $sousAction->calculerEcart();
             $sousAction->updateStatut();
-            }
         });
 
-        // ÉVÉNEMENT SAVED - CASCADE VERS LES PARENTS ET MISE À JOUR EN BASE
         static::saved(function ($sousAction) {
-            // Mettre à jour les taux parents en base de données
+            // Mettre à jour le taux d'avancement de l'action parent
+            $sousAction->updateTauxAvancement();
+            
+            // Vérifier si le taux d'avancement a changé
             if ($sousAction->wasChanged('taux_avancement')) {
-                $sousAction->updateTauxParentsEnBase();
+                $oldValue = $sousAction->getOriginal('taux_avancement') ?? 0;
+                $newValue = $sousAction->taux_avancement;
+                
+                // Créer une notification de changement d'avancement
+                app(\App\Services\NotificationService::class)->notifyAvancementChange(
+                    'sous_action',
+                    $sousAction->id,
+                    $oldValue,
+                    $newValue,
+                    $sousAction
+                );
+            }
+            
+            // Vérifier les échéances approchantes
+            if ($sousAction->date_echeance && !$sousAction->date_realisation) {
+                $daysLeft = now()->diffInDays($sousAction->date_echeance, false);
+                
+                if ($daysLeft >= 0 && $daysLeft <= 7) {
+                    app(\App\Services\NotificationService::class)->notifyEcheanceApproche(
+                        'sous_action',
+                        $sousAction->id,
+                        $daysLeft,
+                        $sousAction
+                    );
+                }
+                
+                // Vérifier si le délai est dépassé
+                if ($daysLeft < 0) {
+                    app(\App\Services\NotificationService::class)->notifyDelaiDepasse(
+                        'sous_action',
+                        $sousAction->id,
+                        abs($daysLeft),
+                        $sousAction
+                    );
+                }
             }
         });
-        
-        
-    }
-    
-    /**
-     * Met à jour les taux de tous les parents en base de données
-     */
-    public function updateTauxParentsEnBase()
-    {
-        try {
-            Log::info('🔄 [CASCADE] Début de la mise à jour des taux parents en base', [
-                'sous_action_id' => $this->id,
-                'nouveau_taux' => $this->taux_avancement
-            ]);
-            
-            // 1. Mettre à jour le taux de l'ACTION parent
-            if ($this->action) {
-                $this->updateTauxActionEnBase();
-            }
-            
-            // 2. Mettre à jour le taux de l'OSP parent
-            if ($this->action && $this->action->objectifSpecifique) {
-                $this->updateTauxOSPEnBase();
-            }
-            
-            // 3. Mettre à jour le taux de l'OS parent
-            if ($this->action && $this->action->objectifSpecifique && $this->action->objectifSpecifique->objectifStrategique) {
-                $this->updateTauxOSEnBase();
-            }
-            
-            // 4. Mettre à jour le taux du PILIER parent
-            if ($this->action && $this->action->objectifSpecifique && $this->action->objectifSpecifique->objectifStrategique && $this->action->objectifSpecifique->objectifStrategique->pilier) {
-                $this->updateTauxPilierEnBase();
-            }
-            
-            Log::info('✅ [CASCADE] Tous les taux parents ont été mis à jour en base');
-            
-        } catch (\Exception $e) {
-            Log::error('❌ [CASCADE] Erreur lors de la mise à jour des taux parents', [
-                'sous_action_id' => $this->id,
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-        }
-    }
-    
-    /**
-     * Met à jour le taux de l'action parent en base
-     */
-    private function updateTauxActionEnBase()
-    {
-        $action = $this->action;
-        $sousActions = $action->sousActions;
-        
-        if ($sousActions->count() > 0) {
-            $totalTaux = $sousActions->sum('taux_avancement');
-            $nouveauTaux = round($totalTaux / $sousActions->count(), 2);
-            
-            $action->taux_avancement = $nouveauTaux;
-            $action->save();
-            
-            Log::info('✅ [CASCADE] Action mise à jour en base', [
-                'action_id' => $action->id,
-                'nouveau_taux' => $nouveauTaux
-            ]);
-        }
-    }
-    
-    /**
-     * Met à jour le taux de l'OSP parent en base
-     */
-    private function updateTauxOSPEnBase()
-    {
-        $osp = $this->action->objectifSpecifique;
-        $actions = $osp->actions;
-        
-        if ($actions->count() > 0) {
-            $totalTaux = 0;
-            foreach ($actions as $action) {
-                $totalTaux += $action->taux_avancement ?? 0;
-            }
-            $nouveauTaux = round($totalTaux / $actions->count(), 2);
-            
-            $osp->taux_avancement = $nouveauTaux;
-            $osp->save();
-            
-            Log::info('✅ [CASCADE] OSP mis à jour en base', [
-                'osp_id' => $osp->id,
-                'nouveau_taux' => $nouveauTaux
-            ]);
-        }
-    }
-    
-    /**
-     * Met à jour le taux de l'OS parent en base
-     */
-    private function updateTauxOSEnBase()
-    {
-        $os = $this->action->objectifSpecifique->objectifStrategique;
-        $objectifsSpecifiques = $os->objectifsSpecifiques;
-        
-        if ($objectifsSpecifiques->count() > 0) {
-            $totalTaux = 0;
-            foreach ($objectifsSpecifiques as $osp) {
-                $totalTaux += $osp->taux_avancement ?? 0;
-            }
-            $nouveauTaux = round($totalTaux / $objectifsSpecifiques->count(), 2);
-            
-            $os->taux_avancement = $nouveauTaux;
-            $os->save();
-            
-            Log::info('✅ [CASCADE] OS mis à jour en base', [
-                'os_id' => $os->id,
-                'nouveau_taux' => $nouveauTaux
-            ]);
-        }
-    }
-    
-    /**
-     * Met à jour le taux du pilier parent en base
-     */
-    private function updateTauxPilierEnBase()
-    {
-        $pilier = $this->action->objectifSpecifique->objectifStrategique->pilier;
-        $objectifsStrategiques = $pilier->objectifsStrategiques;
-        
-        if ($objectifsStrategiques->count() > 0) {
-            $totalTaux = 0;
-            foreach ($objectifsStrategiques as $os) {
-                $totalTaux += $os->taux_avancement ?? 0;
-            }
-            $nouveauTaux = round($totalTaux / $objectifsStrategiques->count(), 2);
-            
-            $pilier->taux_avancement = $nouveauTaux;
-            $pilier->save();
-            
-            Log::info('✅ [CASCADE] Pilier mis à jour en base', [
-                'pilier_id' => $pilier->id,
-                'nouveau_taux' => $nouveauTaux
-            ]);
-        }
     }
 }

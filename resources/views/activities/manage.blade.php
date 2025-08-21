@@ -616,45 +616,12 @@
          overflow: hidden;
          height: calc(100vh - 300px);
          min-height: 600px;
-         width: 100%;
      }
      
      /* Styles pour le modal plein écran */
      .modal-fullscreen .modal-content {
          height: 100vh;
          border-radius: 0;
-         overflow: hidden;
-     }
-     
-     /* Correction des problèmes de décalage */
-     .modal-fullscreen .modal-body {
-         overflow: hidden;
-         padding: 0;
-     }
-     
-     .calendar-container {
-         overflow: hidden;
-         position: relative;
-     }
-     
-     /* Fix pour éviter le double scroll */
-     .calendar-grid {
-         overflow: visible;
-         position: relative;
-     }
-     
-     .calendar-day {
-         overflow: visible;
-         position: relative;
-     }
-     
-     /* S'assurer que l'indicateur de débordement soit visible */
-     .calendar-day:has(.overflow-indicator) {
-         min-height: 180px;
-     }
-     
-     .calendar-day:has(.overflow-indicator) .calendar-activity {
-         min-height: 65px;
      }
      
      .modal-fullscreen .modal-body {
@@ -678,8 +645,6 @@
          grid-template-columns: repeat(7, 1fr);
          background: #f8f9fa;
          border-bottom: 1px solid #dee2e6;
-         width: 100%;
-         gap: 0;
      }
      
      .calendar-day-header {
@@ -699,23 +664,18 @@
          grid-template-columns: repeat(7, 1fr);
          min-height: 500px;
          height: 100%;
-         width: 100%;
-         gap: 0;
      }
      
      .calendar-day {
          border-right: 1px solid #dee2e6;
          border-bottom: 1px solid #dee2e6;
          padding: 12px;
-         min-height: 160px;
+         min-height: 120px;
          height: auto;
          position: relative;
          background: #fff;
          display: flex;
          flex-direction: column;
-         width: 100%;
-         box-sizing: border-box;
-         overflow: hidden;
      }
      
      .calendar-day:nth-child(7n) {
@@ -755,11 +715,11 @@
      
      .calendar-activity {
          transition: all 0.2s ease;
-         min-height: 60px;
+         min-height: 50px;
          display: flex;
          flex-direction: column;
          justify-content: space-between;
-         margin-bottom: 6px;
+         margin-bottom: 4px;
          flex-grow: 1;
      }
      
@@ -805,84 +765,6 @@
      .calendar-activity {
          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
          border: 1px solid rgba(255,255,255,0.2);
-     }
-     
-     /* Indicateur de débordement (+X) */
-     .overflow-indicator {
-         background: #6c757d;
-         color: white;
-         padding: 3px 8px;
-         border-radius: 12px;
-         font-size: 0.75rem;
-         font-weight: 600;
-         text-align: center;
-         cursor: pointer;
-         margin-top: 8px;
-         align-self: flex-end;
-         transition: all 0.2s ease;
-         border: 1px solid #495057;
-         min-height: 24px;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-     }
-     
-     .overflow-indicator:hover {
-         background: #495057;
-         transform: scale(1.05);
-     }
-     
-     /* Info-bulle des activités */
-     .activities-tooltip {
-         position: fixed;
-         z-index: 9999;
-         background: white;
-         border: 1px solid #dee2e6;
-         border-radius: 8px;
-         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-         max-width: 300px;
-         min-width: 250px;
-         font-size: 0.85rem;
-     }
-     
-     .tooltip-content {
-         padding: 12px;
-     }
-     
-     .tooltip-title {
-         font-weight: 600;
-         color: #495057;
-         margin-bottom: 8px;
-         padding-bottom: 6px;
-         border-bottom: 1px solid #e9ecef;
-         font-size: 0.9rem;
-     }
-     
-     .tooltip-activity-item {
-         padding: 6px 0;
-         border-bottom: 1px solid #f8f9fa;
-     }
-     
-     .tooltip-activity-item:last-child {
-         border-bottom: none;
-     }
-     
-     .tooltip-activity-title {
-         font-weight: 600;
-         color: #212529;
-         margin-bottom: 2px;
-     }
-     
-     .tooltip-activity-status {
-         font-size: 0.75rem;
-         color: #6c757d;
-         margin-bottom: 2px;
-     }
-     
-     .tooltip-activity-progress {
-         font-size: 0.7rem;
-         color: #28a745;
-         font-weight: 500;
      }
      
      /* Styles pour le tooltip des activités */
@@ -964,20 +846,14 @@
       
       /* Responsive */
       @media (max-width: 768px) {
-         .calendar-container {
-             height: calc(100vh - 200px);
-             min-height: 400px;
-         }
-         
           .calendar-day {
-             min-height: 120px;
-             padding: 8px;
+              min-height: 60px;
+              padding: 4px;
           }
           
           .calendar-activity {
               font-size: 0.7rem !important;
-             padding: 2px 3px !important;
-             min-height: 45px;
+              padding: 1px 2px !important;
           }
           
           .calendar-legend {
@@ -991,80 +867,18 @@
              padding: 2px 4px;
          }
          
-         .overflow-indicator {
-             font-size: 0.6rem;
-             padding: 1px 4px;
-         }
-         
-         .activities-tooltip {
-             max-width: 250px;
-             min-width: 200px;
-         }
-         
-         /* Métriques sur la même ligne sur petits écrans */
-         .activity-summary {
-             flex-direction: row !important;
-             flex-wrap: wrap;
-             gap: 8px !important;
-             justify-content: center;
-         }
-         
-         .activity-summary .metric-item {
-             min-width: auto;
-             flex: 0 0 auto;
-         }
-     }
-     
-     @media (max-width: 576px) {
-         .calendar-day {
-             min-height: 100px;
-             padding: 6px;
-         }
-         
-         .calendar-activity {
-             font-size: 0.65rem !important;
-             padding: 2px 2px !important;
-             min-height: 40px;
-         }
-         
-         .date-number {
-             font-size: 0.75rem;
-             padding: 1px 3px;
-         }
-         
-         .overflow-indicator {
-             font-size: 0.55rem;
-             padding: 1px 3px;
-         }
-         
-         /* Métriques encore plus compactes sur très petits écrans */
-         .activity-summary {
-             gap: 4px !important;
-         }
-         
-         .activity-summary .metric-item {
-             font-size: 0.75rem;
-             padding: 4px 6px;
-         }
-         
-         .activity-summary .metric-item .metric-value {
-             font-size: 0.8rem;
-         }
-         
-         .activity-summary .metric-item .metric-label {
-             font-size: 0.65rem;
-         }
+
      }
      
      /* Styles spécifiques pour le mode plein écran */
      @media (min-width: 1200px) {
          .calendar-day {
-             min-height: 180px;
-             padding: 18px;
+             min-height: 140px;
+             padding: 15px;
          }
          
          .calendar-activity {
-             min-height: 70px;
+             min-height: 60px;
          }
          
          .activity-title {
@@ -1077,17 +891,6 @@
          
          .progress-bar-mini {
              height: 5px;
-         }
-     }
-     
-     /* Styles pour tablettes (écrans moyens) */
-     @media (min-width: 769px) and (max-width: 1199px) {
-         .activity-summary {
-             gap: 12px;
-         }
-         
-         .activity-summary .metric-item {
-             padding: 6px 10px;
           }
       }
  </style>
@@ -1826,7 +1629,18 @@
                        </div>
                        
                        <div class="calendar-container">
-
+                           <!-- Section d'aide pour la création -->
+                           <div class="alert alert-info mb-3" role="alert">
+                               <div class="d-flex align-items-center">
+                                   <i class="fas fa-info-circle me-2"></i>
+                                   <div class="flex-grow-1">
+                                       <strong>Astuce :</strong> Utilisez le bouton "Nouvelle activité" en bas pour créer une activité directement depuis le calendrier.
+                                   </div>
+                                   <button type="button" class="btn btn-sm btn-outline-info" onclick="createActivityFromCalendar()">
+                                       <i class="fas fa-plus me-1"></i>Créer maintenant
+                                   </button>
+                               </div>
+                           </div>
                            
                            <div class="calendar-header">
                                <div class="calendar-day-header">Dim</div>
@@ -2017,22 +1831,10 @@
           
           // Ajouter les activités pour cette date
           const activitiesForDate = getActivitiesForDate(date);
-     
-     // Limiter l'affichage à 2 activités et ajouter l'indicateur +X si nécessaire
-     const maxVisibleActivities = 2;
-     const visibleActivities = activitiesForDate.slice(0, maxVisibleActivities);
-     const hiddenActivitiesCount = activitiesForDate.length - maxVisibleActivities;
-     
-     visibleActivities.forEach(activity => {
+          activitiesForDate.forEach(activity => {
               const activityElement = createActivityElement(activity);
               cell.appendChild(activityElement);
           });
-     
-     // Ajouter l'indicateur +X si il y a plus de 2 activités
-     if (hiddenActivitiesCount > 0) {
-         const overflowIndicator = createOverflowIndicator(hiddenActivitiesCount, activitiesForDate);
-         cell.appendChild(overflowIndicator);
-     }
           
           grid.appendChild(cell);
       }
@@ -2100,153 +1902,6 @@
       });
   }
   
-  // Fonction pour créer l'indicateur de débordement (+X)
-  function createOverflowIndicator(count, allActivities) {
-      const indicator = document.createElement('div');
-      indicator.className = 'overflow-indicator';
-      indicator.innerHTML = `+${count}`;
-      indicator.title = `${count} activité(s) supplémentaire(s)`;
-      
-      // Ajouter l'info-bulle au clic
-      indicator.addEventListener('click', function(e) {
-          e.stopPropagation();
-          showActivitiesTooltip(this, allActivities);
-      });
-      
-      return indicator;
-  }
-  
-  // Fonction pour sauvegarder la progression depuis les détails
-  function saveProgressFromDetails(activityId) {
-      const progressSlider = document.getElementById('progressSliderDetails');
-      const progressInput = document.getElementById('progressInputDetails');
-      
-      if (!progressSlider || !progressInput) {
-          console.error('❌ [PROGRESS] Éléments de progression non trouvés');
-          return;
-      }
-      
-      const newProgress = parseInt(progressSlider.value);
-      
-      // Mettre à jour l'input
-      progressInput.value = newProgress;
-      
-      // Envoyer la mise à jour au serveur
-      fetch(`/activities/${activityId}/progress`, {
-          method: 'PATCH',
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
-          body: JSON.stringify({
-              taux_avancement: newProgress
-          })
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.success) {
-              console.log('✅ [PROGRESS] Progression mise à jour:', newProgress);
-              
-              // Mettre à jour les données locales
-              const activity = activitiesData.find(a => a.id === activityId);
-              if (activity) {
-                  activity.progression = newProgress;
-                  
-                  // Mettre à jour le statut selon la progression
-                  if (newProgress === 0) {
-                      activity.statut = 'en_attente';
-                  } else if (newProgress === 100) {
-                      activity.statut = 'termine';
-                  } else {
-                      activity.statut = 'en_cours';
-                  }
-              }
-              
-              // Mettre à jour l'affichage du calendrier
-              updateCalendarActivityProgress(activityId, newProgress);
-              updateCalendarActivityStatus(activityId, activity.statut);
-              
-              // Fermer le modal des détails
-              const detailsModal = bootstrap.Modal.getInstance(document.getElementById('activityDetailsModal'));
-              if (detailsModal) {
-                  detailsModal.hide();
-              }
-              
-              // Afficher un message de succès
-              showSuccessMessage('Progression mise à jour avec succès !');
-          } else {
-              console.error('❌ [PROGRESS] Erreur lors de la mise à jour:', data.message);
-              showErrorMessage('Erreur lors de la mise à jour de la progression');
-          }
-      })
-      .catch(error => {
-          console.error('❌ [PROGRESS] Erreur réseau:', error);
-          showErrorMessage('Erreur de connexion lors de la mise à jour');
-      });
-  }
-  
-  // Fonction pour afficher l'info-bulle des activités
-  function showActivitiesTooltip(element, activities) {
-      // Supprimer l'info-bulle existante
-      const existingTooltip = document.querySelector('.activities-tooltip');
-      if (existingTooltip) {
-          existingTooltip.remove();
-      }
-      
-      // Créer l'info-bulle
-      const tooltip = document.createElement('div');
-      tooltip.className = 'activities-tooltip';
-      
-      // Créer le contenu de l'info-bulle
-      const tooltipContent = document.createElement('div');
-      tooltipContent.className = 'tooltip-content';
-      
-      const title = document.createElement('div');
-      title.className = 'tooltip-title';
-      title.textContent = `${activities.length} activité(s) pour cette date`;
-      tooltipContent.appendChild(title);
-      
-      activities.forEach(activity => {
-          const activityItem = document.createElement('div');
-          activityItem.className = 'tooltip-activity-item';
-          
-          const activityTitle = document.createElement('div');
-          activityTitle.className = 'tooltip-activity-title';
-          activityTitle.textContent = activity.titre;
-          activityItem.appendChild(activityTitle);
-          
-          const activityStatus = document.createElement('div');
-          activityStatus.className = 'tooltip-activity-status';
-          activityStatus.textContent = activity.statut;
-          activityItem.appendChild(activityStatus);
-          
-          if (activity.progression !== undefined) {
-              const activityProgress = document.createElement('div');
-              activityProgress.className = 'tooltip-activity-progress';
-              activityProgress.textContent = `${activity.progression}%`;
-              activityItem.appendChild(activityProgress);
-          }
-          
-          tooltipContent.appendChild(activityItem);
-      });
-      
-      tooltip.appendChild(tooltipContent);
-      document.body.appendChild(tooltip);
-      
-      // Positionner l'info-bulle
-      const rect = element.getBoundingClientRect();
-      tooltip.style.left = rect.left + 'px';
-      tooltip.style.top = (rect.bottom + 5) + 'px';
-      
-      // Fermer l'info-bulle au clic ailleurs
-      document.addEventListener('click', function closeTooltip(e) {
-          if (!tooltip.contains(e.target) && !element.contains(e.target)) {
-              tooltip.remove();
-              document.removeEventListener('click', closeTooltip);
-          }
-      });
-  }
-  
   // Fonction pour créer un élément d'activité
   function createActivityElement(activity) {
       const element = document.createElement('div');
@@ -2310,48 +1965,6 @@
       element.addEventListener('mouseleave', hideActivityTooltip);
       
       return element;
-  }
-  
-  // Fonction pour afficher un message de succès
-  function showSuccessMessage(message) {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
-      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-      alertDiv.innerHTML = `
-          <i class="fas fa-check-circle me-2"></i>
-          ${message}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      `;
-      
-      document.body.appendChild(alertDiv);
-      
-      // Auto-fermeture après 3 secondes
-      setTimeout(() => {
-          if (alertDiv.parentNode) {
-              alertDiv.remove();
-          }
-      }, 3000);
-  }
-  
-  // Fonction pour afficher un message d'erreur
-  function showErrorMessage(message) {
-      const alertDiv = document.createElement('div');
-      alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-      alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-      alertDiv.innerHTML = `
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          ${message}
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      `;
-      
-      document.body.appendChild(alertDiv);
-      
-      // Auto-fermeture après 5 secondes
-      setTimeout(() => {
-          if (alertDiv.parentNode) {
-              alertDiv.remove();
-          }
-      }, 5000);
   }
   
   // Fonction pour afficher un tooltip d'activité
@@ -2639,20 +2252,13 @@
           details: activitiesData.map(a => ({ id: a.id, progression: a.progression, parsed: parseFloat(a.progression) || 0 }))
       });
       
-      // Mettre à jour l'affichage - vérifier que les éléments existent d'abord
-      const totalElement = document.getElementById('totalActivities');
-      const enCoursElement = document.getElementById('enCoursCount');
-      const termineElement = document.getElementById('termineCount');
-      const bloqueElement = document.getElementById('bloqueCount');
-      const retardElement = document.getElementById('retardCount');
-      const progressionElement = document.getElementById('progressionMoyenne');
-      
-      if (totalElement) totalElement.textContent = total;
-      if (enCoursElement) enCoursElement.textContent = enCours;
-      if (termineElement) termineElement.textContent = termine;
-      if (bloqueElement) bloqueElement.textContent = bloque;
-      if (retardElement) retardElement.textContent = enRetard;
-      if (progressionElement) progressionElement.textContent = progressionMoyenne + '%';
+      // Mettre à jour l'affichage
+      document.getElementById('totalActivities').textContent = total;
+      document.getElementById('enCoursCount').textContent = enCours;
+      document.getElementById('termineCount').textContent = termine;
+      document.getElementById('bloqueCount').textContent = bloque;
+      document.getElementById('retardCount').textContent = enRetard;
+      document.getElementById('progressionMoyenne').textContent = progressionMoyenne + '%';
       
       console.log('📊 [STATS] Statistiques mises à jour');
   }

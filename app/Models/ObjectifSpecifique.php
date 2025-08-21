@@ -14,9 +14,7 @@ class ObjectifSpecifique extends Model
         'libelle',
         'description',
         'objectif_strategique_id',
-        'owner_id',
-        'taux_avancement',
-        'actif'
+        'owner_id'
     ];
 
     protected $casts = [
@@ -118,5 +116,11 @@ class ObjectifSpecifique extends Model
                 );
             }
         });
+    }
+
+    // Scopes
+    public function scopeByOwner($query, $ownerId)
+    {
+        return $query->where('owner_id', $ownerId);
     }
 }
