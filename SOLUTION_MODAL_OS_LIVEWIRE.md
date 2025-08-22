@@ -106,3 +106,4 @@ protected $listeners = [
 2. Vérifier que la méthode `saveNewOS()` fonctionne avec les nouvelles propriétés
 3. Appliquer le même pattern aux autres modaux si nécessaire
 4. Optimiser les performances si besoin
+

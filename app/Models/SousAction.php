@@ -33,6 +33,17 @@ class SousAction extends Model
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Accesseur pour s'assurer que taux_avancement est toujours un nombre
+     */
+    public function setTauxAvancementAttribute($value)
+    {
+        // S'assurer que la valeur est un nombre entre 0 et 100
+        $value = floatval($value);
+        $value = max(0, min(100, $value)); // Limiter entre 0 et 100
+        $this->attributes['taux_avancement'] = round($value, 2);
+    }
+
     // Constantes pour les types
     const TYPE_NORMAL = 'normal';
     const TYPE_PROJET = 'projet';

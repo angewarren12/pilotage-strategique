@@ -146,3 +146,4 @@ Livewire.on("refreshHierarchique", () => {
 -   **Timeout total** : 1 seconde maximum avant fallback
 -   **Z-index** : Le modal personnalisé utilise `z-index: 9999`
 -   **Responsive** : Le modal s'adapte à différentes tailles d'écran
+

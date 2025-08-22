@@ -12,12 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Mettre à jour automatiquement le statut des activités chaque jour à 00:01
-        $schedule->command('activities:update-status')
-                ->dailyAt('00:01')
-                ->withoutOverlapping()
-                ->runInBackground()
-                ->appendOutputTo(storage_path('logs/activities-status-update.log'));
+        // Vérification quotidienne des échéances des sous-actions
+        $schedule->command('sous-actions:check-deadlines')
+                ->everyMinute() // Test temporaire - toutes les minutes
+                ->withoutOverlapping() // Éviter les exécutions simultanées
+                ->runInBackground() // Exécution en arrière-plan
+                ->appendOutputTo(storage_path('logs/sous-actions-deadlines.log')); // Log des exécutions
     }
 
     /**
@@ -30,5 +30,3 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
-
-

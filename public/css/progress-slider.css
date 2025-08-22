@@ -1,0 +1,152 @@
+/* Styles personnalisés pour le slider de progression */
+
+.progress-slider-container {
+    position: relative;
+}
+
+.progress-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #e9ecef;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Styles pour Webkit (Chrome, Safari, Edge) */
+.progress-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--progress-color, #007bff);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.progress-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.progress-slider::-webkit-slider-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--progress-color, #007bff) 0%, var(--progress-color, #007bff) var(--value, 0%), #e9ecef var(--value, 0%), #e9ecef 100%);
+    transition: all 0.3s ease;
+}
+
+/* Styles pour Firefox */
+.progress-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--progress-color, #007bff);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.progress-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.progress-slider::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #e9ecef;
+    border: none;
+}
+
+/* Styles pour IE/Edge */
+.progress-slider::-ms-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--progress-color, #007bff);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+.progress-slider::-ms-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    color: transparent;
+}
+
+.progress-slider::-ms-fill-lower {
+    background: var(--progress-color, #007bff);
+    border-radius: 4px;
+}
+
+.progress-slider::-ms-fill-upper {
+    background: #e9ecef;
+    border-radius: 4px;
+}
+
+/* Animation de la piste */
+.progress-slider:focus {
+    outline: none;
+}
+
+.progress-slider:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.progress-slider:focus::-moz-range-thumb {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Labels de progression */
+.progress-labels {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .progress-slider::-webkit-slider-thumb {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .progress-slider::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .progress-slider::-ms-thumb {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* Animation de mise à jour */
+.progress-slider.updating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.progress-slider.updating::-webkit-slider-thumb {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}

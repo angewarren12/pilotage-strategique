@@ -266,11 +266,19 @@
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <!-- Bouton Vue hiérarchique - accessible à tous -->
+                                                <!-- Bouton Vue hiérarchique V2 (nouveau) - accessible à tous -->
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        onclick="openPilierHierarchiqueV2({{ $pilier->id }})"
+                                                        title="Vue hiérarchique V2 (nouveau)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                
+                                                <!-- Bouton Vue hiérarchique V1 (ancien) - accessible à tous -->
                                                 <button type="button" 
                                                         class="btn btn-sm btn-outline-info"
                                                         onclick="openPilierHierarchiqueModal({{ $pilier->id }})"
-                                                        title="Vue hiérarchique">
+                                                        title="Vue hiérarchique V1 (ancien)">
                                                     <i class="fas fa-sitemap"></i>
                                                 </button>
                                                 
@@ -4594,6 +4602,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Fonction pour ouvrir la modal hiérarchique V2
+function openPilierHierarchiqueV2(pilierId) {
+    console.log('🔄 Ouverture modal V2 pour pilier:', pilierId);
+    console.log('📅 Timestamp:', new Date().toISOString());
+    
+    // Vérifier que Livewire est disponible
+    if (typeof Livewire === 'undefined') {
+        console.error('❌ Livewire non disponible');
+        return;
+    }
+    
+    // Dispatcher l'événement Livewire
+    try {
+        Livewire.dispatch('openPilierHierarchique', { pilierId: pilierId });
+        console.log('✅ Événement Livewire envoyé avec succès');
+        
+        // Attendre un peu puis vérifier que le composant a reçu l'événement
+        setTimeout(() => {
+            console.log('⏰ Vérification après délai');
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'envoi de l\'événement:', error);
+    }
+}
+
 // Fonction pour afficher l'aperçu des couleurs hiérarchiques
 function showColorPreview() {
     const piliers = @json($piliers);
@@ -4690,3 +4724,6 @@ function showColorPreview() {
         <livewire:vue-generale-modal />
         <livewire:pilier-hierarchique-modal wire:key="pilier-hierarchique-modal" id="pilier-hierarchique-modal" />
         <livewire:project-planning-modal wire:key="project-planning-modal" id="project-planning-modal" />
+        
+        <!-- Composant Livewire pour la modal hiérarchique V2 -->
+        <livewire:pilier-hierarchique-v2 wire:key="pilier-hierarchique-v2" />

@@ -1,0 +1,165 @@
+/* 🎯 Composant de Progression Circulaire Amélioré - VERSION CORRIGÉE */
+
+.progress-circle {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.progress-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.progress-ring {
+    position: relative !important;
+    display: inline-block;
+    margin: 0 auto;
+    width: 80px;
+    height: 80px;
+}
+
+.progress-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center !important;
+    width: 100% !important;
+    pointer-events: none;
+    /* FORCER le centrage - pas de déplacement au hover */
+    transform-origin: center center !important;
+    /* Empêcher tout déplacement */
+    transition: none !important;
+}
+
+.progress-percentage {
+    font-size: 18px;
+    line-height: 1.2;
+    color: #2c3e50;
+    display: block;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.5px;
+    /* FORCER le centrage */
+    text-align: center !important;
+    /* Empêcher tout déplacement */
+    transition: none !important;
+}
+
+.progress-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 8px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* Animation de la progression */
+.progress-ring circle:last-child {
+    transition: stroke-dashoffset 0.8s ease-in-out;
+    stroke-linecap: round;
+}
+
+/* Effet de brillance sur le cercle */
+.progress-ring svg {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .progress-circle {
+        padding: 8px;
+    }
+    
+    .progress-percentage {
+        font-size: 16px;
+    }
+    
+    .progress-label {
+        font-size: 11px;
+    }
+}
+
+/* Variantes de couleurs pour différents niveaux */
+.progress-circle.pilier-level {
+    border-left: 4px solid #007bff;
+}
+
+.progress-circle.objectif-strategique-level {
+    border-left: 4px solid #ffc107;
+}
+
+.progress-circle.objectif-specifique-level {
+    border-left: 4px solid #28a745;
+}
+
+.progress-circle.action-level {
+    border-left: 4px solid #dc3545;
+}
+
+/* Animation d'entrée */
+.progress-circle {
+    animation: fadeInScale 0.6s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Effet de pulsation pour les progressions élevées */
+.progress-circle.high-progress {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+    }
+    100% {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* RÈGLES SPÉCIFIQUES POUR FORCER LE CENTRAGE */
+.progress-circle .progress-ring .progress-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center !important;
+    width: 100% !important;
+    pointer-events: none;
+    transition: none !important;
+}
+
+.progress-circle .progress-ring .progress-text .progress-percentage {
+    text-align: center !important;
+    transition: none !important;
+}
+
+/* Empêcher tout déplacement au hover */
+.progress-circle:hover .progress-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+.progress-circle:hover .progress-percentage {
+    text-align: center !important;
+}

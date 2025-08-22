@@ -1243,17 +1243,17 @@ use Illuminate\Support\Facades\Auth;
                                 </div>
                             
 
-                            @endif
+                        @endif
 
                             <!-- Vue Objectif Spécifique -->
-                            @if($currentView === 'objectifSpecifique')
+                        @if($currentView === 'objectifSpecifique')
                                 <div class="p-4">
                                     <div class="row">
                                         <div class="col-md-8">
                                             <div class="d-flex justify-content-between align-items-center mb-4">
                                                 <h4 class="mb-0">
                                                     <i class="fas fa-tasks me-2" style="color: {{ $pilier->getHierarchicalColor(3) }};"></i>
-                                                    Actionssss
+                                                    Actions
                                                 </h4>
                                                 @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id))
                                                 <button type="button" class="btn btn-sm" style="background: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(3)) }}; border-color: {{ $pilier->getHierarchicalColor(3) }};" wire:click="openCreateActionModal">
@@ -1305,9 +1305,9 @@ use Illuminate\Support\Facades\Auth;
                                                                  <td>
                                                                      <div class="d-flex align-items-center">
                                                                          <div class="progress me-2" style="width: 100px; height: 8px;">
-                                                                                <div class="progress-bar" 
+                                                                        <div class="progress-bar" 
                                                                                   role="progressbar" 
-                                                                                        style="width: {{ $action->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(3) }};"
+                                                                                  style="width: {{ $action->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(3) }};"
                                                                                   aria-valuenow="{{ $action->taux_avancement }}" 
                                                                                   aria-valuemin="0" 
                                                                                   aria-valuemax="100">
@@ -1317,7 +1317,7 @@ use Illuminate\Support\Facades\Auth;
                                                                     </div>
                                                                  </td>
                                                                  <td>
-                                                                            <span class="badge" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                                     <span class="badge" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
                                                                          {{ $action->sousActions->count() }}
                                                                      </span>
                                                                  </td>
@@ -1325,27 +1325,27 @@ use Illuminate\Support\Facades\Auth;
                                                                      <div class="btn-group" role="group">
                                                                          <button type="button" class="btn btn-outline-warning btn-sm" 
                                                                                  wire:click="naviguerVersAction({{ $action->id }})"
-                                                                                        title="Voir détails"
-                                                                                        style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
+                                                                                 title="Voir détails"
+                                                                                 style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
                                                                              <i class="fas fa-eye"></i>
                                                                          </button>
-                                                                                @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id) || (Auth::user()->id == $action->owner_id))
+                                                                         @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id) || (Auth::user()->id == $action->owner_id))
                                                                          <button type="button" 
                                                                                  wire:click="setActionToEditAction({{ $action->id }})"
                                                                                  class="btn btn-outline-warning btn-sm" 
-                                                                                        title="Modifier"
-                                                                                        style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
+                                                                                 title="Modifier"
+                                                                                 style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
                                                                              <i class="fas fa-edit"></i>
                                                                          </button>
                                                                          <button type="button" 
                                                                                  class="btn btn-outline-danger btn-sm" 
                                                                                  wire:click="deleteAction({{ $action->id }})"
                                                                                  onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette action ?')) return false;"
-                                                                                        title="Supprimer"
-                                                                                        style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
+                                                                                 title="Supprimer"
+                                                                                 style="border-color: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getHierarchicalColor(3) }};">
                                                                              <i class="fas fa-trash"></i>
                                                                          </button>
-                                                                                @endif
+                                                                         @endif
                                                                     </div>
                                                                  </td>
                                                              </tr>
@@ -1358,11 +1358,11 @@ use Illuminate\Support\Facades\Auth;
                                                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                                                     <h5 class="text-muted">Aucune action</h5>
                                                     <p class="text-muted">Commencez par créer votre première action</p>
-                                                    @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id))
-                                                        button type="button" class="btn" style="background: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(3)) }}; border-color: {{ $pilier->getHierarchicalColor(3) }};" wire:click="openCreateActionModal">
+                                                                            @if(Auth::user()->isAdminGeneral() || (Auth::user()->id == $selectedObjectifStrategique->owner_id) || (Auth::user()->id == $selectedObjectifSpecifique->owner_id))
+                                                                            <button type="button" class="btn" style="background: {{ $pilier->getHierarchicalColor(3) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(3)) }}; border-color: {{ $pilier->getHierarchicalColor(3) }};" wire:click="openCreateActionModal">
                             <i class="fas fa-plus me-2"></i>Créer la première action
                         </button>
-                                                    @endif
+                                                                            @endif
                                                 </div>
                                             @endif
                                         </div>
@@ -1460,8 +1460,7 @@ use Illuminate\Support\Facades\Auth;
                                                         <i class="fas fa-chevron-down"></i>
                                             </div>
                                         </div>
-                                            </div>
-                                        </div>
+                                             
                                                                                            <!-- OBJECTIF SPÉCIFIQUE COURANT (NIVEAU 2) -->
                                                 <div class="hierarchy-card current-level" style="background: white; border-color: {{ $pilier->getHierarchicalColor(2) }};">
                                                   <div class="hierarchy-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
@@ -3215,19 +3214,6 @@ use Illuminate\Support\Facades\Auth;
                             @endif
                         </div>
                     @endif
-                                        </div>
-                                    </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
                 </div>
 
                         </div>

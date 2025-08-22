@@ -399,6 +399,18 @@ class PilierHierarchiqueModal extends Component
 
         $this->selectedAction = Action::with(['sousActions'])->find($actionId);
         $this->currentView = 'action';
+        
+        // Log détaillé de l'action et de ses sous-actions
+        $this->dispatch('console.log', 'DEBUG: Action chargée:', [
+            'action_id' => $this->selectedAction->id,
+            'action_code' => $this->selectedAction->code,
+            'action_libelle' => $this->selectedAction->libelle,
+            'sous_actions_count' => $this->selectedAction->sousActions->count(),
+            'sous_actions' => $this->selectedAction->sousActions->map(function($sa) {
+                return ['id' => $sa->id, 'code' => $sa->code, 'libelle' => $sa->libelle];
+            })
+        ]);
+        
         $this->breadcrumb = [
             ['type' => 'pilier', 'name' => $this->pilier->code, 'id' => $this->pilier->id],
             ['type' => 'objectifStrategique', 'name' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code, 'id' => $this->selectedObjectifStrategique->id],

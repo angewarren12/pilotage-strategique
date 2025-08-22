@@ -46,3 +46,4 @@
 3. **Modal** s'ouvre automatiquement avec retry si nécessaire
 
 **Plus d'erreur** `❌ [NEW MODAL] Modal non trouvé !` ! 🎉
+

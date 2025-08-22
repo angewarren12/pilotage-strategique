@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class ObjectifSpecifique extends Model
 {
@@ -86,11 +87,46 @@ class ObjectifSpecifique extends Model
 
     /**
      * Mettre à jour le taux d'avancement de l'objectif stratégique parent
+     * ATTENTION: Cette méthode peut causer des boucles infinies
+     * Utiliser avec précaution et éviter les appels récursifs
      */
     public function updateTauxAvancement(): void
     {
-        if ($this->objectifStrategique) {
-            $this->objectifStrategique->updateTauxAvancement();
+        try {
+            if ($this->objectifStrategique) {
+                // Calculer le nouveau taux basé sur les actions
+                $actions = $this->actions;
+                if ($actions->count() > 0) {
+                    $totalProgress = 0;
+                    $count = 0;
+                    
+                    foreach ($actions as $action) {
+                        $taux = $action->getCalculatedTauxAvancement();
+                        if ($taux !== null) {
+                            $totalProgress += $taux;
+                            $count++;
+                        }
+                    }
+                    
+                    if ($count > 0) {
+                        $averageProgress = $totalProgress / $count;
+                        
+                        // Mettre à jour le taux local
+                        $this->taux_avancement = round($averageProgress, 2);
+                        $this->save();
+                        
+                        Log::info('✅ Taux d\'avancement OSP mis à jour', [
+                            'osp_id' => $this->id,
+                            'new_progress' => $this->taux_avancement
+                        ]);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Erreur mise à jour OSP', [
+                'error' => $e->getMessage(), 
+                'osp_id' => $this->id
+            ]);
         }
     }
 

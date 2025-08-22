@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Action extends Model
 {
@@ -89,11 +90,34 @@ class Action extends Model
 
     /**
      * Mettre à jour le taux d'avancement de l'objectif spécifique parent
+     * ATTENTION: Cette méthode peut causer des boucles infinies
+     * Utiliser avec précaution et éviter les appels récursifs
      */
     public function updateTauxAvancement(): void
     {
-        if ($this->objectifSpecifique) {
-            $this->objectifSpecifique->updateTauxAvancement();
+        try {
+            if ($this->objectifSpecifique) {
+                // Calculer le nouveau taux basé sur les sous-actions
+                $sousActions = $this->sousActions;
+                if ($sousActions->count() > 0) {
+                    $totalProgress = $sousActions->sum('taux_avancement');
+                    $averageProgress = $totalProgress / $sousActions->count();
+                    
+                    // Mettre à jour le taux local
+                    $this->taux_avancement = round($averageProgress, 2);
+                    $this->save();
+                    
+                    Log::info('✅ Taux d\'avancement Action mis à jour', [
+                        'action_id' => $this->id,
+                        'new_progress' => $this->taux_avancement
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Erreur mise à jour Action', [
+                'error' => $e->getMessage(), 
+                'action_id' => $this->id
+            ]);
         }
     }
 
