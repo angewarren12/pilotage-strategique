@@ -65,8 +65,7 @@ class PilierHierarchiqueV2 extends Component
         'description' => '',
         'owner_id' => '',
         'date_echeance' => '',
-        'taux_avancement' => 0,
-        'type' => 'normal'
+        'taux_avancement' => 0
     ];
 
     // Éléments à éditer
@@ -80,6 +79,12 @@ class PilierHierarchiqueV2 extends Component
     public $editOSPLibelle;
     public $editOSPDescription;
     public $editOSPOwnerId;
+    
+    // Variable pour l'édition d'objectif spécifique
+    public $objectifSpecifiqueToEdit;
+    
+    // Variables pour les sous-actions
+    public $sousActionToEdit;
 
     // Navigation
     public $breadcrumb = [];
@@ -98,10 +103,45 @@ class PilierHierarchiqueV2 extends Component
             'current_view' => $this->currentView,
             'timestamp' => now()->toISOString()
         ]);
+    }
+    
+    // Méthode pour ouvrir le modal d'édition d'objectif spécifique
+    public function editObjectifSpecifique($objectifSpecifiqueId)
+    {
+        Log::info('🔄 Édition d\'objectif spécifique', ['id' => $objectifSpecifiqueId]);
         
-        $this->dispatch('toast', 'info', 'Composant V2 fonctionnel !');
-        
-        Log::info('✅ Test terminé avec succès');
+        try {
+            // Récupérer l'objectif spécifique
+            $this->objectifSpecifiqueToEdit = ObjectifSpecifique::findOrFail($objectifSpecifiqueId);
+            
+            // Vérifier les permissions
+            if (!$this->canEditObjectifSpecifique($this->objectifSpecifiqueToEdit)) {
+                $this->dispatch('toast', [
+                    'type' => 'error',
+                    'message' => 'Vous n\'avez pas les permissions pour modifier cet objectif spécifique.'
+                ]);
+                return;
+            }
+            
+            // Ouvrir le modal
+            $this->showEditOSPModal = true;
+            
+            Log::info('✅ Modal d\'édition OSP ouvert', [
+                'osp_id' => $objectifSpecifiqueId,
+                'osp_code' => $this->objectifSpecifiqueToEdit->code
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de l\'ouverture du modal d\'édition OSP', [
+                'osp_id' => $objectifSpecifiqueId,
+                'error' => $e->getMessage()
+            ]);
+            
+            $this->dispatch('toast', [
+                'type' => 'error',
+                'message' => 'Erreur lors de l\'ouverture du formulaire d\'édition.'
+            ]);
+        }
     }
 
     public function mount($pilierId = null)
@@ -271,14 +311,12 @@ class PilierHierarchiqueV2 extends Component
                 'os_owner_id' => $objectifStrategique->owner_id
             ]);
             
-            // Créer un tableau avec les données pour l'édition
-            $this->editingOS = [
-                'id' => $objectifStrategique->id,
-                'code' => $objectifStrategique->code,
-                'libelle' => $objectifStrategique->libelle,
-                'description' => $objectifStrategique->description,
-                'owner_id' => $objectifStrategique->owner_id
-            ];
+            // Assigner l'objet complet et les propriétés dédiées pour l'édition
+            $this->editingObjectifStrategique = $objectifStrategique;
+            $this->editOSCode = $objectifStrategique->code;
+            $this->editOSLibelle = $objectifStrategique->libelle;
+            $this->editOSDescription = $objectifStrategique->description;
+            $this->editOSOwnerId = $objectifStrategique->owner_id;
             
             $this->showEditOSModal = true;
             
@@ -345,16 +383,50 @@ class PilierHierarchiqueV2 extends Component
     public function setActionToEdit($actionId)
     {
         try {
+            Log::info('🔧 Ouverture du modal d\'édition d\'action', ['action_id' => $actionId]);
+            
             $action = Action::findOrFail($actionId);
             
-            Log::info('🔧 Édition Action', [
+            Log::info('🔍 Action trouvée:', [
                 'action_id' => $action->id,
+                'action_code' => $action->code,
                 'action_libelle' => $action->libelle,
+                'action_description' => $action->description,
+                'action_owner_id' => $action->owner_id,
                 'user_id' => Auth::id()
             ]);
             
+            // Vérifier que l'action est bien un objet Eloquent
+            Log::info('🔍 Type de l\'action:', [
+                'type' => get_class($action),
+                'is_object' => is_object($action),
+                'has_attributes' => method_exists($action, 'getAttributes')
+            ]);
+            
+            // Assigner l'action et les propriétés dédiées
             $this->editingAction = $action;
+            $this->editActionCode = $action->code;
+            $this->editActionLibelle = $action->libelle;
+            $this->editActionDescription = $action->description;
+            $this->editActionOwnerId = $action->owner_id;
+            
             $this->showEditActionModal = true;
+            
+            Log::info('✅ Modal d\'édition d\'action ouvert:', [
+                'editingAction_id' => $this->editingAction ? $this->editingAction->id : 'null',
+                'editActionCode' => $this->editActionCode,
+                'editActionLibelle' => $this->editActionLibelle,
+                'editActionDescription' => $this->editActionDescription,
+                'editActionOwnerId' => $this->editActionOwnerId,
+                'showEditActionModal' => $this->showEditActionModal
+            ]);
+            
+            // Vérifier que la propriété est bien assignée
+            Log::info('🔍 Vérification de la propriété editingAction:', [
+                'propriete_existe' => property_exists($this, 'editingAction'),
+                'valeur_assignee' => $this->editingAction ? 'OUI' : 'NON',
+                'type_valeur' => $this->editingAction ? get_class($this->editingAction) : 'null'
+            ]);
             
         } catch (\Exception $e) {
             Log::error('❌ Erreur lors de l\'ouverture de la modal d\'édition Action', [
@@ -376,7 +448,12 @@ class PilierHierarchiqueV2 extends Component
                 'user_id' => Auth::id()
             ]);
             
+            // Assigner les valeurs aux propriétés dédiées pour le binding
             $this->editingSousAction = $sousAction;
+            $this->editSousActionCode = $sousAction->code;
+            $this->editSousActionLibelle = $sousAction->libelle;
+            $this->editSousActionDescription = $sousAction->description;
+            $this->editSousActionOwnerId = $sousAction->owner_id;
             $this->showEditSousActionModal = true;
             
         } catch (\Exception $e) {
@@ -437,7 +514,7 @@ class PilierHierarchiqueV2 extends Component
 
         try {
             // Vérifier que l'utilisateur propriétaire existe
-            $owner = User::find($this->editOSPOwnerId);
+            $owner = \DB::table('users')->where('id', $this->editOSPOwnerId)->first();
             if (!$owner) {
                 Log::error('❌ Utilisateur propriétaire non trouvé', ['owner_id' => $this->editOSPOwnerId]);
                 $this->dispatch('toast', 'error', 'Utilisateur propriétaire non trouvé');
@@ -448,13 +525,28 @@ class PilierHierarchiqueV2 extends Component
             $oldOwnerId = $this->editingOSP->owner_id;
             $newOwnerId = $this->editOSPOwnerId;
 
-            // Mettre à jour l'objectif spécifique
-            $this->editingOSP->update([
-                'code' => $this->editOSPCode,
-                'libelle' => $this->editOSPLibelle,
-                'description' => $this->editOSPDescription,
-                'owner_id' => $this->editOSPOwnerId
-            ]);
+            // Mettre à jour l'objectif spécifique avec DB Query Builder
+            $updated = \DB::table('objectif_specifiques')
+                ->where('id', $this->editingOSP->id)
+                ->update([
+                    'code' => $this->editOSPCode,
+                    'libelle' => $this->editOSPLibelle,
+                    'description' => $this->editOSPDescription,
+                    'owner_id' => $this->editOSPOwnerId,
+                    'updated_at' => now()
+                ]);
+
+            if (!$updated) {
+                Log::error('❌ Échec de la mise à jour de l\'objectif spécifique', ['osp_id' => $this->editingOSP->id]);
+                $this->dispatch('toast', 'error', 'Erreur lors de la mise à jour');
+                return;
+            }
+
+            // Mettre à jour l'objet local pour la suite
+            $this->editingOSP->code = $this->editOSPCode;
+            $this->editingOSP->libelle = $this->editOSPLibelle;
+            $this->editingOSP->description = $this->editOSPDescription;
+            $this->editingOSP->owner_id = $this->editOSPOwnerId;
 
             // Envoyer notification au nouveau propriétaire s'il est différent
             if ($oldOwnerId != $newOwnerId) {
@@ -480,15 +572,24 @@ class PilierHierarchiqueV2 extends Component
                 }
             }
 
-            // Mettre à jour le taux d'avancement de l'objectif stratégique parent
-            $this->selectedObjectifStrategique->updateTauxAvancement();
+            // Mettre à jour le taux d'avancement de l'objectif stratégique parent avec DB
+            $this->updateOSPProgressWithDB($this->selectedObjectifStrategique->id);
 
             $this->closeEditOSPModal();
             $this->dispatch('toast', 'success', 'Objectif Spécifique modifié avec succès');
             $this->dispatch('refreshComponent');
 
+            Log::info('✅ Objectif Spécifique mis à jour avec succès', [
+                'osp_id' => $this->editingOSP->id,
+                'new_code' => $this->editOSPCode,
+                'new_libelle' => $this->editOSPLibelle
+            ]);
+
         } catch (\Exception $e) {
-            Log::error('❌ Erreur mise à jour Objectif Spécifique', ['error' => $e->getMessage()]);
+            Log::error('❌ Erreur mise à jour Objectif Spécifique', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $this->dispatch('toast', 'error', 'Erreur lors de la modification de l\'objectif spécifique');
         }
     }
@@ -547,8 +648,20 @@ class PilierHierarchiqueV2 extends Component
 
     public function openCreateActionModal()
     {
+        Log::info('🔄 Ouverture du modal de création d\'action');
+        Log::info('🔍 État avant ouverture:', [
+            'showCreateActionModal' => $this->showCreateActionModal,
+            'user_id' => Auth::id(),
+            'can_create' => $this->canCreateAction(),
+            'selectedObjectifSpecifique' => $this->selectedObjectifSpecifique ? $this->selectedObjectifSpecifique->id : 'null'
+        ]);
+        
         $this->showCreateActionModal = true;
         $this->resetNewActionForm();
+        
+        Log::info('✅ État après ouverture:', [
+            'showCreateActionModal' => $this->showCreateActionModal
+        ]);
     }
 
     public function closeCreateActionModal()
@@ -565,20 +678,242 @@ class PilierHierarchiqueV2 extends Component
 
     public function openCreateSousActionModal()
     {
+        Log::info('🔄 Ouverture du modal de création de sous-action');
+        $this->resetNewSousAction();
         $this->showCreateSousActionModal = true;
-        $this->resetNewSousActionForm();
     }
-
+    
     public function closeCreateSousActionModal()
     {
+        Log::info('🔄 Fermeture du modal de création de sous-action');
         $this->showCreateSousActionModal = false;
-        $this->resetNewSousActionForm();
+        $this->resetNewSousAction();
     }
-
+    
+    public function openEditSousActionModal($sousActionId)
+    {
+        Log::info('🔄 Ouverture du modal d\'édition de sous-action', ['id' => $sousActionId]);
+        
+        try {
+            $this->editingSousAction = SousAction::findOrFail($sousActionId);
+            
+            // Vérifier les permissions
+            if (!$this->canEditSousAction($this->editingSousAction)) {
+                $this->dispatch('toast', [
+                    'type' => 'error',
+                    'message' => 'Vous n\'avez pas les permissions pour modifier cette sous-action.'
+                ]);
+                return;
+            }
+            
+            // Assigner les valeurs aux propriétés d'édition
+            $this->editSousActionCode = $this->editingSousAction->code;
+            $this->editSousActionLibelle = $this->editingSousAction->libelle;
+            $this->editSousActionDescription = $this->editingSousAction->description;
+            $this->editSousActionOwnerId = $this->editingSousAction->owner_id;
+            $this->editSousActionDateEcheance = $this->editingSousAction->date_echeance ? $this->editingSousAction->date_echeance->format('Y-m-d') : '';
+            $this->editSousActionTauxAvancement = $this->editingSousAction->taux_avancement ?? 0;
+            
+            $this->showEditSousActionModal = true;
+            
+            Log::info('✅ Modal d\'édition de sous-action ouvert', [
+                'sous_action_id' => $sousActionId,
+                'sous_action_code' => $this->editingSousAction->code,
+                'edit_properties_set' => true
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de l\'ouverture du modal d\'édition de sous-action', [
+                'sous_action_id' => $sousActionId,
+                'error' => $e->getMessage()
+            ]);
+            
+            $this->dispatch('toast', [
+                'type' => 'error',
+                'message' => 'Erreur lors de l\'ouverture du formulaire d\'édition.'
+            ]);
+        }
+    }
+    
     public function closeEditSousActionModal()
     {
+        Log::info('🔄 Fermeture du modal d\'édition de sous-action');
         $this->showEditSousActionModal = false;
         $this->editingSousAction = null;
+        
+        // Réinitialiser les propriétés d'édition
+        $this->editSousActionCode = '';
+        $this->editSousActionLibelle = '';
+        $this->editSousActionDescription = '';
+        $this->editSousActionOwnerId = '';
+        $this->editSousActionDateEcheance = '';
+        $this->editSousActionTauxAvancement = 0;
+    }
+    
+    public function createSousAction()
+    {
+        Log::info('💾 Création d\'une nouvelle sous-action', [
+            'code' => $this->newSousAction['code'],
+            'libelle' => $this->newSousAction['libelle']
+        ]);
+        
+        try {
+            // Validation
+            $this->validate([
+                'newSousAction.code' => 'required|string|max:10',
+                'newSousAction.libelle' => 'required|string|max:255',
+                'newSousAction.owner_id' => 'required|exists:users,id',
+                'newSousAction.date_echeance' => 'nullable|date|after_or_equal:today'
+            ]);
+            
+            // Créer la sous-action avec DB Query Builder
+            $sousActionId = DB::table('sous_actions')->insertGetId([
+                'code' => $this->newSousAction['code'],
+                'libelle' => $this->newSousAction['libelle'],
+                'description' => $this->newSousAction['description'],
+                'owner_id' => $this->newSousAction['owner_id'],
+                'action_id' => $this->selectedAction->id,
+                'taux_avancement' => 0, // Taux initial à 0%
+                'date_echeance' => $this->newSousAction['date_echeance'] ?: null,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            // Fermer le modal
+            $this->closeCreateSousActionModal();
+            
+            // Rafraîchir les données de l'action sélectionnée
+            $this->selectedAction = Action::with(['owner', 'sousActions'])->findOrFail($this->selectedAction->id);
+            
+            // Mettre à jour le taux d'avancement de l'action parent
+            $this->updateActionProgressWithDB($this->selectedAction->id);
+            
+            // Notification de succès
+            $this->dispatch('toast', [
+                'type' => 'success',
+                'message' => 'Sous-action créée avec succès !'
+            ]);
+            
+            // Rafraîchir le composant pour afficher la nouvelle sous-action
+            $this->dispatch('refreshComponent');
+            
+            Log::info('✅ Sous-action créée et données rafraîchies', [
+                'sous_action_id' => $sousActionId,
+                'code' => $this->newSousAction['code'],
+                'action_id' => $this->selectedAction->id,
+                'sous_actions_count' => $this->selectedAction->sousActions->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la création de la sous-action', [
+                'error' => $e->getMessage()
+            ]);
+            
+            $this->dispatch('toast', [
+                'type' => 'error',
+                'message' => 'Erreur lors de la création : ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    public function updateSousAction()
+    {
+        Log::info('🚀 MÉTHODE updateSousAction APPELÉE !', [
+            'sous_action_id' => $this->editingSousAction?->id,
+            'editSousActionCode' => $this->editSousActionCode,
+            'editSousActionLibelle' => $this->editSousActionLibelle,
+            'editSousActionOwnerId' => $this->editSousActionOwnerId,
+            'editSousActionDateEcheance' => $this->editSousActionDateEcheance
+        ]);
+        
+        try {
+            // Validation avec les propriétés dédiées
+            $this->validate([
+                'editSousActionCode' => 'required|string|max:10',
+                'editSousActionLibelle' => 'required|string|max:255',
+                'editSousActionOwnerId' => 'required|exists:users,id',
+                'editSousActionDateEcheance' => 'nullable|date'
+            ]);
+            
+            // Vérifier les permissions
+            if (!$this->editingSousAction) {
+                $this->dispatch('toast', 'error', 'Aucune sous-action à modifier');
+                return;
+            }
+            
+            if (!$this->canEditSousAction($this->editingSousAction)) {
+                $this->dispatch('toast', [
+                    'type' => 'error',
+                    'message' => 'Vous n\'avez pas les permissions pour modifier cette sous-action.'
+                ]);
+                return;
+            }
+            
+            // Sauvegarder les modifications avec DB Query Builder
+            $updated = DB::table('sous_actions')
+                ->where('id', $this->editingSousAction->id)
+                ->update([
+                    'code' => $this->editSousActionCode,
+                    'libelle' => $this->editSousActionLibelle,
+                    'description' => $this->editSousActionDescription,
+                    'owner_id' => $this->editSousActionOwnerId,
+                    'date_echeance' => $this->editSousActionDateEcheance ?: null,
+                    'updated_at' => now()
+                ]);
+            
+            if (!$updated) {
+                Log::error('❌ Échec de la mise à jour de la sous-action', ['sous_action_id' => $this->editingSousAction->id]);
+                $this->dispatch('toast', 'error', 'Erreur lors de la mise à jour');
+                return;
+            }
+            
+            // Fermer le modal
+            $this->closeEditSousActionModal();
+            
+            // Rafraîchir les données de l'action sélectionnée
+            $this->selectedAction = Action::with(['owner', 'sousActions'])->findOrFail($this->selectedAction->id);
+            
+            // Mettre à jour le taux d'avancement de l'action parent
+            $this->updateActionProgressWithDB($this->selectedAction->id);
+            
+            // Notification de succès
+            $this->dispatch('toast', [
+                'type' => 'success',
+                'message' => 'Sous-action mise à jour avec succès !'
+            ]);
+            
+            // Rafraîchir le composant pour afficher les modifications
+            $this->dispatch('refreshComponent');
+            
+            Log::info('✅ Sous-action mise à jour et données rafraîchies', [
+                'sous_action_id' => $this->editingSousAction->id,
+                'action_id' => $this->selectedAction->id,
+                'sous_actions_count' => $this->selectedAction->sousActions->count()
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la mise à jour de la sous-action', [
+                'sous_action_id' => $this->editingSousAction?->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            $this->dispatch('toast', [
+                'type' => 'error',
+                'message' => 'Erreur lors de la mise à jour : ' . $e->getMessage()
+            ]);
+        }
+    }
+    
+    private function resetNewSousAction()
+    {
+        $this->newSousAction = [
+            'code' => '',
+            'libelle' => '',
+            'description' => '',
+            'owner_id' => '',
+            'date_echeance' => '',
+            'taux_avancement' => 0
+        ];
     }
 
     // Création
@@ -737,7 +1072,21 @@ class PilierHierarchiqueV2 extends Component
 
     public function createAction()
     {
+        Log::info('💾 Tentative de création d\'action');
+        Log::info('🔍 État avant création:', [
+            'user_id' => Auth::id(),
+            'user_name' => Auth::user()->name,
+            'can_create' => $this->canCreateAction(),
+            'selectedObjectifSpecifique' => $this->selectedObjectifSpecifique ? $this->selectedObjectifSpecifique->id : 'null',
+            'selectedObjectifStrategique' => $this->selectedObjectifStrategique ? $this->selectedObjectifStrategique->id : 'null',
+            'newAction_data' => $this->newAction
+        ]);
+        
         if (!$this->canCreateAction()) {
+            Log::warning('🚫 Permission refusée pour créer une action', [
+                'user_id' => Auth::id(),
+                'user_name' => Auth::user()->name
+            ]);
             $this->dispatch('toast', 'error', 'Permission refusée');
             return;
         }
@@ -746,80 +1095,39 @@ class PilierHierarchiqueV2 extends Component
             'newAction.code' => 'required|string|max:10',
             'newAction.libelle' => 'required|string|max:255',
             'newAction.description' => 'nullable|string',
-            'newAction.owner_id' => 'required|exists:users,id',
-            'newAction.date_echeance' => 'nullable|date',
-            'newAction.taux_avancement' => 'required|numeric|min:0|max:100',
-            'newAction.type' => 'required|in:normal,projet'
+            'newAction.owner_id' => 'required|exists:users,id'
         ]);
 
         try {
-            $action = new Action();
-            $action->objectif_specifique_id = $this->selectedObjectifSpecifique->id;
-            $action->code = $this->newAction['code'];
-            $action->libelle = $this->newAction['libelle'];
-            $action->description = $this->newAction['description'];
-            $action->owner_id = $this->newAction['owner_id'];
-            $action->date_echeance = $this->newAction['date_echeance'];
-            $action->taux_avancement = $this->newAction['taux_avancement'];
-            $action->type = $this->newAction['type'];
-            $action->save();
+            // Créer l'action avec DB Query Builder
+            $actionId = DB::table('actions')->insertGetId([
+                'objectif_specifique_id' => $this->selectedObjectifSpecifique->id,
+                'code' => $this->newAction['code'],
+                'libelle' => $this->newAction['libelle'],
+                'description' => $this->newAction['description'],
+                'owner_id' => $this->newAction['owner_id'],
+                'taux_avancement' => 0, // Taux initial à 0%
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
 
             // Envoyer notification au propriétaire
             $this->sendNotification(
                 $this->newAction['owner_id'],
                 'action_assigned',
                 'Nouvelle Action assignée',
-                "Vous avez été assigné comme propriétaire de l'action : {$action->libelle}",
-                ['action_id' => $action->id, 'osp_id' => $this->selectedObjectifSpecifique->id]
+                "Vous avez été assigné comme propriétaire de l'action : {$this->newAction['libelle']}",
+                ['action_id' => $actionId, 'osp_id' => $this->selectedObjectifSpecifique->id]
             );
 
-            $this->selectedObjectifSpecifique->updateTauxAvancement();
+            // Mettre à jour le taux d'avancement de l'objectif spécifique parent avec DB
+            $this->updateOSPProgressWithDB($this->selectedObjectifSpecifique->id);
             $this->closeCreateActionModal();
             $this->dispatch('toast', 'success', 'Action créée avec succès');
             $this->dispatch('refreshComponent');
 
         } catch (\Exception $e) {
             Log::error('Erreur création Action', ['error' => $e->getMessage()]);
-            $this->dispatch('toast', 'error', 'Erreur lors de la création');
-        }
-    }
-
-    public function createSousAction()
-    {
-        if (!$this->canCreateSousAction()) {
-            $this->dispatch('toast', 'error', 'Permission refusée');
-            return;
-        }
-
-        $this->validate([
-            'newSousAction.code' => 'required|string|max:10',
-            'newSousAction.libelle' => 'required|string|max:255',
-            'newSousAction.description' => 'nullable|string',
-            'newSousAction.owner_id' => 'required|exists:users,id',
-            'newSousAction.date_echeance' => 'nullable|date',
-            'newSousAction.taux_avancement' => 'required|numeric|min:0|max:100',
-            'newSousAction.type' => 'required|in:normal,projet'
-        ]);
-
-        try {
-            $sousAction = new SousAction();
-            $sousAction->action_id = $this->selectedAction->id;
-            $sousAction->code = $this->newSousAction['code'];
-            $sousAction->libelle = $this->newSousAction['libelle'];
-            $sousAction->description = $this->newSousAction['description'];
-            $sousAction->owner_id = $this->newSousAction['owner_id'];
-            $sousAction->date_echeance = $this->newSousAction['date_echeance'];
-            $sousAction->taux_avancement = $this->newSousAction['taux_avancement'];
-            $sousAction->type = $this->newSousAction['type'];
-            $sousAction->save();
-
-            $this->selectedAction->updateTauxAvancement();
-            $this->closeCreateSousActionModal();
-            $this->dispatch('toast', 'success', 'Sous-action créée avec succès');
-            $this->dispatch('refreshComponent');
-
-        } catch (\Exception $e) {
-            Log::error('Erreur création Sous-action', ['error' => $e->getMessage()]);
             $this->dispatch('toast', 'error', 'Erreur lors de la création');
         }
     }
@@ -894,22 +1202,39 @@ class PilierHierarchiqueV2 extends Component
         }
 
         $this->validate([
-            'editingAction.code' => 'required|string|max:10',
-            'editingAction.libelle' => 'required|string|max:255',
-            'editingAction.description' => 'nullable|string',
-            'editingAction.owner_id' => 'required|exists:users,id',
-            'editingAction.date_echeance' => 'nullable|date',
-            'editingAction.taux_avancement' => 'required|numeric|min:0|max:100',
-            'editingAction.type' => 'required|in:normal,projet'
+            'editActionCode' => 'required|string|max:10',
+            'editActionLibelle' => 'required|string|max:255',
+            'editActionDescription' => 'nullable|string',
+            'editActionOwnerId' => 'required|exists:users,id'
         ]);
 
         try {
             // Sauvegarder l'ancien propriétaire pour la notification
-            $oldOwnerId = $this->editingAction->getOriginal('owner_id');
-            $newOwnerId = $this->editingAction->owner_id;
+            $oldOwnerId = $this->editingAction->owner_id;
+            $newOwnerId = $this->editActionOwnerId;
 
-            // Mettre à jour l'action
-            $this->editingAction->save();
+            // Mettre à jour l'action avec DB Query Builder
+            $updated = DB::table('actions')
+                ->where('id', $this->editingAction->id)
+                ->update([
+                    'code' => $this->editActionCode,
+                    'libelle' => $this->editActionLibelle,
+                    'description' => $this->editActionDescription,
+                    'owner_id' => $this->editActionOwnerId,
+                    'updated_at' => now()
+                ]);
+
+            if (!$updated) {
+                Log::error('❌ Échec de la mise à jour de l\'action', ['action_id' => $this->editingAction->id]);
+                $this->dispatch('toast', 'error', 'Erreur lors de la mise à jour');
+                return;
+            }
+
+            // Mettre à jour l'objet local pour la suite
+            $this->editingAction->code = $this->editActionCode;
+            $this->editingAction->libelle = $this->editActionLibelle;
+            $this->editingAction->description = $this->editActionDescription;
+            $this->editingAction->owner_id = $this->editActionOwnerId;
 
             // Envoyer notification au nouveau propriétaire s'il est différent
             if ($oldOwnerId != $newOwnerId) {
@@ -935,8 +1260,8 @@ class PilierHierarchiqueV2 extends Component
                 }
             }
 
-            // Mettre à jour le taux d'avancement de l'objectif spécifique parent
-            $this->selectedObjectifSpecifique->updateTauxAvancement();
+            // Mettre à jour le taux d'avancement de l'objectif spécifique parent avec DB
+            $this->updateOSPProgressWithDB($this->selectedObjectifSpecifique->id);
 
             $this->closeEditActionModal();
             $this->dispatch('toast', 'success', 'Action modifiée avec succès');
@@ -956,16 +1281,32 @@ class PilierHierarchiqueV2 extends Component
                 'user_id' => Auth::id()
             ]);
 
-            $action = Action::findOrFail($actionId);
+            // Vérifier les permissions avec DB
+            $action = DB::table('actions')->where('id', $actionId)->first();
+            
+            if (!$action) {
+                Log::warning('🚫 Action non trouvée', ['action_id' => $actionId]);
+                $this->dispatch('toast', 'error', 'Action non trouvée');
+                return;
+            }
 
-            if (!$this->canDeleteAction($action)) {
+            if (!$this->canDeleteAction((object)$action)) {
                 Log::warning('🚫 Permission refusée pour supprimer Action', ['user_id' => Auth::id(), 'action_id' => $actionId]);
                 $this->dispatch('toast', 'error', 'Permission refusée ou action liée');
                 return;
             }
 
-            $action->delete();
-            $this->selectedObjectifSpecifique->updateTauxAvancement();
+            // Supprimer l'action avec DB
+            $deleted = DB::table('actions')->where('id', $actionId)->delete();
+            
+            if (!$deleted) {
+                Log::error('❌ Échec de la suppression de l\'action', ['action_id' => $actionId]);
+                $this->dispatch('toast', 'error', 'Erreur lors de la suppression');
+                return;
+            }
+
+            // Mettre à jour le taux d'avancement de l'objectif spécifique parent avec DB
+            $this->updateOSPProgressWithDB($this->selectedObjectifSpecifique->id);
             $this->dispatch('toast', 'success', 'Action supprimée avec succès');
             $this->dispatch('refreshComponent');
             Log::info('✅ Action supprimée', ['action_id' => $actionId]);
@@ -976,72 +1317,7 @@ class PilierHierarchiqueV2 extends Component
         }
     }
 
-    public function updateSousAction()
-    {
-        if (!$this->editingSousAction) {
-            $this->dispatch('toast', 'error', 'Aucune sous-action à modifier');
-            return;
-        }
 
-        if (!$this->canEditSousAction($this->editingSousAction)) {
-            $this->dispatch('toast', 'error', 'Permission refusée');
-            return;
-        }
-
-        $this->validate([
-            'editingSousAction.code' => 'required|string|max:10',
-            'editingSousAction.libelle' => 'required|string|max:255',
-            'editingSousAction.description' => 'nullable|string',
-            'editingSousAction.owner_id' => 'required|exists:users,id',
-            'editingSousAction.date_echeance' => 'nullable|date',
-            'editingSousAction.taux_avancement' => 'required|numeric|min:0|max:100',
-            'editingSousAction.type' => 'required|in:normal,projet'
-        ]);
-
-        try {
-            // Sauvegarder l'ancien propriétaire pour la notification
-            $oldOwnerId = $this->editingSousAction->getOriginal('owner_id');
-            $newOwnerId = $this->editingSousAction->owner_id;
-
-            // Mettre à jour la sous-action
-            $this->editingSousAction->save();
-
-            // Envoyer notification au nouveau propriétaire s'il est différent
-            if ($oldOwnerId != $newOwnerId) {
-                Log::info('📧 Envoi notification changement responsable Sous-Action', [
-                    'old_owner_id' => $oldOwnerId,
-                    'new_owner_id' => $newOwnerId,
-                    'sous_action_id' => $this->editingSousAction->id,
-                    'sous_action_libelle' => $this->editingSousAction->libelle
-                ]);
-
-                $notificationSent = $this->sendNotification(
-                    $newOwnerId,
-                    'sous_action_assigned',
-                    'Sous-Action assignée',
-                    "Vous avez été assigné comme responsable de la sous-action : {$this->editingSousAction->libelle}",
-                    ['sous_action_id' => $this->editingSousAction->id, 'action_id' => $this->selectedAction->id]
-                );
-
-                if ($notificationSent) {
-                    Log::info('✅ Notification changement responsable Sous-Action envoyée avec succès');
-                } else {
-                    Log::warning('⚠️ Échec de l\'envoi de la notification changement responsable Sous-Action');
-                }
-            }
-
-            // Mettre à jour le taux d'avancement de l'action parent
-            $this->selectedAction->updateTauxAvancement();
-
-            $this->closeEditSousActionModal();
-            $this->dispatch('toast', 'success', 'Sous-action modifiée avec succès');
-            $this->dispatch('refreshComponent');
-
-        } catch (\Exception $e) {
-            Log::error('❌ Erreur mise à jour Sous-Action', ['error' => $e->getMessage()]);
-            $this->dispatch('toast', 'error', 'Erreur lors de la modification de la sous-action');
-        }
-    }
 
     /**
      * Mise à jour rapide de la progression d'une sous-action via le slider
@@ -1155,16 +1431,32 @@ class PilierHierarchiqueV2 extends Component
                 'user_id' => Auth::id()
             ]);
 
-            $sousAction = SousAction::findOrFail($sousActionId);
+            // Vérifier les permissions avec DB
+            $sousAction = DB::table('sous_actions')->where('id', $sousActionId)->first();
+            
+            if (!$sousAction) {
+                Log::warning('🚫 Sous-action non trouvée', ['sous_action_id' => $sousActionId]);
+                $this->dispatch('toast', 'error', 'Sous-action non trouvée');
+                return;
+            }
 
-            if (!$this->canDeleteSousAction($sousAction)) {
+            if (!$this->canDeleteSousAction((object)$sousAction)) {
                 Log::warning('🚫 Permission refusée pour supprimer Sous-Action', ['user_id' => Auth::id(), 'sous_action_id' => $sousActionId]);
                 $this->dispatch('toast', 'error', 'Permission refusée ou sous-action liée');
                 return;
             }
 
-            $sousAction->delete();
-            $this->selectedAction->updateTauxAvancement();
+            // Supprimer la sous-action avec DB
+            $deleted = DB::table('sous_actions')->where('id', $sousActionId)->delete();
+            
+            if (!$deleted) {
+                Log::error('❌ Échec de la suppression de la sous-action', ['sous_action_id' => $sousActionId]);
+                $this->dispatch('toast', 'error', 'Erreur lors de la suppression');
+                return;
+            }
+
+            // Mettre à jour le taux d'avancement de l'action parent avec DB
+            $this->updateActionProgressWithDB($this->selectedAction->id);
             $this->dispatch('toast', 'success', 'Sous-action supprimée avec succès');
             $this->dispatch('refreshComponent');
             Log::info('✅ Sous-action supprimée', ['sous_action_id' => $sousActionId]);
@@ -1201,9 +1493,30 @@ class PilierHierarchiqueV2 extends Component
     public function canCreateAction()
     {
         $user = Auth::user();
-        return (method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral()) || 
+        
+        Log::info('🔐 Vérification permission création Action', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'has_isAdminGeneral' => method_exists($user, 'isAdminGeneral'),
+            'is_admin' => method_exists($user, 'isAdminGeneral') ? $user->isAdminGeneral() : 'Méthode non trouvée',
+            'selected_os_id' => $this->selectedObjectifStrategique ? $this->selectedObjectifStrategique->id : 'null',
+            'selected_os_owner_id' => $this->selectedObjectifStrategique ? $this->selectedObjectifStrategique->owner_id : 'null',
+            'selected_osp_id' => $this->selectedObjectifSpecifique ? $this->selectedObjectifSpecifique->id : 'null',
+            'selected_osp_owner_id' => $this->selectedObjectifSpecifique ? $this->selectedObjectifSpecifique->owner_id : 'null',
+            'user_is_os_owner' => $this->selectedObjectifStrategique ? ($user->id == $this->selectedObjectifStrategique->owner_id) : false,
+            'user_is_osp_owner' => $this->selectedObjectifSpecifique ? ($user->id == $this->selectedObjectifSpecifique->owner_id) : false
+        ]);
+        
+        $result = (method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral()) || 
                ($this->selectedObjectifStrategique && $user->id == $this->selectedObjectifStrategique->owner_id) ||
                ($this->selectedObjectifSpecifique && $user->id == $this->selectedObjectifSpecifique->owner_id);
+               
+        Log::info('🔐 Résultat permission création Action', [
+            'user_id' => $user->id,
+            'permission_granted' => $result
+        ]);
+        
+        return $result;
     }
 
     public function canCreateSousAction()
@@ -1503,8 +1816,7 @@ class PilierHierarchiqueV2 extends Component
             'description' => '',
             'owner_id' => '',
             'date_echeance' => '',
-            'taux_avancement' => 0,
-            'type' => 'normal'
+            'taux_avancement' => 0
         ];
     }
 
@@ -1533,21 +1845,21 @@ class PilierHierarchiqueV2 extends Component
         ]);
         
         return view('livewire.pilier-hierarchique-v2.index', [
-            'users' => $users,
-            'canCreateObjectifStrategique' => $this->canCreateObjectifStrategique(),
-            'canCreateObjectifSpecifique' => $this->canCreateObjectifSpecifique(),
-            'canCreateAction' => $this->canCreateAction(),
-            'canCreateSousAction' => $this->canCreateSousAction(),
-            // Variables manquantes pour les permissions d'édition
-            'canEditObjectifStrategique' => fn($objectifStrategique) => $this->canEditObjectifStrategique($objectifStrategique),
-            'canEditObjectifSpecifique' => fn($objectifSpecifique) => $this->canEditObjectifSpecifique($objectifSpecifique),
+            'pilier' => $this->pilier,
+            'objectifsStrategiques' => $this->pilier ? $this->pilier->objectifsStrategiques : collect(),
+            'canCreateOS' => fn() => $this->canCreateObjectifStrategique(),
+            'canEditOS' => fn($os) => $this->canEditObjectifStrategique($os),
+            'canDeleteOS' => fn($os) => $this->canDeleteObjectifStrategique($os),
+            'canCreateOSP' => fn() => $this->canCreateObjectifSpecifique(),
+            'canEditOSP' => fn($osp) => $this->canEditObjectifSpecifique($osp),
+            'canDeleteOSP' => fn($osp) => $this->canDeleteObjectifSpecifique($osp),
+            'canCreateAction' => fn() => $this->canCreateAction(),
             'canEditAction' => fn($action) => $this->canEditAction($action),
-            'canEditSousAction' => fn($sousAction) => $this->canEditSousAction($sousAction),
-            // Variables manquantes pour les permissions de suppression
-            'canDeleteObjectifStrategique' => fn($objectifStrategique) => $this->canDeleteObjectifStrategique($objectifStrategique),
-            'canDeleteObjectifSpecifique' => fn($objectifSpecifique) => $this->canDeleteObjectifSpecifique($objectifSpecifique),
             'canDeleteAction' => fn($action) => $this->canDeleteAction($action),
-            'canDeleteSousAction' => fn($sousAction) => $this->canDeleteSousAction($sousAction)
+            'canCreateSousAction' => fn() => $this->canCreateSousAction(),
+            'canEditSousAction' => fn($sousAction) => $this->canEditSousAction($sousAction),
+            'canDeleteSousAction' => fn($sousAction) => $this->canDeleteSousAction($sousAction),
+            'users' => User::all(), // Ajout de la liste des utilisateurs
         ]);
     }
 
@@ -1794,4 +2106,100 @@ class PilierHierarchiqueV2 extends Component
             ]);
         }
     }
+
+    // Propriétés dédiées pour l'édition d'action (pour résoudre le binding)
+    public $editActionCode = '';
+    public $editActionLibelle = '';
+    public $editActionDescription = '';
+    public $editActionOwnerId = '';
+    
+    // Propriétés dédiées pour l'édition de sous-action (pour résoudre le binding)
+    public $editSousActionCode = '';
+    public $editSousActionLibelle = '';
+    public $editSousActionDescription = '';
+    public $editSousActionOwnerId = '';
+    public $editSousActionDateEcheance = '';
+    public $editSousActionTauxAvancement = 0;
+    
+    // Propriétés pour l'édition d'objectif stratégique
+    public $editingObjectifStrategique = null;
+    public $editOSCode = '';
+    public $editOSLibelle = '';
+    public $editOSDescription = '';
+    public $editOSOwnerId = '';
+
+    /**
+     * Mise à jour optimisée du taux d'avancement d'une Action avec DB
+     */
+    private function updateActionProgressWithDB($actionId)
+    {
+        try {
+            // Calculer le taux d'avancement basé sur les sous-actions avec DB
+            $sousActions = DB::table('sous_actions')
+                ->where('action_id', $actionId)
+                ->get();
+            
+            if ($sousActions->count() > 0) {
+                $totalProgress = $sousActions->sum('taux_avancement');
+                $averageProgress = $totalProgress / $sousActions->count();
+                $newProgress = round($averageProgress, 2);
+                
+                // Mettre à jour avec DB
+                DB::table('actions')
+                    ->where('id', $actionId)
+                    ->update([
+                        'taux_avancement' => $newProgress,
+                        'updated_at' => now()
+                    ]);
+                
+                Log::info('✅ Taux d\'avancement Action mis à jour avec DB', [
+                    'action_id' => $actionId,
+                    'new_progress' => $newProgress
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Erreur mise à jour Action avec DB', [
+                'error' => $e->getMessage(), 
+                'action_id' => $actionId
+            ]);
+        }
+    }
+
+    /**
+     * Mise à jour optimisée du taux d'avancement d'un Objectif Spécifique avec DB
+     */
+    private function updateOSPProgressWithDB($objectifSpecifiqueId)
+    {
+        try {
+            // Calculer le taux d'avancement basé sur les actions avec DB
+            $actions = DB::table('actions')
+                ->where('objectif_specifique_id', $objectifSpecifiqueId)
+                ->get();
+            
+            if ($actions->count() > 0) {
+                $totalProgress = $actions->sum('taux_avancement');
+                $averageProgress = $totalProgress / $actions->count();
+                $newProgress = round($averageProgress, 2);
+                
+                // Mettre à jour avec DB
+                DB::table('objectif_specifiques')
+                    ->where('id', $objectifSpecifiqueId)
+                    ->update([
+                        'taux_avancement' => $newProgress,
+                        'updated_at' => now()
+                    ]);
+                
+                Log::info('✅ Taux d\'avancement OSP mis à jour avec DB', [
+                    'osp_id' => $objectifSpecifiqueId,
+                    'new_progress' => $newProgress
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Erreur mise à jour OSP avec DB', [
+                'error' => $e->getMessage(), 
+                'osp_id' => $objectifSpecifiqueId
+            ]);
+        }
+    }
+
 }

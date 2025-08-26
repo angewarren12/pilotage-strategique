@@ -23,14 +23,49 @@
                     @include('livewire.pilier-hierarchique-v2.partials.breadcrumb')
 
                     <!-- Contenu principal selon la vue actuelle -->
-                    @if($currentView === 'pilier')
-                        @include('livewire.pilier-hierarchique-v2.components.pilier-detail')
+                    @if($currentView === 'pilier' && $pilier)
+                        @include('livewire.pilier-hierarchique-v2.components.pilier-detail', [
+                            'pilier' => $pilier,
+                            'canCreateObjectifStrategique' => $canCreateOS(),
+                            'canEditObjectifStrategique' => $canEditOS,
+                            'canDeleteObjectifStrategique' => $canDeleteOS,
+                            'canCreateObjectifSpecifique' => $canCreateOSP(),
+                            'canEditObjectifSpecifique' => $canEditOSP,
+                            'canDeleteObjectifSpecifique' => $canDeleteOSP
+                        ])
                     @elseif($currentView === 'objectifStrategique')
-                        @include('livewire.pilier-hierarchique-v2.components.objectif-strategique-list')
+                        @include('livewire.pilier-hierarchique-v2.components.objectif-strategique-list', [
+                            'pilier' => $pilier,
+                            'selectedObjectifStrategique' => $selectedObjectifStrategique,
+                            'canCreateObjectifSpecifique' => $canCreateOSP(),
+                            'canEditObjectifSpecifique' => $canEditOSP,
+                            'canDeleteObjectifSpecifique' => $canDeleteOSP,
+                            'canCreateAction' => $canCreateAction(),
+                            'canEditAction' => $canEditAction,
+                            'canDeleteAction' => $canDeleteAction
+                        ])
                     @elseif($currentView === 'objectifSpecifique')
-                        @include('livewire.pilier-hierarchique-v2.components.objectif-specifique-list')
+                        @include('livewire.pilier-hierarchique-v2.components.objectif-specifique-list', [
+                            'pilier' => $pilier,
+                            'selectedObjectifStrategique' => $selectedObjectifStrategique,
+                            'selectedObjectifSpecifique' => $selectedObjectifSpecifique,
+                            'canCreateAction' => $canCreateAction(),
+                            'canEditAction' => $canEditAction,
+                            'canDeleteAction' => $canDeleteAction,
+                            'canCreateSousAction' => $canCreateSousAction(),
+                            'canEditSousAction' => $canEditSousAction,
+                            'canDeleteSousAction' => $canDeleteSousAction
+                        ])
                     @elseif($currentView === 'action')
-                        @include('livewire.pilier-hierarchique-v2.components.action-list')
+                        @include('livewire.pilier-hierarchique-v2.components.action-list', [
+                            'pilier' => $pilier,
+                            'selectedObjectifStrategique' => $selectedObjectifStrategique,
+                            'selectedObjectifSpecifique' => $selectedObjectifSpecifique,
+                            'selectedAction' => $selectedAction,
+                            'canCreateSousAction' => $canCreateSousAction(),
+                            'canEditSousAction' => $canEditSousAction,
+                            'canDeleteSousAction' => $canDeleteSousAction
+                        ])
                     @elseif($currentView === 'sousAction')
                         @include('livewire.pilier-hierarchique-v2.components.sous-action-list')
                     @endif
@@ -46,23 +81,13 @@
         </div>
     </div>
 
-    <!-- Modals de création -->
-    @include('livewire.pilier-hierarchique-v2.components.creation-forms.create-os-form')
-    @include('livewire.pilier-hierarchique-v2.components.creation-forms.create-osp-form')
-    @include('livewire.pilier-hierarchique-v2.components.creation-forms.create-action-form')
-    @include('livewire.pilier-hierarchique-v2.components.creation-forms.create-sous-action-form')
-
-    <!-- Modals d'édition -->
-    @include('livewire.pilier-hierarchique-v2.components.edit-forms.edit-os-form')
-    @include('livewire.pilier-hierarchique-v2.components.edit-forms.edit-osp-form')
-    @include('livewire.pilier-hierarchique-v2.components.edit-forms.edit-action-form')
-    @include('livewire.pilier-hierarchique-v2.components.edit-forms.edit-sous-action-form')
+    <!-- Tous les modals sont maintenant centralisés dans modals.blade.php -->
 
     <!-- CSS pour le slider de progression -->
     <link rel="stylesheet" href="{{ asset('css/progress-slider.css') }}">
     
     <!-- CSS pour la progression circulaire améliorée -->
-    <link rel="stylesheet" href="{{ asset('css/progress-circle.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/progress-circle.css') }}?v={{ time() }}">
 
     <!-- Scripts JavaScript -->
     <script>

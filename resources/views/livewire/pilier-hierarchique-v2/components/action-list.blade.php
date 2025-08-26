@@ -293,7 +293,7 @@
                                             <button type="button" 
                                                     class="btn btn-sm btn-outline-warning btn-action" 
                                                     title="Modifier"
-                                                    wire:click="setSousActionToEdit({{ $sousAction->id }})">
+                                                    wire:click="openEditSousActionModal({{ $sousAction->id }})">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             
@@ -381,4 +381,7 @@
         </div>
     </div>
 </div>
+
+<!-- Inclusion des modals pour les actions et sous-actions -->
+@include('livewire.pilier-hierarchique-v2.components.modals')
 @endif

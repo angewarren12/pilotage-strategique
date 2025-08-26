@@ -42,3 +42,4 @@
 
 La solution est maintenant implémentée et prête à être testée. Le modal devrait s'ouvrir correctement sans erreur JavaScript.
 
+

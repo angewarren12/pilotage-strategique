@@ -40,8 +40,8 @@
                                         stroke-dashoffset="{{ 2 * pi() * 35 * (1 - $pilier->getTauxAvancementAttribute() / 100) }}"
                                         transform="rotate(-90 40 40)"/>
                             </svg>
-                            <div class="progress-text">
-                                <span class="progress-percentage">{{ number_format($pilier->getTauxAvancementAttribute(), 1) }}%</span>
+                            <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important; pointer-events: none !important; z-index: 1000 !important;">
+                                <span class="progress-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 18px !important; line-height: 1.2 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; letter-spacing: -0.5px !important;">{{ number_format($pilier->getTauxAvancementAttribute(), 1) }}%</span>
                             </div>
                         </div>
                         <div class="progress-label">Progression globale</div>
@@ -200,6 +200,9 @@
         @endif
     </div>
 </div>
+
+<!-- Inclure les modals pour les objectifs stratégiques -->
+@include('livewire.pilier-hierarchique-v2.components.modals')
 
 <style>
 .progress-ring {

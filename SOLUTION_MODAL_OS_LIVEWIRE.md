@@ -107,3 +107,4 @@ protected $listeners = [
 3. Appliquer le même pattern aux autres modaux si nécessaire
 4. Optimiser les performances si besoin
 
+

@@ -1,5 +1,32 @@
-/* 🎯 Composant de Progression Circulaire Amélioré - VERSION CORRIGÉE */
+/* 🚨 PROGRESSION CIRCULAIRE - CSS ULTRA-SPÉCIFIQUE */
 
+/* RÈGLE PRINCIPALE - FORCER LE CENTRAGE */
+div.progress-circle div.progress-ring div.progress-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    text-align: center !important;
+    width: 100% !important;
+    pointer-events: none !important;
+    transition: none !important;
+    z-index: 1000 !important;
+}
+
+/* FORCER LE CENTRAGE DU POURCENTAGE */
+div.progress-circle div.progress-ring div.progress-text span.progress-percentage {
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+    font-weight: 700 !important;
+    color: #2c3e50 !important;
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    letter-spacing: -0.5px !important;
+}
+
+/* STYLES DE BASE */
 .progress-circle {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     padding: 10px;
@@ -19,34 +46,6 @@
     margin: 0 auto;
     width: 80px;
     height: 80px;
-}
-
-.progress-text {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    text-align: center !important;
-    width: 100% !important;
-    pointer-events: none;
-    /* FORCER le centrage - pas de déplacement au hover */
-    transform-origin: center center !important;
-    /* Empêcher tout déplacement */
-    transition: none !important;
-}
-
-.progress-percentage {
-    font-size: 18px;
-    line-height: 1.2;
-    color: #2c3e50;
-    display: block;
-    font-weight: 700;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    letter-spacing: -0.5px;
-    /* FORCER le centrage */
-    text-align: center !important;
-    /* Empêcher tout déplacement */
-    transition: none !important;
 }
 
 .progress-label {
@@ -76,8 +75,8 @@
         padding: 8px;
     }
     
-    .progress-percentage {
-        font-size: 16px;
+    div.progress-circle div.progress-ring div.progress-text span.progress-percentage {
+        font-size: 16px !important;
     }
     
     .progress-label {
@@ -118,38 +117,39 @@
     }
 }
 
-/* Effet de pulsation pour les progressions élevées */
-.progress-circle.high-progress {
-    animation: pulse 2s infinite;
+/* RÈGLES DE SÉCURITÉ - EMPÊCHER TOUT DÉPLACEMENT */
+.progress-circle:hover div.progress-ring div.progress-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
 }
 
-@keyframes pulse {
-    0% {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    50% {
-        box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
-    }
-    100% {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
+.progress-circle:hover div.progress-ring div.progress-text span.progress-percentage {
+    text-align: center !important;
 }
 
-/* RÈGLES SPÉCIFIQUES POUR FORCER LE CENTRAGE */
-.progress-circle .progress-ring .progress-text {
+/* RÈGLES POUR LES CARTES DES PARENTS (50x50px) */
+.progress-circle[style*="--progress"] div.progress-text {
     position: absolute !important;
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     text-align: center !important;
     width: 100% !important;
-    pointer-events: none;
+    pointer-events: none !important;
     transition: none !important;
+    z-index: 1000 !important;
 }
 
-.progress-circle .progress-ring .progress-text .progress-percentage {
+.progress-circle[style*="--progress"] div.progress-text span.progress-percentage {
     text-align: center !important;
-    transition: none !important;
+    display: block !important;
+    width: 100% !important;
+    font-weight: 700 !important;
+    color: #2c3e50 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
 }
 
 /* Empêcher tout déplacement au hover */

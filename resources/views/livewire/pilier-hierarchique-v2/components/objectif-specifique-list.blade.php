@@ -43,8 +43,8 @@
                                         stroke-dashoffset="{{ 2 * pi() * 35 * (1 - $selectedObjectifSpecifique->taux_avancement / 100) }}"
                                         transform="rotate(-90 40 40)"/>
                             </svg>
-                            <div class="progress-text">
-                                <span class="progress-percentage">{{ number_format($selectedObjectifSpecifique->taux_avancement, 1) }}%</span>
+                            <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important; pointer-events: none !important; z-index: 1000 !important;">
+                                <span class="progress-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 18px !important; line-height: 1.2 !important; text-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; letter-spacing: -0.5px !important;">{{ number_format($selectedObjectifSpecifique->taux_avancement, 1) }}%</span>
                             </div>
                         </div>
                         <div class="progress-label">Progression</div>
@@ -82,8 +82,8 @@
                                     <circle cx="25" cy="25" r="20" fill="none" stroke="{{ $pilier->getHierarchicalColor(1) }}" stroke-width="5" 
                                             stroke-dasharray="126" stroke-dashoffset="{{ 126 - (126 * $pilier->taux_avancement / 100) }}"/>
                                 </svg>
-                                <div class="progress-text">
-                                    <span class="progress-percentage">{{ number_format($pilier->taux_avancement, 1) }}%</span>
+                                <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important; pointer-events: none !important; z-index: 1000 !important;">
+                                    <span class="progress-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 14px !important; line-height: 1.2 !important;">{{ number_format($pilier->taux_avancement, 1) }}%</span>
                                 </div>
                             </div>
                             <div class="progress-label">Avancement</div>
@@ -117,8 +117,8 @@
                                     <circle cx="25" cy="25" r="20" fill="none" stroke="{{ $pilier->getHierarchicalColor(2) }}" stroke-width="5" 
                                             stroke-dasharray="126" stroke-dashoffset="{{ 126 - (126 * $selectedObjectifStrategique->taux_avancement / 100) }}"/>
                                 </svg>
-                                <div class="progress-text">
-                                    <span class="progress-percentage">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</span>
+                                <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important; pointer-events: none !important; z-index: 1000 !important;">
+                                    <span class="progress-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 14px !important; line-height: 1.2 !important;">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</span>
                                 </div>
                             </div>
                             <div class="progress-label">Avancement</div>
@@ -326,6 +326,9 @@
         </div>
     </div>
 </div>
+
+<!-- Inclusion des modals pour les actions et sous-actions -->
+@include('livewire.pilier-hierarchique-v2.components.modals')
 @endif
 
 <style>
@@ -359,5 +362,8 @@
     
     .progress-circle:hover {
         transform: scale(1.05);
+    }
+</style>
+
     }
 </style>

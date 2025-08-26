@@ -228,15 +228,15 @@
                                 </div>
                             </div>
                             <div class="col-md-5 text-center">
-                                <div class="progress-circle" style="--progress: {{ $pilier->taux_avancement }}%;">
-                                    <svg width="70" height="70" viewBox="0 0 70 70">
-                                        <circle cx="35" cy="35" r="30" fill="none" stroke="#e9ecef" stroke-width="6"/>
-                                        <circle cx="35" cy="35" r="30" fill="none" stroke="{{ $pilier->getHierarchicalColor(1) }}" stroke-width="6" 
-                                                stroke-dasharray="188" stroke-dashoffset="{{ 188 - (188 * $pilier->taux_avancement / 100) }}"/>
+                                <div class="progress-ring" style="position: relative;">
+                                    <svg width="100" height="100" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e9ecef" stroke-width="6"/>
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="{{ $pilier->getHierarchicalColor(1) }}" stroke-width="6" 
+                                                stroke-dasharray="282.74" stroke-dashoffset="{{ 282.74 - (282.74 * $pilier->taux_avancement / 100) }}"/>
                                     </svg>
-                                    <div class="progress-text">
-                                        <span class="progress-percentage fw-bold">{{ number_format($pilier->taux_avancement, 1) }}%</span>
-                                        <small class="text-muted d-block">Avancement</small>
+                                    <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important;">
+                                        <span class="progress-percentage" style="font-size: 18px !important; line-height: 1.2 !important; color: #495057 !important; display: block !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1) !important; font-weight: bold !important;">{{ number_format($pilier->taux_avancement, 1) }}%</span>
+                                        <small class="text-muted d-block" style="font-size: 12px !important;">Avancement</small>
                                     </div>
                                 </div>
                             </div>
