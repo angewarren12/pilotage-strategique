@@ -1,7 +1,7 @@
 <div class="validation-center">
     <!-- Bouton de validation avec badge -->
     <div class="position-relative">
-        <button class="btn btn-outline-warning position-relative" wire:click="toggleValidations" title="Validations">
+        <button class="btn btn-outline-warning position-relative btn-validation-mobile" wire:click="toggleValidations" title="Validations">
             <i class="fas fa-shield-alt"></i>
             @if(count($validations) > 0)
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
@@ -13,7 +13,7 @@
 
     <!-- Panneau des validations -->
     @if($showValidations)
-        <div class="validation-panel position-absolute top-100 end-0 mt-2 bg-white border rounded shadow-lg" style="width: 450px; max-height: 600px; z-index: 1050;">
+        <div class="validation-panel position-absolute top-100 end-0 mt-2 bg-white border rounded shadow-lg">
             <!-- Header du panneau -->
             <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
                 <h6 class="mb-0">
@@ -52,12 +52,13 @@
             @endif
 
             <!-- Liste des validations -->
-            <div class="validation-list" style="max-height: 400px; overflow-y: auto;">
+            <div class="validation-list" style="max-height: min(400px, 50vh); overflow-y: auto;">
                 @if(count($validations) > 0)
                     @foreach($validations as $validation)
-                        <div class="validation-item p-3 border-bottom {{ $validation->isPending() ? 'bg-light' : '' }}" 
-                             wire:click="showValidationDetails({{ $validation->id }})"
-                             style="cursor: pointer;">
+                        <div class="validation-item p-2 p-md-3 border-bottom {{ $validation->isPending() ? 'bg-light' : '' }}" 
+                             wire:click="openValidationModal({{ $validation->id }})"
+                             style="cursor: pointer;"
+                             data-validation-id="{{ $validation->id }}">
                             <div class="d-flex align-items-start gap-3">
                                 <!-- Icône de validation -->
                                 <div class="flex-shrink-0">
@@ -66,23 +67,53 @@
                                 
                                 <!-- Contenu de la validation -->
                                 <div class="flex-grow-1 min-w-0">
-                                    <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start">
                                         <h6 class="mb-1 text-truncate {{ $validation->isPending() ? 'fw-bold' : '' }}">
                                             {{ $validation->element_name }}
                                         </h6>
-                                        <div class="d-flex gap-1">
-                                            <span class="badge bg-{{ $this->getValidationColor($validation->status) }}">
+                                        <div class="d-flex gap-1 mt-1 mt-md-0">
+                                            <span class="badge bg-{{ $this->getValidationColor($validation->status) }} small">
                                                 {{ ucfirst($validation->status) }}
                                             </span>
                                             @if($this->canValidate($validation))
-                                                <span class="badge bg-info">Vous pouvez valider</span>
+                                                <span class="badge bg-info small d-none d-md-inline">Vous pouvez valider</span>
+                                                <span class="badge bg-info small d-md-none">Validable</span>
                                             @endif
                                         </div>
                                     </div>
                                     <p class="mb-1 text-muted small">
                                         <strong>{{ $validation->requestedBy->name ?? 'Utilisateur inconnu' }}</strong>
-                                        a demandé une validation
+                                        <span class="d-none d-sm-inline">a demandé une validation</span>
+                                        <span class="d-sm-none">validation</span>
                                     </p>
+                                    
+                                    <!-- Affichage du type de validation -->
+                                    <div class="mb-1">
+                                        @if($validation->type === 'completion')
+                                            <span class="badge bg-success small">
+                                                <i class="fas fa-check-circle me-1"></i>Achèvement
+                                            </span>
+                                        @elseif($validation->type === 'progression_decrease')
+                                            <span class="badge bg-warning small">
+                                                <i class="fas fa-arrow-down me-1"></i>Diminution Progression
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary small">
+                                                <i class="fas fa-question-circle me-1"></i>{{ ucfirst($validation->type ?? 'validation') }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Détails spécifiques pour les diminutions de progression -->
+                                    @if($validation->type === 'progression_decrease' && $validation->current_value && $validation->requested_value)
+                                        <div class="mb-1">
+                                            <small class="text-muted">
+                                                <i class="fas fa-arrow-down me-1"></i>
+                                                {{ $validation->current_value }}% → {{ $validation->requested_value }}%
+                                            </small>
+                                        </div>
+                                    @endif
+                                    
                                     <small class="text-muted">{{ $validation->formatted_requested_at }}</small>
                                 </div>
                             </div>
@@ -113,7 +144,7 @@
     <!-- Modal de détails de validation -->
     @if($showValidationDetails && $selectedValidation)
         <div class="modal fade show" style="display: block; z-index: 1060;" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
                         <div class="d-flex align-items-center gap-3">
@@ -148,8 +179,60 @@
                                 </span>
                             </div>
 
-                            <!-- Données de validation -->
-                            @if($selectedValidation->validation_data)
+                            <!-- Détails spécifiques selon le type de validation -->
+                            @if($selectedValidation->type === 'progression_decrease')
+                                <div class="card mb-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-arrow-down me-2"></i>
+                                            Demande de Diminution de Progression
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <strong>Progression actuelle :</strong>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-primary fs-6">{{ $selectedValidation->current_value }}%</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <strong>Progression demandée :</strong>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-warning fs-6">{{ $selectedValidation->requested_value }}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @if($selectedValidation->reason)
+                                            <div class="mt-3">
+                                                <strong>Raison de la demande :</strong>
+                                                <p class="mb-0 mt-1">{{ $selectedValidation->reason }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @elseif($selectedValidation->type === 'completion')
+                                <div class="card mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            Demande d'Achèvement
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">
+                                            <strong>Demande :</strong> Validation pour passer la progression de 
+                                            <span class="badge bg-warning">{{ $selectedValidation->current_value ?? 99 }}%</span> 
+                                            à <span class="badge bg-success">100%</span>
+                                        </p>
+                                        @if($selectedValidation->reason)
+                                            <div class="mt-2">
+                                                <strong>Raison :</strong> {{ $selectedValidation->reason }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @elseif($selectedValidation->validation_data)
                                 <div class="card mb-3">
                                     <div class="card-header">
                                         <h6 class="mb-0">Détails de la demande</h6>
@@ -271,6 +354,42 @@
 
     .validation-list::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
+    }
+
+    /* Responsive pour petits écrans */
+    @media (max-width: 576px) {
+        .validation-panel {
+            left: 10px !important;
+            right: 10px !important;
+            width: auto !important;
+            max-width: none !important;
+        }
+        
+        .validation-item {
+            padding: 0.75rem !important;
+        }
+        
+        .modal-dialog {
+            margin: 10px !important;
+            max-width: none !important;
+        }
+        
+        .modal-header .d-flex {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        
+        .modal-header .btn-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .validation-panel {
+            width: min(400px, 90vw) !important;
+        }
     }
     </style>
 

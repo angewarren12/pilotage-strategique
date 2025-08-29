@@ -35,13 +35,15 @@
                                 $maxEcheanceAction = $selectedAction->getMaxEcheanceDate();
                             @endphp
                             @if($maxEcheanceAction)
-                                <strong>Échéance max des sous-actions:</strong> 
+                                <strong>Échéance 
+:</strong> 
                                 <span class="badge bg-warning text-dark">
                                     <i class="fas fa-calendar-alt me-1"></i>
                                     {{ \Carbon\Carbon::parse($maxEcheanceAction)->format('d/m/Y') }}
                                 </span>
                             @else
-                                <strong>Échéance max des sous-actions:</strong> 
+                                <strong>Échéance 
+:</strong> 
                                 <span class="badge bg-light text-muted">
                                     <i class="fas fa-calendar-times me-1"></i>
                                     Aucune échéance

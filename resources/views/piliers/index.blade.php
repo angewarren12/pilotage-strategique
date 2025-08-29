@@ -380,7 +380,7 @@
                             <div class="row">
                                 <div class="col-md-3 mb-2">
                                     <div class="color-option" data-color="#007bff">
-                                        <div class="color-preview" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #00AE9E 0%, #008F82 100%);">
                                             <span class="color-name">Bleu</span>
                                         </div>
                                     </div>
@@ -484,7 +484,7 @@
                             <div class="row">
                                 <div class="col-md-3 mb-2">
                                     <div class="color-option-edit" data-color="#007bff">
-                                        <div class="color-preview" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                                        <div class="color-preview" style="background: linear-gradient(135deg, #00AE9E 0%, #008F82 100%);">
                                             <span class="color-name">Bleu</span>
                 </div>
                 </div>
@@ -968,7 +968,7 @@
                     <div class="flex-grow-1">
                         <h4 class="modal-title mb-0">
                             <i class="fas fa-chart-network me-2"></i>
-                            Vue Générale - Pilotage Stratégique
+                            Vue Générale - Stratelia
                         </h4>
                         <small class="text-white-50">Vue d'ensemble complète de la hiérarchie stratégique</small>
                     </div>

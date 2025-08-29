@@ -12,12 +12,16 @@ class Validation extends Model
     use HasFactory;
 
     protected $fillable = [
+        'type',
         'element_type',
         'element_id',
         'requested_by',
         'validated_by',
         'status',
         'comments',
+        'current_value',
+        'requested_value',
+        'reason',
         'rejection_reason',
         'requested_at',
         'validated_at',
@@ -75,6 +79,21 @@ class Validation extends Model
     public function scopeByValidator($query, $userId)
     {
         return $query->where('validated_by', $userId);
+    }
+    
+    public function scopeByType($query, $type)
+    {
+        return $query->where('type', $type);
+    }
+    
+    public function scopeCompletion($query)
+    {
+        return $query->where('type', 'completion');
+    }
+    
+    public function scopeProgressionDecrease($query)
+    {
+        return $query->where('type', 'progression_decrease');
     }
 
     public function scopeExpired($query)

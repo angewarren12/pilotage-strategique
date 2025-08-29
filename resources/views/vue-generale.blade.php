@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'SUIVI DES DILIGENCES - Pilotage Stratégique')
+@section('title', 'SUIVI DES DILIGENCES - Stratelia')
 
 @section('content')
 <div class="container-fluid mt-5 pt-4">

@@ -120,7 +120,7 @@
                                             @endphp
                                             <div class="progress-bar bg-success" style="width: {{ $globalProgress }}%"></div>
                                         </div>
-                                        <small class="text-muted">Progression globale: {{ number_format($globalProgress, 1) }}%</small>
+                                        <small class="text-muted">Progression globale: {{ number_format($globalProgress, 0) }}%</small>
                                     </div>
                                 </div>
                             </div>
@@ -242,7 +242,7 @@
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $pilier->taux_avancement }}%"></div>
                                                                             </div>
-                                                                            <small class="text-white-75">{{ number_format($pilier->taux_avancement, 1) }}%</small>
+                                                                            <small class="text-white-75">{{ number_format($pilier->taux_avancement, 0) }}%</small>
                                                                             <div class="mt-1">
                                                                                 <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
                                                                             </div>
@@ -258,7 +258,7 @@
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $objectifStrategique->taux_avancement }}%"></div>
                                                                             </div>
-                                                                            <small class="text-white-75">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
+                                                                            <small class="text-white-75">{{ number_format($objectifStrategique->taux_avancement, 0) }}%</small>
                                                                             <div class="mt-1">
                                                                                 <span class="badge bg-white text-dark">{{ $objectifStrategique->owner->name ?? 'Non assigné' }}</span>
                                                                             </div>
@@ -274,7 +274,7 @@
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
                                                                             </div>
-                                                                            <small class="text-white-75">{{ number_format($objectifSpecifique->taux_avancement, 1) }}%</small>
+                                                                            <small class="text-white-75">{{ number_format($objectifSpecifique->taux_avancement, 0) }}%</small>
                                                                             <div class="mt-1">
                                                                                 <span class="badge bg-white text-dark">{{ $objectifSpecifique->owner->name ?? 'Non assigné' }}</span>
                                                                             </div>
@@ -292,7 +292,7 @@
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $action->taux_avancement }}%"></div>
                                                                             </div>
-                                                                            <small class="text-white-75">{{ number_format($action->taux_avancement, 1) }}%</small>
+                                                                            <small class="text-white-75">{{ number_format($action->taux_avancement, 0) }}%</small>
                                                                             <div class="mt-1 d-flex align-items-center justify-content-between">
                                                                                 <span class="badge bg-white text-dark">{{ $action->owner->name ?? 'Non assigné' }}</span>
                                                                                 <i class="fas fa-comments text-white" style="font-size: 0.8em;"></i>
@@ -308,7 +308,7 @@
                                                                             <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $sousAction->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-white-75">{{ number_format($sousAction->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($sousAction->taux_avancement, 0) }}%</small>
                                                                         <div class="mt-1">
                                                                             <span class="badge bg-white text-dark">{{ $sousAction->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
@@ -342,7 +342,7 @@
                                                                             <div class="col-3">
                                                                                 <small class="text-muted">Progression</small>
                                                                                 <div>
-                                                                                    <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 1) }}%</span>
+                                                                                    <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 0) }}%</span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -360,7 +360,7 @@
                                                                             <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $pilier->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-white-75">{{ number_format($pilier->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($pilier->taux_avancement, 0) }}%</small>
                                                                         <div class="mt-1">
                                                                             <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
@@ -376,7 +376,7 @@
                                                                             <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $objectifStrategique->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-white-75">{{ number_format($objectifStrategique->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($objectifStrategique->taux_avancement, 0) }}%</small>
                                                                         <div class="mt-1">
                                                                             <span class="badge bg-white text-dark">{{ $objectifStrategique->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
@@ -392,7 +392,7 @@
                                                                             <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
                                                                         </div>
-                                                                        <small class="text-white-75">{{ number_format($objectifSpecifique->taux_avancement, 1) }}%</small>
+                                                                        <small class="text-white-75">{{ number_format($objectifSpecifique->taux_avancement, 0) }}%</small>
                                                                         <div class="mt-1">
                                                                             <span class="badge bg-white text-dark">{{ $objectifSpecifique->owner->name ?? 'Non assigné' }}</span>
                                                                         </div>
@@ -409,7 +409,7 @@
                                                                         <div class="progress-bar bg-white" 
                                                                              style="width: {{ $action->taux_avancement }}%"></div>
                                                                     </div>
-                                                                    <small class="text-white-75">{{ number_format($action->taux_avancement, 1) }}%</small>
+                                                                    <small class="text-white-75">{{ number_format($action->taux_avancement, 0) }}%</small>
                                                                     <div class="mt-1 d-flex align-items-center justify-content-between">
                                                                         <span class="badge bg-white text-dark">{{ $action->owner->name ?? 'Non assigné' }}</span>
                                                                         <i class="fas fa-comments text-white" style="font-size: 0.8em;"></i>
@@ -439,7 +439,7 @@
                                                                         <div class="col-3">
                                                                             <small class="text-muted">Progression</small>
                                                                             <div>
-                                                                                <span class="badge bg-primary">{{ number_format($action->taux_avancement, 1) }}%</span>
+                                                                                <span class="badge bg-primary">{{ number_format($action->taux_avancement, 0) }}%</span>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -460,7 +460,7 @@
                                                         <div class="progress-bar bg-white" 
                                                              style="width: {{ $pilier->taux_avancement }}%"></div>
                                                     </div>
-                                                    <small class="text-white-75">{{ number_format($pilier->taux_avancement, 1) }}%</small>
+                                                    <small class="text-white-75">{{ number_format($pilier->taux_avancement, 0) }}%</small>
                                                     <div class="mt-1">
                                                         <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
                                                     </div>

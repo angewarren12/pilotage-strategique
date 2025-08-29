@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sidebar</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #00AE9E 0%, #33C2B5 100%);
+            height: 80px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+        }
+        
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        
+        .sidebar-toggle:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .sidebar {
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            height: calc(100vh - 80px);
+            position: fixed;
+            top: 80px;
+            left: 0;
+            width: 280px;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(0);
+        }
+        
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+        
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            display: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .sidebar-overlay.show {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+            padding-top: calc(2rem + 80px);
+            min-height: calc(100vh - 80px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .main-content.full-width {
+            margin-left: 0;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f8f9fa;
+            background: #e9ecef;
+        }
+        
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+        
+        .sidebar-menu .nav-link {
+            color: #495057;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+        
+        .sidebar-menu .nav-link:hover {
+            background-color: #e9ecef;
+            color: #00AE9E;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .sidebar-overlay {
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(2px);
+                z-index: 9998;
+                transition: opacity 0.3s ease;
+                pointer-events: auto;
+            }
+            
+            .sidebar-overlay.show {
+                display: block;
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .sidebar-overlay {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+            
+            .sidebar-overlay.show {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <span style="color: white; font-weight: bold;">Test Sidebar</span>
+    </nav>
+
+    <!-- Overlay pour la sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h6 class="mb-0">Navigation</h6>
+        </div>
+        
+        <div class="sidebar-menu">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profil</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Reporting</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <h1>Test de la Sidebar</h1>
+        <p>Cliquez sur le bouton hamburger pour tester le fonctionnement de la sidebar.</p>
+        <p>Largeur de l'écran: <span id="screenWidth"></span>px</p>
+        <p>État de la sidebar: <span id="sidebarState">visible</span></p>
+    </div>
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        // Gestion de la sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.getElementById('mainContent');
+            const screenWidthSpan = document.getElementById('screenWidth');
+            const sidebarStateSpan = document.getElementById('sidebarState');
+            
+            // Récupérer l'état de la sidebar depuis le localStorage
+            const sidebarState = localStorage.getItem('sidebarState') || 'visible';
+            
+            // Appliquer l'état initial
+            if (sidebarState === 'hidden') {
+                sidebar.classList.add('hidden');
+                mainContent.classList.add('full-width');
+                sidebarToggle.classList.add('sidebar-hidden');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                sidebarStateSpan.textContent = 'masquée';
+            }
+            
+            // Mettre à jour l'affichage de la largeur d'écran
+            function updateScreenWidth() {
+                screenWidthSpan.textContent = window.innerWidth;
+            }
+            
+            // Fonction pour fermer la sidebar sur mobile
+            function closeSidebarMobile() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            // Gérer le clic sur le bouton toggle
+            sidebarToggle.addEventListener('click', function() {
+                console.log('Bouton toggle cliqué, largeur écran:', window.innerWidth);
+                
+                if (window.innerWidth <= 768) {
+                    // Sur mobile, toggle simple avec overlay
+                    if (sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                        document.body.style.overflow = '';
+                        sidebarStateSpan.textContent = 'masquée (mobile)';
+                    } else {
+                        sidebar.classList.add('show');
+                        sidebarOverlay.classList.add('show');
+                        document.body.style.overflow = 'hidden';
+                        sidebarStateSpan.textContent = 'visible (mobile)';
+                    }
+                } else {
+                    // Sur desktop, comportement normal sans overlay
+                    if (sidebar.classList.contains('hidden')) {
+                        // Afficher la sidebar
+                        sidebar.classList.remove('hidden');
+                        mainContent.classList.remove('full-width');
+                        sidebarToggle.classList.remove('sidebar-hidden');
+                        localStorage.setItem('sidebarState', 'visible');
+                        
+                        // Animation d'entrée fluide
+                        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        sidebar.style.transform = 'translateX(0)';
+                        
+                        // Changer l'icône avec animation
+                        sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                        
+                        // Ajouter une classe pour l'animation
+                        sidebar.classList.add('sidebar-visible');
+                        
+                        // S'assurer que l'overlay est masqué sur desktop
+                        sidebarOverlay.classList.remove('show');
+                        
+                        sidebarStateSpan.textContent = 'visible (desktop)';
+                    } else {
+                        // Masquer la sidebar
+                        sidebar.classList.add('hidden');
+                        mainContent.classList.add('full-width');
+                        sidebarToggle.classList.add('sidebar-hidden');
+                        localStorage.setItem('sidebarState', 'hidden');
+                        
+                        // Animation de sortie fluide
+                        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        sidebar.style.transform = 'translateX(-100%)';
+                        
+                        // Changer l'icône avec animation
+                        sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                        
+                        // Retirer la classe d'animation
+                        sidebar.classList.remove('sidebar-visible');
+                        
+                        // S'assurer que l'overlay est masqué sur desktop
+                        sidebarOverlay.classList.remove('show');
+                        
+                        sidebarStateSpan.textContent = 'masquée (desktop)';
+                    }
+                }
+            });
+            
+            // Gérer le clic sur l'overlay pour fermer la sidebar
+            sidebarOverlay.addEventListener('click', closeSidebarMobile);
+            
+            // Fermer la sidebar en cliquant sur un lien (mobile uniquement)
+            const sidebarLinks = sidebar.querySelectorAll('.nav-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebarMobile();
+                    }
+                });
+            });
+            
+            // Gestion responsive
+            function handleResize() {
+                updateScreenWidth();
+                
+                if (window.innerWidth <= 768) {
+                    // Sur mobile, la sidebar est masquée par défaut
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    sidebar.classList.add('hidden');
+                    mainContent.classList.add('full-width');
+                    sidebarToggle.classList.add('sidebar-hidden');
+                    sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                    document.body.style.overflow = '';
+                    sidebarStateSpan.textContent = 'masquée (mobile)';
+                } else {
+                    // Sur desktop, restaurer l'état sauvegardé et masquer l'overlay
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    if (sidebarState === 'visible') {
+                        sidebar.classList.remove('hidden');
+                        mainContent.classList.remove('full-width');
+                        sidebarToggle.classList.remove('sidebar-hidden');
+                        sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                        sidebarStateSpan.textContent = 'visible (desktop)';
+                    } else {
+                        sidebar.classList.add('hidden');
+                        mainContent.classList.add('full-width');
+                        sidebarToggle.classList.add('sidebar-hidden');
+                        sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                        sidebarStateSpan.textContent = 'masquée (desktop)';
+                    }
+                }
+            }
+            
+            // Écouter les changements de taille d'écran
+            window.addEventListener('resize', handleResize);
+            
+            // Appliquer le comportement initial
+            updateScreenWidth();
+            handleResize();
+        });
+    </script>
+</body>
+</html>

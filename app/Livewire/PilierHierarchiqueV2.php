@@ -1874,7 +1874,7 @@ class PilierHierarchiqueV2 extends Component
     }
 
     /**
-     * Mise à jour de la progression d'une sous-action avec DB Query Builder
+     * Mise à jour de la progression d'une sous-action avec validation stricte
      */
     public function updateSousActionProgress($sousActionId, $newProgress)
     {
@@ -1898,12 +1898,77 @@ class PilierHierarchiqueV2 extends Component
                 return;
             }
 
+            // Utiliser le service de validation de progression
+            $progressionService = app(\App\Services\ProgressionValidationService::class);
+            $user = auth()->user();
+            
+            // Vérifier les permissions de modification
+            $permissionCheck = $progressionService->canModifyProgression($user, $sousAction, $newProgress);
+            
+            if (!$permissionCheck['can_modify']) {
+                if ($permissionCheck['requires_validation']) {
+                    // Créer une demande de validation pour diminution
+                    try {
+                        $validation = $progressionService->createProgressionDecreaseValidation(
+                            $sousAction, 
+                            $user, 
+                            $newProgress,
+                            'Demande de diminution de progression'
+                        );
+                        
+                        $this->dispatch('toast', [
+                            'type' => 'warning',
+                            'message' => 'Demande de validation envoyée pour diminution de progression. En attente de validation.'
+                        ]);
+                        
+                        return;
+                        
+                    } catch (\Exception $e) {
+                        Log::error('❌ Erreur lors de la création de la demande de validation', [
+                            'error' => $e->getMessage(),
+                            'sous_action_id' => $sousActionId
+                        ]);
+                        
+                        $this->dispatch('toast', 'error', 'Erreur lors de la création de la demande de validation');
+                        return;
+                    }
+                } else {
+                    $this->dispatch('toast', 'error', 'Permission refusée pour cette modification');
+                    return;
+                }
+            }
+
             // Préparer les données de mise à jour
             $updateData = ['taux_avancement' => $newProgress];
             
-            // Gestion de la date de réalisation et notification
-            if ($newProgress == 100) {
-                // Si exactement 100%, enregistrer la date de réalisation
+            // Gestion de la progression à 100% avec figement automatique à 99%
+            if ($newProgress >= 100) {
+                // Utiliser le service pour gérer la progression à 100%
+                $wasHandled = $progressionService->handleProgressionCompletion($sousAction, $user);
+                
+                if ($wasHandled) {
+                    // La progression a été figée à 99% et une validation a été créée
+                    $this->dispatch('toast', [
+                        'type' => 'warning',
+                        'message' => 'Progression figée à 99% en attente de validation. Demande de validation envoyée.'
+                    ]);
+                    
+                    // Mettre à jour les taux des parents
+                    $this->updateParentProgressRates($sousAction);
+                    
+                    // Émettre l'événement pour mettre à jour les cercles de progression
+                    $this->dispatch('progress-updated', [
+                        'action_progress' => $sousAction->action ? $sousAction->action->taux_avancement : null,
+                        'osp_progress' => $sousAction->action && $sousAction->action->objectifSpecifique ? $sousAction->action->objectifSpecifique->taux_avancement : null,
+                        'os_progress' => $sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique ? $sousAction->action->objectifSpecifique->objectifStrategique->taux_avancement : null,
+                        'pilier_progress' => $sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->pilier ? $sousAction->action->objectifSpecifique->objectifStrategique->pilier->taux_avancement : null
+                    ]);
+                    
+                    $this->dispatch('refreshComponent');
+                    return;
+                }
+                
+                // Si la progression n'a pas été gérée par le service, procéder normalement
                 if (!$sousAction->date_realisation) {
                     $updateData['date_realisation'] = now();
                     

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Connexion - Plateforme de Pilotage Stratégique</title>
+    <title>Connexion - Plateforme de Stratelia</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,10 +15,10 @@
     
     <style>
         :root {
-            --primary-green: #4CAF50;
-            --light-green: #81C784;
-            --lighter-green: #A5D6A7;
-            --very-light-green: #C8E6C9;
+            --primary-green: #00AE9E;
+            --light-green: #33C2B5;
+            --lighter-green: #66D5CC;
+            --very-light-green: #99E8E2;
             --white: #FFFFFF;
             --light-gray: #F8F9FA;
             --gray: #6C757D;
@@ -358,7 +358,7 @@
         <div class="login-sidebar">
             <div class="login-logo">
                 <i class="fas fa-chart-line me-2"></i>
-                Pilotage Stratégique
+                Stratelia
             </div>
             <div class="login-subtitle">
                 Plateforme de gestion et suivi des objectifs stratégiques
@@ -424,7 +424,7 @@
                                 @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                            </div>
+                </div>
 
                 <div class="form-group">
                     <label for="password" class="form-label">
@@ -464,7 +464,7 @@
             </form>
 
             <div class="login-footer">
-                <p>Plateforme de Pilotage Stratégique &copy; {{ date('Y') }}</p>
+                <p>Plateforme de Stratelia &copy; {{ date('Y') }}</p>
                 <p>Développé avec <i class="fas fa-heart text-danger"></i> et Laravel</p>
             </div>
         </div>

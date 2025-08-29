@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Nouvelle Sous-Action - Plateforme de Pilotage Stratégique')
+@section('title', 'Nouvelle Sous-Action - Plateforme de Stratelia')
 
 @section('content')
 <div class="container-fluid">

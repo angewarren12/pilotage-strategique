@@ -3250,7 +3250,7 @@ use Illuminate\Support\Facades\Auth;
 
     <style>
         .bg-gradient-primary {
-            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            background: linear-gradient(135deg, #00AE9E 0%, #008F82 100%);
         }
         
         .hierarchical-card {

@@ -2,7 +2,7 @@
 
 <!-- Modal de création d'Objectif Stratégique -->
 @if($showCreateOSModal)
-<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
+<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog" data-bs-backdrop="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
@@ -105,12 +105,11 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
 @endif
 
 <!-- Modal d'édition d'Objectif Stratégique -->
 @if($showEditOSModal && $editingObjectifStrategique)
-<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
+<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog" data-bs-backdrop="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
@@ -223,7 +222,7 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modals pour les Objectifs Spécifiques -->
@@ -458,7 +457,7 @@
 
 <!-- Modal de création d'Action -->
 @if($showCreateActionModal)
-<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
+<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog" data-bs-backdrop="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
@@ -566,7 +565,7 @@
 
 <!-- Modal d'édition d'Action -->
 @if($showEditActionModal && $editingAction)
-<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
+<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog" data-bs-backdrop="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
@@ -686,7 +685,7 @@
 
 <!-- Modal de création de Sous-Action -->
 @if($showCreateSousActionModal)
-<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
+<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog" data-bs-backdrop="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(5)) }};">
@@ -802,7 +801,9 @@
                                 <input type="date" 
                                        class="form-control @error('newSousAction.date_echeance') is-invalid @enderror" 
                                        id="sous_action_date_echeance" 
-                                       wire:model="newSousAction.date_echeance">
+                                       wire:model="newSousAction.date_echeance"
+                                       min="2020-01-01"
+                                       max="2030-12-31">
                                 @error('newSousAction.date_echeance')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -850,7 +851,7 @@
 
 <!-- Modal d'édition de Sous-Action -->
 @if($showEditSousActionModal && $editingSousAction)
-<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog">
+<div class="modal fade show" style="display: block; z-index: 1050;" tabindex="-1" role="dialog" data-bs-backdrop="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(5)) }};">
@@ -982,7 +983,9 @@
                                 <input type="date" 
                                        class="form-control @error('editSousActionDateEcheance') is-invalid @enderror" 
                                        id="edit_sous_action_date_echeance" 
-                                       wire:model="editSousActionDateEcheance">
+                                       wire:model="editSousActionDateEcheance"
+                                       min="2020-01-01"
+                                       max="2030-12-31">
                                 @error('editSousActionDateEcheance')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

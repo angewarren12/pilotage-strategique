@@ -338,6 +338,121 @@ class ValidationService
                     $element->update(['statut' => $validationData['new_status']]);
                 }
                 break;
+                
+            case 'completion':
+                // Validation de l'achèvement d'une sous-action
+                if ($validation->element_type === 'sous_action' && isset($validationData['new_progress'])) {
+                    // Utiliser DB Query Builder pour cohérence avec le reste du code
+                    \DB::table('sous_actions')
+                        ->where('id', $validation->element_id)
+                        ->update([
+                            'taux_avancement' => $validationData['new_progress'],
+                            'date_realisation' => now(),
+                            'updated_at' => now()
+                        ]);
+                    
+                    // Recharger l'élément avec les nouvelles données
+                    $element = \App\Models\SousAction::find($validation->element_id);
+                    
+                    // Mettre à jour les taux d'avancement des parents
+                    if ($element && $element->action_id) {
+                        $this->updateParentProgressRates($element);
+                    }
+                    
+                    // Notifier le propriétaire de la sous-action
+                    if ($element && $element->owner_id) {
+                        app(\App\Services\NotificationService::class)->sendNotification(
+                            $element->owner_id,
+                            'sous_action_validated',
+                            'Sous-Action validée ! ✅',
+                            "Votre sous-action '{$element->libelle}' a été validée et marquée comme terminée.",
+                            [
+                                'sous_action_id' => $element->id,
+                                'validation_id' => $validation->id,
+                                'validated_by' => $validation->validated_by
+                            ]
+                        );
+                    }
+                    
+                    Log::info('✅ Sous-action validée et mise à jour à 100%', [
+                        'sous_action_id' => $validation->element_id,
+                        'validation_id' => $validation->id,
+                        'validated_by' => $validation->validated_by,
+                        'action_id' => $element?->action_id
+                    ]);
+                }
+                break;
+        }
+    }
+
+    /**
+     * Mise à jour des taux parents avec DB Query Builder
+     */
+    private function updateParentProgressRates($sousAction)
+    {
+        try {
+            // 1. Mettre à jour l'Action parente
+            if ($sousAction->action_id) {
+                $actionProgress = \DB::table('sous_actions')
+                    ->where('action_id', $sousAction->action_id)
+                    ->avg('taux_avancement');
+                
+                $newActionProgress = round($actionProgress, 2);
+                
+                \DB::table('actions')
+                    ->where('id', $sousAction->action_id)
+                    ->update(['taux_avancement' => $newActionProgress]);
+            }
+
+            // 2. Mettre à jour l'Objectif Spécifique parent
+            if ($sousAction->action && $sousAction->action->objectif_specifique_id) {
+                $ospProgress = \DB::table('actions')
+                    ->where('objectif_specifique_id', $sousAction->action->objectif_specifique_id)
+                    ->avg('taux_avancement');
+                
+                $newOSPProgress = round($ospProgress, 2);
+                
+                \DB::table('objectif_specifiques')
+                    ->where('id', $sousAction->action->objectif_specifique_id)
+                    ->update(['taux_avancement' => $newOSPProgress]);
+            }
+
+            // 3. Mettre à jour l'Objectif Stratégique parent
+            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectif_strategique_id) {
+                $osProgress = \DB::table('objectif_specifiques')
+                    ->where('objectif_strategique_id', $sousAction->action->objectifSpecifique->objectif_strategique_id)
+                    ->avg('taux_avancement');
+                
+                $newOSProgress = round($osProgress, 2);
+                
+                \DB::table('objectif_strategiques')
+                    ->where('id', $sousAction->action->objectifSpecifique->objectif_strategique_id)
+                    ->update(['taux_avancement' => $newOSProgress]);
+            }
+
+            // 4. Mettre à jour le Pilier parent
+            if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectifStrategique && $sousAction->action->objectifSpecifique->objectifStrategique->pilier_id) {
+                $pilierProgress = \DB::table('objectif_strategiques')
+                    ->where('pilier_id', $sousAction->action->objectifSpecifique->objectifStrategique->pilier_id)
+                    ->avg('taux_avancement');
+                
+                $newPilierProgress = round($pilierProgress, 2);
+                
+                \DB::table('piliers')
+                    ->where('id', $sousAction->action->objectifSpecifique->objectifStrategique->pilier_id)
+                    ->update(['taux_avancement' => $newPilierProgress]);
+            }
+
+            Log::info('✅ Taux parents mis à jour après validation', [
+                'sous_action_id' => $sousAction->id,
+                'action_id' => $sousAction->action_id
+            ]);
+
+        } catch (\Exception $e) {
+            Log::warning('⚠️ Erreur mise à jour taux parents après validation', [
+                'error' => $e->getMessage(),
+                'sous_action_id' => $sousAction->id
+            ]);
         }
     }
 

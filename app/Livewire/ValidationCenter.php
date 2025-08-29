@@ -52,13 +52,26 @@ class ValidationCenter extends Component
         }
     }
 
-    public function showValidationDetails($validationId)
+    public function openValidationModal($validationId)
     {
+        Log::info('🔍 Méthode showValidationDetails appelée', [
+            'validation_id' => $validationId,
+            'user_id' => auth()->id()
+        ]);
+        
         $this->selectedValidation = Validation::with(['requestedBy', 'validatedBy'])
             ->find($validationId);
         
         if ($this->selectedValidation) {
             $this->showValidationDetails = true;
+            Log::info('✅ Modal de validation ouvert', [
+                'validation_id' => $validationId,
+                'element_type' => $this->selectedValidation->element_type
+            ]);
+        } else {
+            Log::warning('⚠️ Validation non trouvée', [
+                'validation_id' => $validationId
+            ]);
         }
     }
 
@@ -80,11 +93,34 @@ class ValidationCenter extends Component
             $user = Auth::user();
             $validationService = app(ValidationService::class);
             
-            $success = $validationService->approveValidation(
-                $this->selectedValidation,
-                $user,
-                $this->approvalComments
-            );
+            // Gérer les différents types de validation
+            if ($this->selectedValidation->type === 'progression_decrease') {
+                // Utiliser le service de validation de progression
+                $progressionService = app(\App\Services\ProgressionValidationService::class);
+                $success = $progressionService->applyProgressionDecrease($this->selectedValidation);
+                
+                if ($success) {
+                    // Marquer la validation comme approuvée
+                    $this->selectedValidation->update([
+                        'status' => 'approved',
+                        'validated_by' => $user->id,
+                        'validated_at' => now(),
+                        'comments' => $this->approvalComments
+                    ]);
+                    
+                    $this->dispatch('toast', 'success', 'Diminution de progression approuvée et appliquée');
+                } else {
+                    $this->dispatch('toast', 'error', 'Erreur lors de l\'application de la diminution');
+                    return;
+                }
+            } else {
+                // Validation standard (completion, etc.)
+                $success = $validationService->approveValidation(
+                    $this->selectedValidation,
+                    $user,
+                    $this->approvalComments
+                );
+            }
 
             if ($success) {
                 $this->dispatch('showToast', [

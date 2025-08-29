@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Plateforme de Pilotage Stratégique')</title>
+    <title>@yield('title', 'Plateforme de Stratelia')</title>
     
     @livewireStyles
     
@@ -16,18 +16,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- CSS du calendrier des activités -->
     <link href="{{ asset('css/activity-calendar.css') }}" rel="stylesheet">
+    <!-- CSS des optimisations mobiles -->
+    <link href="{{ asset('css/mobile-optimizations.css') }}" rel="stylesheet">
     
     <style>
         :root {
-            --primary-green: #4CAF50;
-            --light-green: #81C784;
-            --lighter-green: #A5D6A7;
-            --very-light-green: #C8E6C9;
+            --primary-green: #00AE9E;
+            --light-green: #33C2B5;
+            --lighter-green: #66D5CC;
+            --very-light-green: #99E8E2;
             --white: #FFFFFF;
             --light-gray: #F8F9FA;
             --gray: #6C757D;
             --dark-gray: #343A40;
-            --success-green: #28A745;
+            --success-green: #00AE9E;
             --warning-orange: #FFC107;
             --danger-red: #DC3545;
             --info-blue: #17A2B8;
@@ -216,7 +218,7 @@
 
         .btn-primary:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 174, 158, 0.4);
         }
 
         .btn-success {
@@ -352,6 +354,99 @@
 
             .navbar-brand {
                 font-size: 1.25rem;
+            }
+            
+            /* Header responsive - Layout horizontal forcé */
+            .navbar {
+                padding: 0.75rem 0 !important;
+                height: 70px !important;
+            }
+            
+            .navbar-nav {
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+            }
+            
+            .navbar-nav .nav-item {
+                margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 0.5rem !important;
+                font-size: 0.9rem !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 0.375rem !important;
+                background: rgba(255, 255, 255, 0.1) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            }
+            
+            .navbar-nav .nav-link:hover {
+                background: rgba(255, 255, 255, 0.2) !important;
+                transform: translateY(-1px) !important;
+            }
+            
+            /* Optimisation des composants Livewire sur mobile */
+            .validation-center, .notification-center {
+                position: relative !important;
+            }
+            
+            /* Boutons de validation et notification optimisés */
+            .btn-validation-mobile, .btn-notification-mobile {
+                padding: 0.5rem !important;
+                min-width: 44px !important;
+                min-height: 44px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 0.375rem !important;
+                background: rgba(255, 255, 255, 0.1) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                color: white !important;
+                margin: 0 0.25rem !important;
+            }
+            
+            .btn-validation-mobile:hover, .btn-notification-mobile:hover {
+                background: rgba(255, 255, 255, 0.2) !important;
+                transform: translateY(-1px) !important;
+            }
+            
+            /* Dropdown utilisateur sur mobile - Positionnement corrigé */
+            .navbar-nav .dropdown {
+                position: relative !important;
+            }
+            
+            .navbar-nav .dropdown-toggle {
+                background: rgba(255, 255, 255, 0.1) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                color: white !important;
+                padding: 0.5rem 0.75rem !important;
+                min-width: 120px !important;
+                text-align: left !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                border-radius: 0.375rem !important;
+            }
+            
+            .navbar-nav .dropdown-menu {
+                position: fixed !important;
+                top: 70px !important;
+                right: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+                background: white !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+                z-index: 1050 !important;
             }
         }
 
@@ -674,6 +769,64 @@
             .indent-1, .indent-2, .indent-3, .indent-4, .indent-5 {
                 padding-left: 0.5rem !important;
             }
+            
+            /* Header responsive */
+            .navbar-brand {
+                font-size: 1.1rem !important;
+            }
+            
+            .navbar-nav .nav-item {
+                margin-right: 0.5rem !important;
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.9rem !important;
+            }
+            
+            /* Sidebar responsive */
+            .sidebar {
+                width: 100% !important;
+                left: -100% !important;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.show {
+                left: 0 !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .navbar-brand {
+                font-size: 1rem !important;
+            }
+            
+            .navbar-brand i {
+                margin-right: 0.5rem !important;
+            }
+            
+            .navbar-nav .nav-item {
+                margin-right: 0.25rem !important;
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 0.375rem 0.5rem !important;
+                font-size: 0.85rem !important;
+            }
+            
+            .btn {
+                font-size: 0.875rem !important;
+                padding: 0.375rem 0.75rem !important;
+            }
+            
+            .container-fluid {
+                padding: 0.5rem !important;
+            }
         }
         
         /* Ensure content doesn't overlap with navbar */
@@ -868,6 +1021,83 @@
                 font-size: 0.9rem;
             }
         }
+        
+        /* Styles responsifs pour très petits écrans */
+        @media (max-width: 576px) {
+            .navbar {
+                padding: 0.5rem 0 !important;
+                height: 65px !important;
+            }
+            
+            .navbar-brand {
+                font-size: 1.1rem !important;
+            }
+            
+            .navbar-nav .nav-item {
+                margin-right: 0.25rem !important;
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 0.375rem 0.5rem !important;
+                font-size: 0.85rem !important;
+            }
+            
+            .sidebar-toggle {
+                font-size: 1.1rem !important;
+                padding: 0.375rem !important;
+            }
+            
+            /* Dropdown utilisateur sur très petits écrans */
+            .dropdown-menu {
+                top: 65px !important;
+                position: fixed !important;
+                right: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 0.375rem 0 !important;
+                height: 60px !important;
+            }
+            
+            .navbar-brand {
+                font-size: 1rem !important;
+            }
+            
+            .navbar-nav .nav-item {
+                margin-right: 0.125rem !important;
+            }
+            
+            .navbar-nav .nav-link {
+                padding: 0.25rem 0.375rem !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .sidebar-toggle {
+                font-size: 1rem !important;
+                padding: 0.25rem !important;
+            }
+            
+            /* Dropdown utilisateur sur ultra-petits écrans */
+            .dropdown-menu {
+                top: 60px !important;
+                position: fixed !important;
+                right: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                border: none !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+            }
+        }
     </style>
 
     @stack('styles')
@@ -878,47 +1108,33 @@
         <div class="container-fluid">
             <button class="sidebar-toggle me-3" id="sidebarToggle">
                 <i class="fas fa-bars"></i>
-                </button>
+            </button>
 
             <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="fas fa-chart-line me-2"></i>
-                Pilotage Stratégique
+                <i class="fas fa-chart-line me-2 me-sm-2 me-md-2"></i>
+                <span class="d-none d-sm-inline">Stratelia</span>
+                <span class="d-sm-none">S</span>
             </a>
 
-            <div class="navbar-nav ms-auto">
+            <div class="navbar-nav ms-auto d-flex align-items-center">
                 <!-- Centre de validations -->
-                <div class="nav-item me-3">
+                <div class="nav-item me-1 me-sm-2 me-md-3">
                     <livewire:validation-center />
                 </div>
                 
                 <!-- Centre de notifications -->
-                <div class="nav-item me-3">
+                <div class="nav-item me-1 me-sm-2 me-md-3">
                     <livewire:notification-center />
                 </div>
                 
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-1"></i>
-                        {{ Auth::user()->name }}
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Paramètres</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                @csrf
-                                <button type="submit" class="dropdown-item">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
+
             </div>
         </div>
     </nav>
 
+    <!-- Overlay pour la sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
@@ -931,6 +1147,12 @@
                     <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link ">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Profil</span>
                     </a>
                 </li>
                 
@@ -996,6 +1218,21 @@
                 </li>
                 @endif
                 --}}
+                
+                <!-- Séparateur -->
+                <li><hr class="dropdown-divider my-3"></li>
+                
+            
+                <!-- Bouton Déconnexion -->
+                <li class="nav-item">
+                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="nav-link btn btn-link p-0 w-100 text-start">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Déconnexion</span>
+                        </button>
+                    </form>
+                </li>
                     </ul>
                 </div>
     </div>
@@ -1110,6 +1347,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
             const mainContent = document.getElementById('mainContent');
             
             // Récupérer l'état de la sidebar depuis le localStorage
@@ -1119,56 +1357,106 @@
             if (sidebarState === 'hidden') {
                 sidebar.classList.add('hidden');
                 mainContent.classList.add('full-width');
+                sidebarToggle.classList.add('sidebar-hidden');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            }
+            
+            // Fonction pour fermer la sidebar sur mobile
+            function closeSidebarMobile() {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
             }
             
             // Gérer le clic sur le bouton toggle
             sidebarToggle.addEventListener('click', function() {
-                // Toggle de la sidebar
-                if (sidebar.classList.contains('hidden')) {
-                    // Afficher la sidebar
-                    sidebar.classList.remove('hidden');
-                    mainContent.classList.remove('full-width');
-                    sidebarToggle.classList.remove('sidebar-hidden');
-                    localStorage.setItem('sidebarState', 'visible');
-                    
-                    // Animation d'entrée fluide
-                    sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                    sidebar.style.transform = 'translateX(0)';
-                    
-                    // Changer l'icône avec animation
-                    sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
-                    
-                    // Ajouter une classe pour l'animation
-                    sidebar.classList.add('sidebar-visible');
+                console.log('Bouton toggle cliqué, largeur écran:', window.innerWidth);
+                
+                if (window.innerWidth <= 768) {
+                    // Sur mobile, toggle simple avec overlay
+                    if (sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                        document.body.style.overflow = '';
+                    } else {
+                        sidebar.classList.add('show');
+                        sidebarOverlay.classList.add('show');
+                        document.body.style.overflow = 'hidden';
+                    }
                 } else {
-                    // Masquer la sidebar
-                    sidebar.classList.add('hidden');
-                    mainContent.classList.add('full-width');
-                    sidebarToggle.classList.add('sidebar-hidden');
-                    localStorage.setItem('sidebarState', 'hidden');
-                    
-                    // Animation de sortie fluide
-                    sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                    sidebar.style.transform = 'translateX(-100%)';
-                    
-                    // Changer l'icône avec animation
-                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
-                    
-                    // Retirer la classe d'animation
-                    sidebar.classList.remove('sidebar-visible');
+                    // Sur desktop, comportement normal sans overlay
+                    if (sidebar.classList.contains('hidden')) {
+                        // Afficher la sidebar
+                        sidebar.classList.remove('hidden');
+                        mainContent.classList.remove('full-width');
+                        sidebarToggle.classList.remove('sidebar-hidden');
+                        localStorage.setItem('sidebarState', 'visible');
+                        
+                        // Animation d'entrée fluide
+                        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        sidebar.style.transform = 'translateX(0)';
+                        
+                        // Changer l'icône avec animation
+                        sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                        
+                        // Ajouter une classe pour l'animation
+                        sidebar.classList.add('sidebar-visible');
+                        
+                        // S'assurer que l'overlay est masqué sur desktop
+                        sidebarOverlay.classList.remove('show');
+                    } else {
+                        // Masquer la sidebar
+                        sidebar.classList.add('hidden');
+                        mainContent.classList.add('full-width');
+                        sidebarToggle.classList.add('sidebar-hidden');
+                        localStorage.setItem('sidebarState', 'hidden');
+                        
+                        // Animation de sortie fluide
+                        sidebar.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        sidebar.style.transform = 'translateX(-100%)';
+                        
+                        // Changer l'icône avec animation
+                        sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                        
+                        // Retirer la classe d'animation
+                        sidebar.classList.remove('sidebar-visible');
+                        
+                        // S'assurer que l'overlay est masqué sur desktop
+                        sidebarOverlay.classList.remove('show');
+                    }
                 }
+            });
+            
+            // Gérer le clic sur l'overlay pour fermer la sidebar
+            sidebarOverlay.addEventListener('click', closeSidebarMobile);
+            
+            // Fermer la sidebar en cliquant sur un lien (mobile uniquement)
+            const sidebarLinks = sidebar.querySelectorAll('.nav-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeSidebarMobile();
+                    }
+                });
             });
             
             // Gestion responsive
             function handleResize() {
                 if (window.innerWidth <= 768) {
                     // Sur mobile, la sidebar est masquée par défaut
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
                     sidebar.classList.add('hidden');
                     mainContent.classList.add('full-width');
                     sidebarToggle.classList.add('sidebar-hidden');
                     sidebarToggle.innerHTML = '<i class="fas fa-bars"></i>';
+                    document.body.style.overflow = '';
                 } else {
-                    // Sur desktop, restaurer l'état sauvegardé
+                    // Sur desktop, restaurer l'état sauvegardé et masquer l'overlay
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
                     if (sidebarState === 'visible') {
                         sidebar.classList.remove('hidden');
                         mainContent.classList.remove('full-width');
@@ -1194,5 +1482,65 @@
     @stack('scripts')
     
     @livewireScripts
+    
+    <!-- Script pour corriger les dropdowns et la sidebar mobile -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fonction pour forcer la largeur des panneaux
+            function forceFullWidthPanels() {
+                const validationPanel = document.querySelector('.validation-panel');
+                const notificationPanel = document.querySelector('.notification-panel');
+                
+                if (window.innerWidth <= 768) {
+                    if (validationPanel) {
+                        validationPanel.style.width = '100vw';
+                        validationPanel.style.maxWidth = '100vw';
+                        validationPanel.style.left = '0';
+                        validationPanel.style.right = '0';
+                        validationPanel.style.margin = '0';
+                        validationPanel.style.borderRadius = '0';
+                    }
+                    
+                    if (notificationPanel) {
+                        notificationPanel.style.width = '100vw';
+                        notificationPanel.style.maxWidth = '100vw';
+                        notificationPanel.style.left = '0';
+                        notificationPanel.style.right = '0';
+                        notificationPanel.style.borderRadius = '0';
+                    }
+                }
+            }
+            
+            // Exécuter au chargement
+            forceFullWidthPanels();
+            
+            // Exécuter lors du redimensionnement
+            window.addEventListener('resize', function() {
+                forceFullWidthPanels();
+                if (window.innerWidth > 768) {
+                    // Fermer la sidebar sur desktop
+                    const sidebar = document.getElementById('sidebar');
+                    const sidebarOverlay = document.getElementById('sidebarOverlay');
+                    if (sidebar) sidebar.classList.remove('show');
+                    if (sidebarOverlay) sidebarOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // Observer les changements dans le DOM pour les panneaux
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        forceFullWidthPanels();
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
 </body>
 </html>

@@ -73,7 +73,15 @@ class VueGeneraleModal extends Component
 
             $this->piliers = $query->get();
             
-            Log::info('Vue Générale - Données chargées', ['count' => $this->piliers->count()]);
+            Log::info('Vue Générale - Données chargées', [
+                'count' => $this->piliers->count(),
+                'piliers_with_os' => $this->piliers->filter(function($p) {
+                    return $p->objectifsStrategiques->count() > 0;
+                })->count(),
+                'piliers_without_os' => $this->piliers->filter(function($p) {
+                    return $p->objectifsStrategiques->count() === 0;
+                })->count()
+            ]);
             
         } catch (\Exception $e) {
             Log::error('Erreur lors du chargement de la Vue Générale', ['error' => $e->getMessage()]);
@@ -128,10 +136,28 @@ class VueGeneraleModal extends Component
     {
         if (!$dateEcheance) return null;
         
+        // Si pas de date de réalisation, ne pas calculer d'écart
+        if (!$dateRealisation) {
+            $echeance = Carbon::parse($dateEcheance);
+            $today = Carbon::now();
+            $daysUntilDeadline = $today->diffInDays($echeance, false);
+            $daysUntilDeadline = (int)$daysUntilDeadline; // 🔒 force entier
+            
+            if ($daysUntilDeadline < 0) {
+                return abs($daysUntilDeadline) . 'J de retard';
+            } elseif ($daysUntilDeadline > 0) {
+                return 'Reste ' . $daysUntilDeadline . 'J';
+            } else {
+                return 'Échéance aujourd\'hui';
+            }
+        }
+        
+        // Si date de réalisation existe, calculer l'écart réel
         $echeance = Carbon::parse($dateEcheance);
-        $realisation = $dateRealisation ? Carbon::parse($dateRealisation) : Carbon::now();
+        $realisation = Carbon::parse($dateRealisation);
         
         $diff = $echeance->diffInDays($realisation, false);
+        $diff = (int)$diff; // 🔒 force entier
         
         if ($diff < 0) {
             return abs($diff) . 'J en avance';
@@ -141,6 +167,9 @@ class VueGeneraleModal extends Component
             return 'À jour';
         }
     }
+    
+
+
 
     public function getProgressStatus($taux)
     {

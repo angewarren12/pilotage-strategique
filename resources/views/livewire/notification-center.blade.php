@@ -1,7 +1,7 @@
 <div class="notification-center">
     <!-- Bouton de notification avec badge -->
     <div class="position-relative">
-        <button class="btn btn-outline-primary position-relative" wire:click="toggleNotifications" title="Notifications">
+        <button class="btn btn-outline-light position-relative btn-notification-mobile" wire:click="toggleNotifications" title="Notifications" style="border-color: rgba(255, 255, 255, 0.3); color: white;">
             <i class="fas fa-bell"></i>
             @if($unreadCount > 0)
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -13,9 +13,9 @@
 
     <!-- Panneau des notifications -->
     @if($showNotifications)
-        <div class="notification-panel position-absolute top-100 end-0 mt-2 bg-white border-0 rounded-3 shadow-lg" style="width: 420px; max-height: 600px; z-index: 1050;">
+        <div class="notification-panel position-absolute top-100 end-0 mt-2 bg-white border-0 rounded-3 shadow-lg">
             <!-- Header du panneau -->
-            <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-gradient-primary text-white rounded-top-3">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-gradient-success text-white rounded-top-3">
                 <h6 class="mb-0 fw-bold">
                     <i class="fas fa-bell me-2"></i>
                     Centre de Notifications
@@ -37,7 +37,7 @@
             <div class="notification-list" style="max-height: 400px; overflow-y: auto;">
                 @if(count($notifications) > 0)
                     @foreach($notifications as $notification)
-                        <div class="notification-item p-3 border-0 {{ $this->isUnread($notification) ? 'bg-light-blue' : 'bg-white' }} {{ $this->getNotificationColor($notification->priority) }} border-start border-3" 
+                        <div class="notification-item p-3 border-0 {{ $this->isUnread($notification) ? 'bg-light-green' : 'bg-white' }} {{ $this->getNotificationColor($notification->priority) }} border-start border-3" 
                              wire:click="showNotificationDetails({{ $notification->id }})"
                              style="cursor: pointer; transition: all 0.2s ease;">
                             <div class="d-flex align-items-start gap-3">
@@ -172,12 +172,12 @@
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     }
 
-    .bg-gradient-primary {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #00AE9E 0%, #008F82 100%);
     }
 
-    .bg-light-blue {
-        background-color: rgba(0, 123, 255, 0.05);
+    .bg-light-green {
+        background-color: rgba(0, 174, 158, 0.05);
     }
 
     .notification-item {
@@ -188,17 +188,17 @@
     }
 
     .notification-item:hover {
-        background-color: rgba(0, 123, 255, 0.08) !important;
+        background-color: rgba(0, 174, 158, 0.08) !important;
         transform: translateX(4px);
-        border-color: rgba(0, 123, 255, 0.2);
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+        border-color: rgba(0, 174, 158, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 174, 158, 0.1);
     }
 
     .notification-icon-wrapper {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: rgba(0, 123, 255, 0.1);
+        background: rgba(0, 174, 158, 0.1);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -206,12 +206,12 @@
     }
 
     .notification-icon-wrapper.unread {
-        background: rgba(0, 123, 255, 0.2);
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        background: rgba(0, 174, 158, 0.2);
+        box-shadow: 0 0 0 3px rgba(0, 174, 158, 0.1);
     }
 
     .notification-item:hover .notification-icon-wrapper {
-        background: rgba(0, 123, 255, 0.2);
+        background: rgba(0, 174, 158, 0.2);
         transform: scale(1.1);
     }
 

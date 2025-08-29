@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/reporting', [DashboardController::class, 'reporting'])->name('reporting');
+    Route::get('/reporting/advanced', [DashboardController::class, 'reporting'])->name('reporting.advanced');
     
     // Routes pour les piliers (Admin général uniquement)
     Route::resource('piliers', PilierController::class);

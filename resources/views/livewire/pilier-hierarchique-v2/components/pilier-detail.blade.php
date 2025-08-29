@@ -26,13 +26,15 @@
                                 $maxEcheancePilier = $pilier->getMaxEcheanceDate();
                             @endphp
                             @if($maxEcheancePilier)
-                                <strong>Échéance max des sous-actions:</strong> 
+                                <strong>Échéance 
+:</strong> 
                                 <span class="badge bg-warning text-dark">
                                     <i class="fas fa-calendar-alt me-1"></i>
                                     {{ \Carbon\Carbon::parse($maxEcheancePilier)->format('d/m/Y') }}
                                 </span>
                             @else
-                                <strong>Échéance max des sous-actions:</strong> 
+                                <strong>Échéance 
+:</strong> 
                                 <span class="badge bg-light text-muted">
                                     <i class="fas fa-calendar-times me-1"></i>
                                     Aucune échéance
@@ -88,30 +90,30 @@
         </div>
 
         @if($pilier->objectifsStrategiques->count() > 0)
-            <div class="table-responsive">
+            <div class="table-responsive objectifs-strategiques-table">
                 <table class="table table-hover table-striped">
                     <thead style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
                         <tr>
-                            <th style="width: 10%;">
-                                <i class="fas fa-code me-1"></i>Code
+                            <th class="col-code" style="width: 10%;">
+                                <i class="fas fa-code me-1"></i><span>Code</span>
                             </th>
-                            <th style="width: 20%;">
-                                <i class="fas fa-bullseye me-1"></i>Libellé
+                            <th class="col-libelle" style="width: 20%;">
+                                <i class="fas fa-bullseye me-1"></i><span>Libellé</span>
                             </th>
-                            <th style="width: 15%;">
-                                <i class="fas fa-percentage me-1"></i>Progression
+                            <th class="col-progression" style="width: 15%;">
+                                <i class="fas fa-percentage me-1"></i><span>Progression</span>
                             </th>
-                            <th style="width: 15%;">
-                                <i class="fas fa-calendar-alt me-1"></i>Date d'échéance
+                            <th class="col-echeance" style="width: 15%;">
+                                <i class="fas fa-calendar-alt me-1"></i><span>Date d'échéance</span>
                             </th>
-                            <th style="width: 15%;">
-                                <i class="fas fa-user me-1"></i>Propriétaire
+                            <th class="col-proprietaire" style="width: 15%;">
+                                <i class="fas fa-user me-1"></i><span>Propriétaire</span>
                             </th>
-                            <th style="width: 10%;">
-                                <i class="fas fa-list me-1"></i>Objectifs Spécifiques
+                            <th class="col-osp" style="width: 10%;">
+                                <i class="fas fa-list me-1"></i><span>Objectifs Spécifiques</span>
                             </th>
-                            <th style="width: 15%;">
-                                <i class="fas fa-cogs me-1"></i>Actions
+                            <th class="col-actions" style="width: 15%;">
+                                <i class="fas fa-cogs me-1"></i><span>Actions</span>
                             </th>
                         </tr>
                     </thead>

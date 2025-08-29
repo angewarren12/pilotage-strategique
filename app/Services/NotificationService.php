@@ -156,7 +156,12 @@ class NotificationService
                 if ($element->owner) {
                     $users->push($element->owner);
                 }
-                $users = $users->merge(User::where('role', 'admin_general')->get());
+                // Récupérer les admins généraux via la méthode isAdminGeneral
+                $allUsers = User::all();
+                $adminUsers = $allUsers->filter(function($user) {
+                    return method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral();
+                });
+                $users = $users->merge($adminUsers);
                 break;
                 
             case 'objectif_strategique':
@@ -167,7 +172,12 @@ class NotificationService
                 if ($element->pilier && $element->pilier->owner) {
                     $users->push($element->pilier->owner);
                 }
-                $users = $users->merge(User::where('role', 'admin_general')->get());
+                // Récupérer les admins généraux via la méthode isAdminGeneral
+                $allUsers = User::all();
+                $adminUsers = $allUsers->filter(function($user) {
+                    return method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral();
+                });
+                $users = $users->merge($adminUsers);
                 break;
                 
             case 'objectif_specifique':
@@ -181,7 +191,12 @@ class NotificationService
                 if ($element->objectifStrategique && $element->objectifStrategique->pilier && $element->objectifStrategique->pilier->owner) {
                     $users->push($element->objectifStrategique->pilier->owner);
                 }
-                $users = $users->merge(User::where('role', 'admin_general')->get());
+                // Récupérer les admins généraux via la méthode isAdminGeneral
+                $allUsers = User::all();
+                $adminUsers = $allUsers->filter(function($user) {
+                    return method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral();
+                });
+                $users = $users->merge($adminUsers);
                 break;
                 
             case 'action':
@@ -198,7 +213,12 @@ class NotificationService
                 if ($element->objectifSpecifique && $element->objectifSpecifique->objectifStrategique && $element->objectifSpecifique->objectifStrategique->pilier && $element->objectifSpecifique->objectifStrategique->pilier->owner) {
                     $users->push($element->objectifSpecifique->objectifStrategique->pilier->owner);
                 }
-                $users = $users->merge(User::where('role', 'admin_general')->get());
+                // Récupérer les admins généraux via la méthode isAdminGeneral
+                $allUsers = User::all();
+                $adminUsers = $allUsers->filter(function($user) {
+                    return method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral();
+                });
+                $users = $users->merge($adminUsers);
                 break;
                 
             case 'sous_action':
@@ -218,7 +238,12 @@ class NotificationService
                 if ($element->action && $element->action->objectifSpecifique && $element->action->objectifSpecifique->objectifStrategique && $element->action->objectifSpecifique->objectifStrategique->pilier && $element->action->objectifSpecifique->objectifStrategique->pilier->owner) {
                     $users->push($element->action->objectifSpecifique->objectifStrategique->pilier->owner);
                 }
-                $users = $users->merge(User::where('role', 'admin_general')->get());
+                // Récupérer les admins généraux via la méthode isAdminGeneral
+                $allUsers = User::all();
+                $adminUsers = $allUsers->filter(function($user) {
+                    return method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral();
+                });
+                $users = $users->merge($adminUsers);
                 break;
         }
         
@@ -349,6 +374,40 @@ class NotificationService
             if ($daysLate > 0) {
                 $this->notifyDelaiDepasse('sous_action', $sousAction->id, abs($daysLate), $sousAction);
             }
+        }
+    }
+    
+    /**
+     * Méthode générique pour envoyer des notifications
+     */
+    public function sendNotification($userId, $type, $title, $message, $data = [])
+    {
+        try {
+            Notification::create([
+                'user_id' => $userId,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'data' => $data,
+                'read_at' => null,
+                'created_at' => now()
+            ]);
+            
+            Log::info("Notification envoyée avec succès", [
+                'user_id' => $userId,
+                'type' => $type,
+                'title' => $title
+            ]);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de l'envoi de la notification", [
+                'error' => $e->getMessage(),
+                'user_id' => $userId,
+                'type' => $type
+            ]);
+            
+            return false;
         }
     }
 }
