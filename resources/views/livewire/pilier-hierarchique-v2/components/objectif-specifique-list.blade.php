@@ -55,73 +55,99 @@
     </div>
 
     <!-- Cartes des parents (Pilier et Objectif Stratégique) -->
-    <div class="statistics-container p-4 bg-light">
-        <div class="row g-3">
+    <div class="statistics-container p-3 p-md-4 bg-light">
+        <div class="row g-2 g-md-3">
             <!-- Carte 1: Détails du Pilier parent -->
-            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                <div class="card h-100" style="border-left: 4px solid {{ $pilier->getHierarchicalColor(1) }};">
-                    <div class="card-header" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }};">
-                        <h6 class="mb-0">
-                            <i class="fas fa-layer-group me-2"></i>
-                            Pilier Parent
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6 col-xs-6">
+                <div class="card h-100 mobile-optimized-card" style="border-left: 4px solid {{ $pilier->getHierarchicalColor(1) }};">
+                    <div class="card-header mobile-card-header" style="background: {{ $pilier->getHierarchicalColor(1) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(1)) }};">
+                        <h6 class="mb-0 mobile-header-text">
+                            <i class="fas fa-layer-group me-1 me-md-2"></i>
+                            <span class="d-none d-sm-inline">Pilier Parent</span>
+                            <span class="d-inline d-sm-none">Pilier</span>
                         </h6>
                     </div>
-                    <div class="card-body">
-                        <h6 class="card-title text-primary mb-2">{{ $pilier->libelle }}</h6>
-                        <p class="card-text text-muted small mb-2">
+                    <div class="card-body mobile-card-body">
+                        <h6 class="card-title text-primary mb-2 mobile-title">{{ $pilier->libelle }}</h6>
+                        <p class="card-text text-muted small mb-2 mobile-description d-none d-md-block">
                             {{ $pilier->description ? Str::limit($pilier->description, 80) : 'Aucune description disponible' }}
                         </p>
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="text-muted me-2">Code :</span>
-                            <span class="badge bg-secondary">{{ $pilier->code }}</span>
+                        <div class="d-flex align-items-center mb-2 mobile-code">
+                            <span class="text-muted me-1 me-md-2 mobile-label">Code :</span>
+                            <span class="badge bg-secondary mobile-badge">{{ $pilier->code }}</span>
                         </div>
-                        <div class="text-center">
-                            <div class="progress-circle pilier-level" style="--progress: {{ $pilier->taux_avancement }}%; position: relative;">
-                                <svg width="50" height="50" viewBox="0 0 50 50">
+                        <div class="d-flex align-items-center mb-2 mobile-owner">
+                            <span class="text-muted me-1 me-md-2 mobile-label">Propriétaire :</span>
+                            <span class="badge bg-info mobile-badge">
+                                <i class="fas fa-user me-1"></i>
+                                {{ $pilier->owner ? Str::limit($pilier->owner->name, 15) : 'Non assigné' }}
+                            </span>
+                        </div>
+                        <div class="text-center mobile-progress">
+                            <div class="progress-circle pilier-level mobile-progress-circle" style="--progress: {{ $pilier->taux_avancement }}%; position: relative;">
+                                <svg width="40" height="40" viewBox="0 0 40 40" class="d-inline d-sm-none">
+                                    <circle cx="20" cy="20" r="15" fill="none" stroke="#e9ecef" stroke-width="4"/>
+                                    <circle cx="20" cy="20" r="15" fill="none" stroke="{{ $pilier->getHierarchicalColor(1) }}" stroke-width="4" 
+                                            stroke-dasharray="94" stroke-dashoffset="{{ 94 - (94 * $pilier->taux_avancement / 100) }}"/>
+                                </svg>
+                                <svg width="50" height="50" viewBox="0 0 50 50" class="d-none d-sm-inline">
                                     <circle cx="25" cy="25" r="20" fill="none" stroke="#e9ecef" stroke-width="5"/>
                                     <circle cx="25" cy="25" r="20" fill="none" stroke="{{ $pilier->getHierarchicalColor(1) }}" stroke-width="5" 
                                             stroke-dasharray="126" stroke-dashoffset="{{ 126 - (126 * $pilier->taux_avancement / 100) }}"/>
                                 </svg>
                                 <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important; pointer-events: none !important; z-index: 1000 !important;">
-                                    <span class="progress-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 14px !important; line-height: 1.2 !important;">{{ number_format($pilier->taux_avancement, 1) }}%</span>
+                                    <span class="progress-percentage mobile-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 14px !important; line-height: 1.2 !important;">{{ number_format($pilier->taux_avancement, 1) }}%</span>
                                 </div>
                             </div>
-                            <div class="progress-label">Avancement</div>
+                            <div class="progress-label mobile-label-text">Avancement</div>
                         </div>
                     </div>
                 </div>
             </div>
             
             <!-- Carte 2: Détails de l'Objectif Stratégique parent -->
-            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                <div class="card h-100" style="border-left: 4px solid {{ $pilier->getHierarchicalColor(2) }};">
-                    <div class="card-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
-                        <h6 class="mb-0">
-                            <i class="fas fa-bullseye me-2"></i>
-                            Objectif Stratégique Parent
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6 col-6 col-xs-6">
+                <div class="card h-100 mobile-optimized-card" style="border-left: 4px solid {{ $pilier->getHierarchicalColor(2) }};">
+                    <div class="card-header mobile-card-header" style="background: {{ $pilier->getHierarchicalColor(2) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(2)) }};">
+                        <h6 class="mb-0 mobile-header-text">
+                            <i class="fas fa-bullseye me-1 me-md-2"></i>
+                            <span class="d-none d-sm-inline">Objectif Stratégique Parent</span>
+                            <span class="d-inline d-sm-none">OS Parent</span>
                         </h6>
                     </div>
-                    <div class="card-body">
-                        <h6 class="card-title text-primary mb-2">{{ $selectedObjectifStrategique->libelle }}</h6>
-                        <p class="card-text text-muted small mb-2">
+                    <div class="card-body mobile-card-body">
+                        <h6 class="card-title text-primary mb-2 mobile-title">{{ $selectedObjectifStrategique->libelle }}</h6>
+                        <p class="card-text text-muted small mb-2 mobile-description d-none d-md-block">
                             {{ $selectedObjectifStrategique->description ? Str::limit($selectedObjectifStrategique->description, 80) : 'Aucune description disponible' }}
                         </p>
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="text-muted me-2">Code :</span>
-                            <span class="badge bg-secondary">{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}</span>
+                        <div class="d-flex align-items-center mb-2 mobile-code">
+                            <span class="text-muted me-1 me-md-2 mobile-label">Code :</span>
+                            <span class="badge bg-secondary mobile-badge">{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}</span>
                         </div>
-                        <div class="text-center">
-                            <div class="progress-circle objectif-strategique-level" style="--progress: {{ $selectedObjectifStrategique->taux_avancement }}%; position: relative;">
-                                <svg width="50" height="50" viewBox="0 0 50 50">
+                        <div class="d-flex align-items-center mb-2 mobile-owner">
+                            <span class="text-muted me-1 me-md-2 mobile-label">Propriétaire :</span>
+                            <span class="badge bg-info mobile-badge">
+                                <i class="fas fa-user me-1"></i>
+                                {{ $selectedObjectifStrategique->owner ? Str::limit($selectedObjectifStrategique->owner->name, 15) : 'Non assigné' }}
+                            </span>
+                        </div>
+                        <div class="text-center mobile-progress">
+                            <div class="progress-circle objectif-strategique-level mobile-progress-circle" style="--progress: {{ $selectedObjectifStrategique->taux_avancement }}%; position: relative;">
+                                <svg width="40" height="40" viewBox="0 0 40 40" class="d-inline d-sm-none">
+                                    <circle cx="20" cy="20" r="15" fill="none" stroke="#e9ecef" stroke-width="4"/>
+                                    <circle cx="20" cy="20" r="15" fill="none" stroke="{{ $pilier->getHierarchicalColor(2) }}" stroke-width="4" 
+                                            stroke-dasharray="94" stroke-dashoffset="{{ 94 - (94 * $selectedObjectifStrategique->taux_avancement / 100) }}"/>
+                                </svg>
+                                <svg width="50" height="50" viewBox="0 0 50 50" class="d-none d-sm-inline">
                                     <circle cx="25" cy="25" r="20" fill="none" stroke="#e9ecef" stroke-width="5"/>
                                     <circle cx="25" cy="25" r="20" fill="none" stroke="{{ $pilier->getHierarchicalColor(2) }}" stroke-width="5" 
                                             stroke-dasharray="126" stroke-dashoffset="{{ 126 - (126 * $selectedObjectifStrategique->taux_avancement / 100) }}"/>
                                 </svg>
                                 <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important; pointer-events: none !important; z-index: 1000 !important;">
-                                    <span class="progress-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 14px !important; line-height: 1.2 !important;">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</span>
+                                    <span class="progress-percentage mobile-percentage" style="text-align: center !important; display: block !important; width: 100% !important; font-weight: 700 !important; color: #2c3e50 !important; font-size: 14px !important; line-height: 1.2 !important;">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</span>
                                 </div>
                             </div>
-                            <div class="progress-label">Avancement</div>
+                            <div class="progress-label mobile-label-text">Avancement</div>
                         </div>
                     </div>
                 </div>
@@ -215,7 +241,8 @@
                                         $maxEcheanceAction = $action->getMaxEcheanceDate();
                                     @endphp
                                     @if($maxEcheanceAction)
-                                        <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                        <span class="badge bg-warning text-dark" title="Date d'Échéance 
+imale des sous-actions">
                                             <i class="fas fa-calendar-alt me-1"></i>
                                             {{ \Carbon\Carbon::parse($maxEcheanceAction)->format('d/m/Y') }}
                                         </span>

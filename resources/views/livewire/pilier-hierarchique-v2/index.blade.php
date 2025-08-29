@@ -9,12 +9,7 @@
                         <i class="fas fa-sitemap me-2"></i>
                         Vue Hiérarchique du Pilier
                     </h5>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-light" wire:click="testComponent">
-                            <i class="fas fa-vial me-1"></i>Test
-                        </button>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
 
                 <!-- Body de la modal -->

@@ -20,6 +20,28 @@
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        min-width: 0;
+    }
+    
+    /* Masquer complètement les barres de progression à 0% */
+    .progress-bar[style*="width: 0%"],
+    .progress-bar[style*="width: 0.00%"],
+    .progress-bar[style*="width: 0.0%"] {
+        width: 0% !important;
+        min-width: 0 !important;
+        background: transparent !important;
+        display: none !important;
+    }
+    
+    /* Alternative : masquer toutes les barres avec une largeur très faible */
+    .progress-bar[style*="width: 0.1%"],
+    .progress-bar[style*="width: 0.2%"],
+    .progress-bar[style*="width: 0.3%"],
+    .progress-bar[style*="width: 0.4%"],
+    .progress-bar[style*="width: 0.5%"] {
+        width: 0% !important;
+        min-width: 0 !important;
+        background: transparent !important;
     }
     .progress-bar::before {
         content: '';
@@ -248,26 +270,32 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div class="progress pilier-card" data-pilier-id="{{ $pilier->id }}" style="height: 25px;">
-                                                <div class="progress-bar pilier-progress-bar"
-                                                     role="progressbar" 
-                                                     style="width: {{ $pilier->taux_avancement }}%"
-                                                     aria-valuenow="{{ $pilier->taux_avancement }}" 
-                                                     aria-valuemin="0" 
-                                                     aria-valuemax="100">
-                                                    {{ number_format($pilier->taux_avancement, 2) }}%
+                                            <div class="d-flex flex-column align-items-start">
+                                                <div class="d-flex justify-content-between align-items-center w-100 mb-1">
+                                                    <small class="text-muted">Progression</small>
+                                                    <span class="badge fw-bold" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }};">
+                                                        {{ number_format($pilier->taux_avancement, 2) }}%
+                                                    </span>
+                                                </div>
+                                                <div class="progress mb-2 progress-compact" style="width: 100%; background: #e9ecef;">
+                                                    <div class="progress-bar" 
+                                                         style="width: {{ $pilier->taux_avancement }}%; background: {{ $pilier->getHierarchicalColor(4) }};"
+                                                         role="progressbar" 
+                                                         aria-valuenow="{{ $pilier->taux_avancement }}" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="taux-avancement-display text-center mt-1 taux-avancement" data-pilier-id="{{ $pilier->id }}">
-                                                {{ number_format($pilier->taux_avancement, 2) }}%
-                                            </div>
                                         </td>
+                                        
                                         <td>
                                             @php
                                                 $maxEcheance = $pilier->getMaxEcheanceDate();
                                             @endphp
                                             @if($maxEcheance)
-                                                <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                                <span class="badge bg-warning text-dark" title="Date d'Échéance 
+imale des sous-actions">
                                                     <i class="fas fa-calendar-alt me-1"></i>
                                                     {{ \Carbon\Carbon::parse($maxEcheance)->format('d/m/Y') }}
                                                 </span>

@@ -178,11 +178,11 @@
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">
-                                            <div class="row">
-                                                <div class="col-3">Échéance</div>
-                                                <div class="col-3">Date Réalisation</div>
-                                                <div class="col-3">Écart</div>
-                                                <div class="col-3">Progression</div>
+                                            <div class="execution-header">
+                                                <div class="execution-header-item">Échéance</div>
+                                                <div class="execution-header-item">Date Réalisation</div>
+                                                <div class="execution-header-item">Écart</div>
+                                                <div class="execution-header-item">Progression</div>
                                             </div>
                                         </th>
                                     </tr>
@@ -315,34 +315,40 @@
                                                                     </td>
 
                                                                     <td>
-                                                                        <div class="row">
-                                                                            <div class="col-3">
-                                                                                <small class="text-muted">Échéance</small>
-                                                                                <div>{{ $sousAction->date_echeance ? Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') : 'Non définie' }}</div>
-                                                                            </div>
-                                                                            <div class="col-3">
-                                                                                <small class="text-muted">Date Réalisation</small>
-                                                                                <div>{{ $sousAction->date_realisation ? Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') : '-' }}</div>
-                                                                            </div>
-                                                                            <div class="col-3">
-                                                                                <small class="text-muted">Écart</small>
-                                                                                <div>
-                                                                                    @php
-                                                                                        $ecart = $this->calculateEcart($sousAction->date_echeance, $sousAction->date_realisation);
-                                                                                    @endphp
-                                                                                    @if($ecart)
-                                                                                        <span class="badge bg-{{ $sousAction->date_realisation ? 'success' : 'warning' }}">
-                                                                                            {{ $ecart }}
-                                                                                        </span>
-                                                                                    @else
-                                                                                        <span class="badge bg-secondary">-</span>
-                                                                                    @endif
+                                                                        <div class="execution-section">
+                                                                            <div class="execution-grid">
+                                                                                <div class="execution-item">
+                                                                                    <div class="execution-label">Échéance</div>
+                                                                                    <div class="execution-value">
+                                                                                        {{ $sousAction->date_echeance ? Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') : 'Non définie' }}
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                            <div class="col-3">
-                                                                                <small class="text-muted">Progression</small>
-                                                                                <div>
-                                                                                    <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 0) }}%</span>
+                                                                                <div class="execution-item">
+                                                                                    <div class="execution-label">Date Réalisation</div>
+                                                                                    <div class="execution-value">
+                                                                                        {{ $sousAction->date_realisation ? Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') : '-' }}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="execution-item">
+                                                                                    <div class="execution-label">Écart</div>
+                                                                                    <div class="execution-value">
+                                                                                        @php
+                                                                                            $ecart = $this->calculateEcart($sousAction->date_echeance, $sousAction->date_realisation);
+                                                                                        @endphp
+                                                                                        @if($ecart)
+                                                                                            <span class="badge bg-{{ $sousAction->date_realisation ? 'success' : 'warning' }}">
+                                                                                                {{ $ecart }}
+                                                                                            </span>
+                                                                                        @else
+                                                                                            <span class="badge bg-secondary">-</span>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div class="execution-item">
+                                                                                    <div class="execution-label">Progression</div>
+                                                                                    <div class="execution-value">
+                                                                                        <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 0) }}%</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -416,31 +422,58 @@
                                                                     </div>
                                                                 </td>
 
-                                                                <td class="table-light hierarchical-cell" data-level="sousaction">
-                                                                    <div class="text-muted">Aucune sous-action</div>
+                                                                <td class="text-center text-muted" colspan="1">
+                                                                    <div class="empty-sous-action">
+                                                                        <i class="fas fa-info-circle me-2"></i>
+                                                                        <span class="empty-text">Aucune sous-action</span>
+                                                                    </div>
                                                                 </td>
 
                                                                 <td>
-                                                                    <div class="row">
-                                                                        <div class="col-3">
-                                                                            <small class="text-muted">Échéance</small>
-                                                                            <div>-</div>
-                                                                        </div>
-                                                                        <div class="col-3">
-                                                                            <small class="text-muted">Date Réalisation</small>
-                                                                            <div>-</div>
-                                                                        </div>
-                                                                        <div class="col-3">
-                                                                            <small class="text-muted">Écart</small>
-                                                                            <div>
-                                                                                <span class="badge bg-secondary">-</span>
+                                                                    <div class="execution-section execution-empty">
+                                                                        <div class="execution-grid">
+                                                                            <div class="execution-item">
+                                                                                <div class="execution-label">Échéance</div>
+                                                                                <div class="execution-value">
+                                                                                    <span class="empty-value">
+                                                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                                                        Non définie
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="execution-item">
+                                                                                <div class="execution-label">Date Réalisation</div>
+                                                                                <div class="execution-value">
+                                                                                    <span class="empty-value">
+                                                                                        <i class="fas fa-clock me-1"></i>
+                                                                                        En attente
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="execution-item">
+                                                                                <div class="execution-label">Écart</div>
+                                                                                <div class="execution-value">
+                                                                                    <span class="empty-value">
+                                                                                        <i class="fas fa-minus me-1"></i>
+                                                                                        N/A
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="execution-item">
+                                                                                <div class="execution-label">Progression</div>
+                                                                                <div class="execution-value">
+                                                                                    <span class="empty-value">
+                                                                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                                                                        {{ number_format($action->taux_avancement, 0) }}%
+                                                                                    </span>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="col-3">
-                                                                            <small class="text-muted">Progression</small>
-                                                                            <div>
-                                                                                <span class="badge bg-primary">{{ number_format($action->taux_avancement, 0) }}%</span>
-                                                                            </div>
+                                                                        <div class="empty-action-hint">
+                                                                            <small class="text-muted">
+                                                                                <i class="fas fa-lightbulb me-1"></i>
+                                                                                Créez des sous-actions pour commencer l'exécution
+                                                                            </small>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -506,6 +539,9 @@
     <livewire:action-comments-modal />
 
     <style>
+        /* Import du CSS externe pour la responsivité */
+        @import url('{{ asset("css/vue-generale-responsive.css") }}');
+        
         .sticky-top {
             position: sticky;
             top: 0;
@@ -610,6 +646,231 @@
         
         .badge:hover {
             transform: scale(1.1);
+        }
+
+        /* Styles pour la section EXÉCUTION */
+        .execution-section {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .execution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid */
+            gap: 10px;
+        }
+
+        .execution-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .execution-label {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .execution-value {
+            font-size: 1em;
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        /* Styles pour l'en-tête de la section EXÉCUTION */
+        .execution-header {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+
+        .execution-header-item {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #495057;
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Responsive adjustments for execution grid */
+        @media (max-width: 768px) {
+            .execution-grid {
+                grid-template-columns: 1fr; /* Stack on small screens */
+            }
+            
+            .execution-header {
+                grid-template-columns: 1fr; /* Stack on small screens */
+            }
+            
+            .execution-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 5px;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .execution-label {
+                margin-bottom: 0;
+                margin-right: 10px;
+            }
+        }
+
+        /* Desktop optimizations */
+        @media (min-width: 1200px) {
+            .execution-grid {
+                grid-template-columns: repeat(4, 1fr); /* Fixed 4 columns on large screens */
+                gap: 15px;
+            }
+            
+            .execution-header {
+                grid-template-columns: repeat(4, 1fr); /* Fixed 4 columns on large screens */
+                gap: 15px;
+            }
+        }
+
+        /* Medium screen optimizations */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .execution-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+                gap: 12px;
+            }
+            
+            .execution-header {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+                gap: 12px;
+            }
+        }
+
+        /* Responsive table improvements */
+        @media (max-width: 1200px) {
+            .table-responsive {
+                font-size: 0.9em;
+            }
+            
+            .hierarchical-cell {
+                padding: 8px 6px;
+            }
+            
+            .hierarchical-cell .fw-bold {
+                font-size: 0.9em;
+            }
+            
+            .hierarchical-cell small {
+                font-size: 0.75em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.8em;
+            }
+            
+            .hierarchical-cell {
+                padding: 6px 4px;
+            }
+            
+            .hierarchical-cell .fw-bold {
+                font-size: 0.8em;
+            }
+            
+            .hierarchical-cell small {
+                font-size: 0.7em;
+            }
+            
+            .badge {
+                font-size: 0.7em;
+                padding: 2px 4px;
+            }
+            
+            .progress {
+                height: 4px !important;
+            }
+            
+            .modal-dialog {
+                margin: 0;
+                max-width: 100%;
+                height: 100%;
+            }
+            
+            .modal-content {
+                border-radius: 0;
+                height: 100%;
+            }
+        }
+
+        /* Horizontal scroll improvements */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Better table cell spacing */
+        .table th,
+        .table td {
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        /* Improved table header readability */
+        .table-secondary th {
+            background-color: #e9ecef !important;
+            color: #495057 !important;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        /* Better visual separation for execution section */
+        .execution-section {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .execution-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Indicateur visuel pour les actions sans sous-actions */
+        .hierarchical-row:has(.execution-empty) {
+            background-color: rgba(248, 249, 250, 0.5) !important;
+        }
+
+        .hierarchical-row:has(.execution-empty):hover {
+            background-color: rgba(248, 249, 250, 0.8) !important;
+        }
+
+        /* Styles simples pour la responsivité de la table */
+        .table-responsive {
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        /* Optimisation pour écrans moyens */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .table {
+                min-width: 1000px;
+            }
+            
+            .execution-section {
+                min-width: 180px;
+            }
+        }
+
+        /* Optimisation pour petits écrans */
+        @media (max-width: 767px) {
+            .table {
+                min-width: 800px;
+            }
+            
+            .execution-section {
+                min-width: 150px;
+            }
         }
     </style>
 

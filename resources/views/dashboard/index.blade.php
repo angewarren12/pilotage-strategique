@@ -103,36 +103,6 @@
                 <div class="label">Sous-Actions</div>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-4 mb-2 mb-md-3">
-            <div class="stats-card stats-card-compact">
-                <div class="icon">
-                    <i class="fas fa-check-circle text-success"></i>
-                </div>
-                <div class="number">{{ $stats['sous_actions_terminees'] }}</div>
-                <div class="label">Terminées</div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-4 mb-2 mb-md-3">
-            <div class="stats-card stats-card-compact">
-                <div class="icon">
-                    <i class="fas fa-clock text-warning"></i>
-                </div>
-                <div class="number">{{ $stats['sous_actions_en_cours'] }}</div>
-                <div class="label">En Cours</div>
-            </div>
-        </div>
-        
-        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-4 mb-2 mb-md-3">
-            <div class="stats-card stats-card-compact">
-                <div class="icon">
-                    <i class="fas fa-exclamation-triangle text-danger"></i>
-                </div>
-                <div class="number">{{ $stats['sous_actions_en_retard'] }}</div>
-                <div class="label">En Retard</div>
-            </div>
-        </div>
     </div>
 
     <!-- Hierarchical View -->
@@ -181,6 +151,11 @@
                                         @endif
                                     </td>
                                     <td>
+                                        
+
+
+
+                                        <div class="progress-circle" style="--progress: {{ $pilier->taux_avancement }}%;">
                                         <div class="d-flex align-items-center">
                                             <div class="progress flex-grow-1 me-2" style="height: 8px;">
                                                 <div class="progress-bar" style="width: {{ $pilier->taux_avancement }}%"></div>

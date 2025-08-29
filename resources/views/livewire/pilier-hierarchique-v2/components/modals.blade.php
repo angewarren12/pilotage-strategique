@@ -332,7 +332,7 @@
             </div>
         </div>
     </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modal d'édition d'Objectif Spécifique -->
@@ -350,16 +350,7 @@
             
             <form wire:submit.prevent="updateObjectifSpecifique">
                 <div class="modal-body">
-                    <!-- Debug Info -->
-                    @if($editingOSP)
-                    <div class="alert alert-info mb-3">
-                        <strong>Debug :</strong> 
-                        ID: {{ $editingOSP->id }}, 
-                        Code: {{ $editingOSP->code }}, 
-                        Libellé: {{ $editingOSP->libelle }}, 
-                        Propriétaire: {{ $editingOSP->owner_id }}
-                    </div>
-                    @endif
+                   
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -450,7 +441,7 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modals pour les Actions -->
@@ -560,7 +551,7 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modal d'édition d'Action -->
@@ -578,17 +569,6 @@
             
             <form wire:submit.prevent="updateAction">
                 <div class="modal-body">
-                    <!-- Debug Info -->
-                    @if($editingAction)
-                    <div class="alert alert-info mb-3">
-                        <strong>Debug :</strong> 
-                        ID: {{ $editingAction->id }}, 
-                        Code: {{ $editingAction->code }}, 
-                        Libellé: {{ $editingAction->libelle }}, 
-                        Propriétaire: {{ $editingAction->owner_id }}
-                    </div>
-                    @endif
-                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -678,7 +658,7 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modals pour les Sous-Actions -->
@@ -846,7 +826,7 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modal d'édition de Sous-Action -->
@@ -997,6 +977,7 @@
                                 <label for="edit_sous_action_taux" class="form-label">
                                     <i class="fas fa-percentage me-1"></i>Taux d'avancement
                                 </label>
+                                
                                 @if($editSousActionType === 'projet')
                                     <!-- Mode lecture seule pour les projets -->
                                     <input type="number" 
@@ -1012,22 +993,39 @@
                                         <i class="fas fa-lock me-1"></i>Progression automatique (Projet)
                                     </small>
                                 @else
-                                    <!-- Mode lecture seule pour toutes les sous-actions (édition via slider) -->
-                                    <input type="number" 
-                                           class="form-control @error('editSousActionTauxAvancement') is-invalid @enderror" 
-                                           id="edit_sous_action_taux" 
-                                           wire:model="editSousActionTauxAvancement"
-                                           min="0" 
-                                           max="100" 
-                                           step="0.1"
-                                           readonly
-                                           style="background-color: #f8f9fa; cursor: not-allowed;">
-                                    @error('editSousActionTauxAvancement')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <small class="form-text text-muted">
-                                        Taux actuel (0-100%) - Modifiable via le slider dans la liste
-                                    </small>
+                                    <!-- Affichage conditionnel selon les permissions -->
+                                    @if($this->canEditSousAction($editingSousAction))
+                                        <!-- Mode édition pour les utilisateurs autorisés -->
+                                        <input type="number" 
+                                               class="form-control @error('editSousActionTauxAvancement') is-invalid @enderror" 
+                                               id="edit_sous_action_taux" 
+                                               wire:model="editSousActionTauxAvancement"
+                                               min="0" 
+                                               max="100" 
+                                               step="0.1">
+                                        @error('editSousActionTauxAvancement')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="form-text text-success">
+                                            <i class="fas fa-edit me-1"></i>Modifiable (vous avez les permissions)
+                                        </small>
+                                    @else
+                                        <!-- Mode lecture seule pour les autres utilisateurs - Barre de progression statique -->
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge fw-bold me-2" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(5)) }};">
+                                                {{ number_format($editSousActionTauxAvancement, 2) }}%
+                                            </span>
+                                        </div>
+                                        <div class="progress mb-2 progress-compact" style="width: 100%; background: #e9ecef;">
+                                            <div class="progress-bar" 
+                                                 style="width: {{ $editSousActionTauxAvancement }}%; background: {{ $pilier->getHierarchicalColor(5) }};"
+                                                 role="progressbar" 
+                                                 aria-valuenow="{{ $editSousActionTauxAvancement }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -1055,7 +1053,7 @@
         </div>
     </div>
 </div>
-<div class="modal-backdrop fade show"></div>
+<!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 @endif
 
 <!-- Modal de gestion des activités -->
@@ -1424,13 +1422,13 @@
                 </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+    <!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 </div>
 @endif
 
 <!-- Modal d'édition d'activité -->
 @if($editingActivity)
-<div class="modal fade show d-block" tabindex="-1" aria-labelledby="editActivityModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
+<div class="modal fade show d-block" tabindex="-1" data-bs-backdrop="true" aria-labelledby="editActivityModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -1587,13 +1585,13 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    <!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 </div>
 @endif
 
 <!-- Modal du diagramme de Gantt -->
 @if($showGanttChartModal && $selectedSousActionForActivities)
-<div class="modal fade show d-block" tabindex="-1" aria-labelledby="ganttChartModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
+<div class="modal fade show d-block" tabindex="-1" data-bs-backdrop="true" aria-labelledby="ganttChartModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <div class="modal-header" style="background: #ffc107; color: #212529;">
@@ -1710,13 +1708,13 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    <!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 </div>
 @endif
 
 <!-- Modal du calendrier des activités -->
 @if($showActivityCalendarModal && $selectedSousActionForActivities)
-<div class="modal fade show d-block" tabindex="-1" aria-labelledby="activityCalendarModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
+<div class="modal fade show d-block" tabindex="-1" data-bs-backdrop="true" aria-labelledby="activityCalendarModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: white;">
@@ -1854,6 +1852,6 @@
             </div>
         </div>
     </div>
-    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    <!-- Overlay supprimé - Bootstrap gère automatiquement l'arrière-plan sombre -->
 </div>
 @endif

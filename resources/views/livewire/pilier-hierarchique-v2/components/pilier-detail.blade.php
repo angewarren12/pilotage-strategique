@@ -18,8 +18,7 @@
                     <div>
                         <h3 class="mb-1">{{ $pilier->libelle }}</h3>
                         <p class="text-muted mb-0">
-                            <strong>Code:</strong> {{ $pilier->code }} | 
-                            <strong>Propriétaire:</strong> {{ $pilier->owner ? $pilier->owner->name : 'Non assigné' }}
+                            <strong>Code:</strong> {{ $pilier->code }}
                         </p>
                         <p class="text-muted mb-0">
                             @php
@@ -157,7 +156,8 @@
                                         $maxEcheanceOS = $objectifStrategique->getMaxEcheanceDate();
                                     @endphp
                                     @if($maxEcheanceOS)
-                                        <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                        <span class="badge bg-warning text-dark" title="Date d'Échéance 
+imale des sous-actions">
                                             <i class="fas fa-calendar-alt me-1"></i>
                                             {{ \Carbon\Carbon::parse($maxEcheanceOS)->format('d/m/Y') }}
                                         </span>

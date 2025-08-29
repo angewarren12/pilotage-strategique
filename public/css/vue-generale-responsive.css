@@ -1,0 +1,328 @@
+
+
+/* Responsive table improvements */
+@media (max-width: 1200px) {
+    .table-responsive {
+        font-size: 0.9em;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .hierarchical-cell {
+        padding: 8px 6px;
+    }
+    
+    .hierarchical-cell .fw-bold {
+        font-size: 0.9em;
+    }
+    
+    .hierarchical-cell small {
+        font-size: 0.75em;
+    }
+    
+    /* Améliorer la visibilité des boutons d'action */
+    .btn {
+        font-size: 0.8em;
+        padding: 4px 8px;
+        margin: 2px;
+    }
+    
+    .btn-sm {
+        font-size: 0.75em;
+        padding: 3px 6px;
+    }
+    
+    /* Optimiser les colonnes d'action */
+    .action-column {
+        min-width: 120px;
+        white-space: nowrap;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 4px;
+        flex-wrap: nowrap;
+        justify-content: center;
+    }
+}
+
+/* Optimisations spécifiques pour écrans moyens (900px-1200px) */
+@media (min-width: 900px) and (max-width: 1200px) {
+    /* Forcer le scroll horizontal et améliorer la visibilité */
+    .table-responsive {
+        overflow-x: auto !important;
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        position: relative;
+    }
+    
+    /* Indicateur de scroll plus visible */
+    .table-responsive::before {
+        content: '📱 Faites défiler horizontalement pour voir toutes les colonnes';
+        position: absolute;
+        top: -30px;
+        left: 0;
+        right: 0;
+        background: #007bff;
+        color: white;
+        text-align: center;
+        padding: 6px;
+        font-size: 0.8em;
+        font-weight: bold;
+        border-radius: 6px 6px 0 0;
+        z-index: 1000;
+    }
+    
+    /* Optimiser la table */
+    .table {
+        min-width: 1100px !important;
+        margin-bottom: 0;
+    }
+    
+    /* Réduire l'espacement pour plus de contenu visible */
+    .table th,
+    .table td {
+        padding: 6px 4px;
+        font-size: 0.85em;
+    }
+    
+    /* Optimiser les colonnes critiques */
+    .table th:nth-child(1),
+    .table td:nth-child(1) {
+        min-width: 120px;
+        max-width: 140px;
+    }
+    
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+        min-width: 90px;
+        max-width: 110px;
+    }
+    
+    .table th:nth-child(3),
+    .table td:nth-child(3) {
+        min-width: 90px;
+        max-width: 110px;
+    }
+    
+    .table th:nth-child(4),
+    .table td:nth-child(4) {
+        min-width: 90px;
+        max-width: 110px;
+    }
+    
+    .table th:nth-child(5),
+    .table td:nth-child(5) {
+        min-width: 180px;
+        max-width: 220px;
+    }
+    
+    /* Colonne des boutons d'action - CRITIQUE */
+    .table th:nth-child(6),
+    .table td:nth-child(6) {
+        min-width: 140px !important;
+        max-width: 180px;
+        background-color: rgba(0, 123, 255, 0.05);
+        border-left: 2px solid #007bff;
+    }
+    
+    /* Améliorer la visibilité des boutons */
+    .btn {
+        font-size: 0.8em;
+        padding: 5px 8px;
+        margin: 2px;
+        white-space: nowrap;
+        min-width: 60px;
+    }
+    
+    .btn-sm {
+        font-size: 0.75em;
+        padding: 4px 6px;
+        min-width: 50px;
+    }
+    
+    /* Grille EXÉCUTION optimisée */
+    .execution-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .execution-section {
+        padding: 5px;
+        min-width: 170px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8em;
+        overflow-x: auto !important;
+        border: 1px solid #dc3545;
+    }
+    
+    /* Indicateur de scroll pour mobile */
+    .table-responsive::before {
+        content: '📱 Défilez horizontalement pour voir les boutons';
+        position: absolute;
+        top: -25px;
+        left: 0;
+        right: 0;
+        background: #dc3545;
+        color: white;
+        text-align: center;
+        padding: 4px;
+        font-size: 0.7em;
+        font-weight: bold;
+        border-radius: 4px 4px 0 0;
+        z-index: 1000;
+    }
+    
+    .hierarchical-cell {
+        padding: 6px 4px;
+    }
+    
+    .hierarchical-cell .fw-bold {
+        font-size: 0.8em;
+    }
+    
+    .hierarchical-cell small {
+        font-size: 0.7em;
+    }
+    
+    .badge {
+        font-size: 0.7em;
+        padding: 2px 4px;
+    }
+    
+    .progress {
+        height: 4px !important;
+    }
+    
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+    
+    .modal-content {
+        border-radius: 0;
+        height: 100%;
+    }
+    
+    /* Mobile-specific table improvements */
+    .table {
+        min-width: 800px !important;
+    }
+    
+    .table th,
+    .table td {
+        padding: 6px 4px;
+        font-size: 0.8em;
+    }
+    
+    .table thead th {
+        font-size: 0.75em;
+        padding: 8px 4px;
+    }
+    
+    /* Colonnes d'action sur mobile */
+    .table th:nth-child(6),
+    .table td:nth-child(6) {
+        min-width: 120px !important;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left: 2px solid #dc3545;
+    }
+    
+    /* Boutons adaptés au mobile */
+    .btn {
+        font-size: 0.7em;
+        padding: 3px 6px;
+        margin: 1px;
+        min-width: 50px;
+    }
+    
+    .btn-sm {
+        font-size: 0.65em;
+        padding: 2px 4px;
+        min-width: 40px;
+    }
+}
+
+/* Styles de base pour la responsivité des tableaux */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Amélioration de la lisibilité des tableaux */
+.table th,
+.table td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.table-secondary th {
+    background-color: #e9ecef !important;
+    color: #495057 !important;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Optimisations pour très petits écrans */
+@media (max-width: 576px) {
+    .execution-section {
+        padding: 6px;
+        margin: 2px;
+    }
+    
+    .execution-item {
+        padding: 6px;
+        font-size: 0.75em;
+    }
+    
+    .execution-label {
+        min-width: 70px;
+        font-size: 0.7em;
+    }
+    
+    .execution-value {
+        font-size: 0.8em;
+    }
+    
+    /* Improve table readability on very small screens */
+    .table-responsive {
+        font-size: 0.75em;
+    }
+    
+    .hierarchical-cell {
+        padding: 4px 2px;
+    }
+    
+    .hierarchical-cell .fw-bold {
+        font-size: 0.75em;
+    }
+    
+    .hierarchical-cell small {
+        font-size: 0.65em;
+    }
+}

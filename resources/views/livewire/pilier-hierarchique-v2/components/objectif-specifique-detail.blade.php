@@ -100,13 +100,15 @@
                                 $maxEcheancePilier = $pilier->getMaxEcheanceDate();
                             @endphp
                             @if($maxEcheancePilier)
-                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="text-muted me-2">Échéance 
+ :</span>
                                 <span class="badge bg-warning text-dark">
                                     <i class="fas fa-calendar-alt me-1"></i>
                                     {{ \Carbon\Carbon::parse($maxEcheancePilier)->format('d/m/Y') }}
                                 </span>
                             @else
-                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="text-muted me-2">Échéance 
+ :</span>
                                 <span class="badge bg-light text-muted">
                                     <i class="fas fa-calendar-times me-1"></i>
                                     Aucune
@@ -153,13 +155,15 @@
                                 $maxEcheanceOS = $selectedObjectifStrategique->getMaxEcheanceDate();
                             @endphp
                             @if($maxEcheanceOS)
-                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="text-muted me-2">Échéance 
+ :</span>
                                 <span class="badge bg-warning text-dark">
                                     <i class="fas fa-calendar-alt me-1"></i>
                                     {{ \Carbon\Carbon::parse($maxEcheanceOS)->format('d/m/Y') }}
                                 </span>
                             @else
-                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="text-muted me-2">Échéance 
+ :</span>
                                 <span class="badge bg-light text-muted">
                                     <i class="fas fa-calendar-times me-1"></i>
                                     Aucune
@@ -271,7 +275,8 @@
                                         $maxEcheanceAction = $action->getMaxEcheanceDate();
                                     @endphp
                                     @if($maxEcheanceAction)
-                                        <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                        <span class="badge bg-warning text-dark" title="Date d'Échéance 
+imale des sous-actions">
                                             <i class="fas fa-calendar-alt me-1"></i>
                                             {{ \Carbon\Carbon::parse($maxEcheanceAction)->format('d/m/Y') }}
                                         </span>

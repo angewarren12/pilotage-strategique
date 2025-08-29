@@ -597,25 +597,25 @@ class PilierHierarchiqueV2 extends Component
 
     public function updateObjectifStrategique()
     {
-        if (!$this->editingOS) {
+        if (!$this->editingObjectifStrategique) {
             $this->dispatch('toast', 'error', 'Aucun objectif à modifier');
             return;
         }
 
         $this->validate([
-            'editingOS.code' => 'required|string|max:10',
-            'editingOS.libelle' => 'required|string|max:255',
-            'editingOS.description' => 'nullable|string',
-            'editingOS.owner_id' => 'required|exists:users,id'
+            'editOSCode' => 'required|string|max:10',
+            'editOSLibelle' => 'required|string|max:255',
+            'editOSDescription' => 'nullable|string',
+            'editOSOwnerId' => 'required|exists:users,id'
         ]);
 
         try {
             // Récupérer l'objet depuis la base de données et le mettre à jour
-            $objectifStrategique = ObjectifStrategique::findOrFail($this->editingOS['id']);
-            $objectifStrategique->code = $this->editingOS['code'];
-            $objectifStrategique->libelle = $this->editingOS['libelle'];
-            $objectifStrategique->description = $this->editingOS['description'];
-            $objectifStrategique->owner_id = $this->editingOS['owner_id'];
+            $objectifStrategique = ObjectifStrategique::findOrFail($this->editingObjectifStrategique->id);
+            $objectifStrategique->code = $this->editOSCode;
+            $objectifStrategique->libelle = $this->editOSLibelle;
+            $objectifStrategique->description = $this->editOSDescription;
+            $objectifStrategique->owner_id = $this->editOSOwnerId;
             $objectifStrategique->save();
             
             $this->pilier->updateTauxAvancement();
@@ -624,9 +624,14 @@ class PilierHierarchiqueV2 extends Component
             $this->dispatch('refreshComponent');
             
             Log::info('✅ Objectif Stratégique mis à jour', [
-                'os_id' => $this->editingOS['id'],
+                'os_id' => $this->editingObjectifStrategique->id,
                 'user_id' => Auth::id(),
-                'new_data' => $this->editingOS
+                'new_data' => [
+                    'code' => $this->editOSCode,
+                    'libelle' => $this->editOSLibelle,
+                    'description' => $this->editOSDescription,
+                    'owner_id' => $this->editOSOwnerId
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -766,7 +771,7 @@ class PilierHierarchiqueV2 extends Component
                 'newSousAction.code' => 'required|string|max:10',
                 'newSousAction.libelle' => 'required|string|max:255',
                 'newSousAction.owner_id' => 'required|exists:users,id',
-                'newSousAction.date_echeance' => 'nullable|date|after_or_equal:today',
+                'newSousAction.date_echeance' => 'nullable|date',
                 'newSousAction.type' => 'required|in:normal,projet'
             ]);
             
@@ -1289,8 +1294,8 @@ class PilierHierarchiqueV2 extends Component
                 'user_id' => Auth::id()
             ]);
 
-            // Vérifier les permissions avec DB
-            $action = DB::table('actions')->where('id', $actionId)->first();
+            // Vérifier les permissions avec le modèle Eloquent
+            $action = Action::find($actionId);
             
             if (!$action) {
                 Log::warning('🚫 Action non trouvée', ['action_id' => $actionId]);
@@ -1298,14 +1303,14 @@ class PilierHierarchiqueV2 extends Component
                 return;
             }
 
-            if (!$this->canDeleteAction((object)$action)) {
+            if (!$this->canDeleteAction($action)) {
                 Log::warning('🚫 Permission refusée pour supprimer Action', ['user_id' => Auth::id(), 'action_id' => $actionId]);
                 $this->dispatch('toast', 'error', 'Permission refusée ou action liée');
                 return;
             }
 
-            // Supprimer l'action avec DB
-            $deleted = DB::table('actions')->where('id', $actionId)->delete();
+            // Supprimer l'action avec le modèle Eloquent
+            $deleted = $action->delete();
             
             if (!$deleted) {
                 Log::error('❌ Échec de la suppression de l\'action', ['action_id' => $actionId]);
@@ -1439,8 +1444,8 @@ class PilierHierarchiqueV2 extends Component
                 'user_id' => Auth::id()
             ]);
 
-            // Vérifier les permissions avec DB
-            $sousAction = DB::table('sous_actions')->where('id', $sousActionId)->first();
+            // Vérifier les permissions avec le modèle Eloquent
+            $sousAction = SousAction::find($sousActionId);
             
             if (!$sousAction) {
                 Log::warning('🚫 Sous-action non trouvée', ['sous_action_id' => $sousActionId]);
@@ -1448,14 +1453,14 @@ class PilierHierarchiqueV2 extends Component
                 return;
             }
 
-            if (!$this->canDeleteSousAction((object)$sousAction)) {
+            if (!$this->canDeleteSousAction($sousAction)) {
                 Log::warning('🚫 Permission refusée pour supprimer Sous-Action', ['user_id' => Auth::id(), 'sous_action_id' => $sousActionId]);
                 $this->dispatch('toast', 'error', 'Permission refusée ou sous-action liée');
                 return;
             }
 
-            // Supprimer la sous-action avec DB
-            $deleted = DB::table('sous_actions')->where('id', $sousActionId)->delete();
+            // Supprimer la sous-action avec le modèle Eloquent
+            $deleted = $sousAction->delete();
             
             if (!$deleted) {
                 Log::error('❌ Échec de la suppression de la sous-action', ['sous_action_id' => $sousActionId]);
@@ -1562,11 +1567,21 @@ class PilierHierarchiqueV2 extends Component
     public function canEditSousAction($sousAction)
     {
         $user = Auth::user();
-        return (method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral()) || 
-               ($this->selectedObjectifStrategique && $user->id == $this->selectedObjectifStrategique->owner_id) ||
-               ($this->selectedObjectifSpecifique && $user->id == $this->selectedObjectifSpecifique->owner_id) ||
-               ($this->selectedAction && $user->id == $this->selectedAction->owner_id) ||
-               $user->id == $sousAction->owner_id;
+        $isAdmin = method_exists($user, 'isAdminGeneral') && $user->isAdminGeneral();
+        $isSousActionOwner = $user->id == $sousAction->owner_id;
+        $isActionOwner = $this->selectedAction && $user->id == $this->selectedAction->owner_id;
+        
+        Log::info('🔐 Vérification permission édition Sous-Action', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'is_admin' => $isAdmin,
+            'is_sous_action_owner' => $isSousActionOwner,
+            'is_action_owner' => $isActionOwner,
+            'sous_action_id' => $sousAction->id
+        ]);
+        
+        // Seuls l'admin, le propriétaire de la sous-action et le propriétaire de l'action parent peuvent modifier
+        return $isAdmin || $isSousActionOwner || $isActionOwner;
     }
 
     public function canDeleteObjectifStrategique($objectifStrategique)
@@ -1693,40 +1708,63 @@ class PilierHierarchiqueV2 extends Component
     {
         $this->breadcrumb = [];
         
-        if ($this->pilier) {
-            $this->breadcrumb[] = [
-                'label' => $this->pilier->code . ' - ' . $this->pilier->libelle,
-                'action' => 'retourVersPilier'
-            ];
+        // Vérification de sécurité pour le pilier
+        if (!$this->pilier) {
+            Log::warning('⚠️ Pilier non défini lors de la construction du breadcrumb');
+            return;
         }
         
-        if ($this->selectedObjectifStrategique) {
+        // Premier niveau : Pilier
+        $this->breadcrumb[] = [
+            'code' => $this->pilier->code,
+            'label' => $this->pilier->libelle,
+            'action' => 'retourVersPilier'
+        ];
+        
+        // Deuxième niveau : Objectif Stratégique
+        if ($this->selectedObjectifStrategique && $this->pilier) {
             $this->breadcrumb[] = [
-                'label' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . ' - ' . $this->selectedObjectifStrategique->libelle,
+                'code' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code,
+                'label' => $this->selectedObjectifStrategique->libelle,
                 'action' => 'retourVersObjectifStrategique'
             ];
         }
         
-        if ($this->selectedObjectifSpecifique) {
+        // Troisième niveau : Objectif Spécifique
+        if ($this->selectedObjectifSpecifique && $this->selectedObjectifStrategique && $this->pilier) {
             $this->breadcrumb[] = [
-                'label' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code . ' - ' . $this->selectedObjectifSpecifique->libelle,
+                'code' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code,
+                'label' => $this->selectedObjectifSpecifique->libelle,
                 'action' => 'retourVersObjectifSpecifique'
             ];
         }
         
-        if ($this->selectedAction) {
+        // Quatrième niveau : Action
+        if ($this->selectedAction && $this->selectedObjectifSpecifique && $this->selectedObjectifStrategique && $this->pilier) {
             $this->breadcrumb[] = [
-                'label' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code . '.' . $this->selectedAction->code . ' - ' . $this->selectedAction->libelle,
+                'code' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code . '.' . $this->selectedAction->code,
+                'label' => $this->selectedAction->libelle,
                 'action' => 'retourVersAction'
             ];
         }
         
-        if ($this->selectedSousAction) {
+        // Cinquième niveau : Sous-Action
+        if ($this->selectedSousAction && $this->selectedAction && $this->selectedObjectifSpecifique && $this->selectedObjectifStrategique && $this->pilier) {
             $this->breadcrumb[] = [
-                'label' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code . '.' . $this->selectedAction->code . '.' . $this->selectedSousAction->code . ' - ' . $this->selectedSousAction->libelle,
+                'code' => $this->pilier->code . '.' . $this->selectedObjectifStrategique->code . '.' . $this->selectedObjectifSpecifique->code . '.' . $this->selectedAction->code . '.' . $this->selectedSousAction->code,
+                'label' => $this->selectedSousAction->libelle,
                 'action' => null
             ];
         }
+        
+        Log::info('🔗 Breadcrumb mis à jour', [
+            'breadcrumb_count' => count($this->breadcrumb),
+            'pilier_id' => $this->pilier->id ?? 'N/A',
+            'os_id' => $this->selectedObjectifStrategique->id ?? 'N/A',
+            'osp_id' => $this->selectedObjectifSpecifique->id ?? 'N/A',
+            'action_id' => $this->selectedAction->id ?? 'N/A',
+            'sous_action_id' => $this->selectedSousAction->id ?? 'N/A'
+        ]);
     }
 
     private function sendNotification($userId, $type, $title, $message, $data = [])
