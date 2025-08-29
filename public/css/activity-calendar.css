@@ -1,0 +1,531 @@
+/* Styles pour le calendrier des activités */
+
+.calendar-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    text-align: center;
+}
+
+.calendar-day-header {
+    padding: 15px 10px;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.calendar-day-header:last-child {
+    border-right: none;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #f8f9fa;
+}
+
+.calendar-day {
+    background: white;
+    min-height: 120px;
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+/* Gestion de la hauteur selon le nombre d'activités */
+.calendar-day.has-many-activities {
+    min-height: 150px;
+}
+
+.calendar-day.has-very-many-activities {
+    min-height: 180px;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.calendar-day.other-month {
+    background: #f8f9fa;
+    color: #adb5bd;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: 2px solid #2196f3;
+    font-weight: bold;
+}
+
+.calendar-day.today .day-number {
+    color: #1976d2;
+    font-weight: bold;
+}
+
+.day-number {
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.activities-container {
+    margin-top: 5px;
+    display: grid;
+    grid-template-rows: repeat(auto-fit, minmax(20px, 1fr));
+    gap: 2px;
+    min-height: 20px;
+}
+
+.activity-item {
+    background: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 4px solid;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Gestion de la taille selon le nombre d'activités */
+.calendar-day.has-many-activities .activity-item {
+    padding: 4px 6px;
+    margin-bottom: 2px;
+}
+
+.calendar-day.has-very-many-activities .activity-item {
+    padding: 3px 5px;
+    margin-bottom: 1px;
+    font-size: 0.9em;
+}
+
+.activity-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Couleurs par statut */
+.activity-en_attente {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+}
+
+.activity-en_cours {
+    border-left-color: #007bff;
+    background: linear-gradient(135deg, #cce7ff, #b3d9ff);
+}
+
+.activity-termine {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+}
+
+.activity-bloque {
+    border-left-color: #dc3545;
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+}
+
+.activity-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Amélioration de la lisibilité pour les activités compressées */
+.activities-compressed .activity-title {
+    font-size: 10px;
+    margin-bottom: 2px;
+}
+
+.has-very-many-activities .activity-title {
+    font-size: 9px;
+    margin-bottom: 1px;
+}
+
+.activity-progress {
+    margin-top: 4px;
+}
+
+.activity-progress .progress {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+.activity-progress .progress-bar {
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Indicateurs de statut */
+.status-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 80px;
+        padding: 5px;
+    }
+    
+    .day-number {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+    
+    .activity-item {
+        padding: 4px 6px;
+        margin-bottom: 2px;
+    }
+    
+    .activity-title {
+        font-size: 10px;
+    }
+    
+    .calendar-header {
+        font-size: 12px;
+        padding: 10px 5px;
+    }
+    
+    /* Gestion mobile des activités multiples */
+    .activities-container {
+        max-height: 60px;
+    }
+    
+    .activity-count-indicator {
+        width: 16px;
+        height: 16px;
+        font-size: 8px;
+        top: 2px;
+        right: 2px;
+    }
+    
+    .more-activities-indicator {
+        font-size: 8px;
+        padding: 1px 4px;
+    }
+}
+
+/* Animation d'entrée */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.calendar-container {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Hover effects pour les boutons de navigation */
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Style pour les jours avec beaucoup d'activités */
+.calendar-day.has-many-activities {
+    background: linear-gradient(135deg, #fff8e1, #ffecb3);
+}
+
+.calendar-day.has-many-activities .day-number {
+    color: #f57c00;
+    font-weight: bold;
+}
+
+/* Indicateur de quantité d'activités */
+.activity-count-indicator {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    z-index: 5;
+}
+
+/* Gestion des activités compressées */
+.activities-compressed {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.activities-compressed .activity-item {
+    transform: scale(0.95);
+    transform-origin: left center;
+}
+
+/* Indicateur "plus d'activités" */
+.more-activities-indicator {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 9px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 2px;
+    transition: all 0.2s ease;
+}
+
+.more-activities-indicator:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* Slots vides pour maintenir l'alignement */
+.activity-slot-empty {
+    height: 20px;
+    margin-bottom: 2px;
+    opacity: 0;
+}
+
+/* Tooltip personnalisé */
+.activity-item[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.activity-item[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+    z-index: 1000;
+}
+
+/* Styles pour le diagramme de Gantt */
+.gantt-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.gantt-header {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+    color: #212529;
+    font-weight: 600;
+    text-align: center;
+}
+
+.gantt-activity-header,
+.gantt-timeline-header {
+    padding: 15px 20px;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gantt-timeline-header {
+    border-right: none;
+}
+
+.gantt-body {
+    background: #f8f9fa;
+}
+
+.gantt-row {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    border-bottom: 1px solid #e9ecef;
+    min-height: 60px;
+    align-items: center;
+}
+
+.gantt-row:nth-child(even) {
+    background: white;
+}
+
+.gantt-row:hover {
+    background: #e3f2fd;
+}
+
+.gantt-activity-info {
+    padding: 15px 20px;
+    border-right: 1px solid #e9ecef;
+}
+
+.activity-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.activity-dates {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.activity-progress {
+    display: flex;
+    gap: 8px;
+}
+
+.gantt-timeline {
+    position: relative;
+    height: 40px;
+    padding: 0 20px;
+    background: linear-gradient(90deg, transparent 0%, transparent 49%, #e9ecef 50%, transparent 51%, transparent 100%);
+    background-size: 20px 100%;
+}
+
+.gantt-bar {
+    position: absolute;
+    height: 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gantt-bar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.gantt-bar-content {
+    padding: 5px 8px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.gantt-bar-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gantt-bar-progress {
+    margin-top: 2px;
+}
+
+.gantt-bar-progress .progress {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.gantt-bar-progress .progress-bar {
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Couleurs des barres Gantt par statut */
+.gantt-bar.activity-en_attente {
+    background: linear-gradient(135deg, #ffc107, #ff8f00);
+}
+
+.gantt-bar.activity-en_cours {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.gantt-bar.activity-termine {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.gantt-bar.activity-bloque {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+/* Responsive pour le Gantt */
+@media (max-width: 768px) {
+    .gantt-header {
+        grid-template-columns: 200px 1fr;
+    }
+    
+    .gantt-row {
+        grid-template-columns: 200px 1fr;
+    }
+    
+    .gantt-activity-header,
+    .gantt-activity-info {
+        padding: 10px 15px;
+    }
+    
+    .gantt-timeline {
+        padding: 0 15px;
+    }
+    
+    .activity-name {
+        font-size: 12px;
+    }
+    
+    .activity-dates {
+        font-size: 10px;
+    }
+}

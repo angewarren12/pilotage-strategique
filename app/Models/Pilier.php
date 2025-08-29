@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class Pilier extends Model
 {
@@ -31,6 +32,14 @@ class Pilier extends Model
     public function objectifsStrategiques()
     {
         return $this->hasMany(ObjectifStrategique::class);
+    }
+
+    /**
+     * Relation avec les objectifs spécifiques via les objectifs stratégiques
+     */
+    public function objectifsSpecifiques()
+    {
+        return $this->hasManyThrough(ObjectifSpecifique::class, ObjectifStrategique::class);
     }
 
     /**
@@ -151,6 +160,33 @@ class Pilier extends Model
         $luminance = (0.299 * $r + 0.587 * $g + 0.114 * $b) / 255;
         
         return $luminance > 0.5 ? 'dark' : 'white';
+    }
+
+    /**
+     * Obtient la date d'échéance maximale parmi toutes les sous-actions de ce pilier
+     * @return string|null Date d'échéance maximale au format Y-m-d ou null si aucune
+     */
+    public function getMaxEcheanceDate()
+    {
+        try {
+            // Utiliser une requête directe pour éviter les problèmes de relations complexes
+            $maxEcheance = \DB::table('sous_actions')
+                ->join('actions', 'sous_actions.action_id', '=', 'actions.id')
+                ->join('objectif_specifiques', 'actions.objectif_specifique_id', '=', 'objectif_specifiques.id')
+                ->join('objectif_strategiques', 'objectif_specifiques.objectif_strategique_id', '=', 'objectif_strategiques.id')
+                ->where('objectif_strategiques.pilier_id', $this->id)
+                ->whereNotNull('sous_actions.date_echeance')
+                ->max('sous_actions.date_echeance');
+            
+            return $maxEcheance;
+            
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du calcul de la date d\'échéance maximale du pilier', [
+                'pilier_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     // Événements

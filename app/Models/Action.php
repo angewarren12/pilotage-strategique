@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class Action extends Model
 {
@@ -161,5 +162,29 @@ class Action extends Model
     public function scopeByOwner($query, $ownerId)
     {
         return $query->where('owner_id', $ownerId);
+    }
+
+    /**
+     * Obtient la date d'échéance maximale parmi toutes les sous-actions liées à cette action
+     * @return string|null Date d'échéance maximale au format Y-m-d ou null si aucune
+     */
+    public function getMaxEcheanceDate()
+    {
+        try {
+            // Utiliser une requête directe pour éviter les problèmes de relations complexes
+            $maxEcheance = \DB::table('sous_actions')
+                ->where('action_id', $this->id)
+                ->whereNotNull('date_echeance')
+                ->max('date_echeance');
+            
+            return $maxEcheance;
+            
+        } catch (\Exception $e) {
+            \Log::error('Erreur lors du calcul de la date d\'échéance maximale de l\'action', [
+                'action_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 }

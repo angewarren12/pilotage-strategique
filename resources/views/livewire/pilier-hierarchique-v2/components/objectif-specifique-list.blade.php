@@ -155,19 +155,22 @@
                             <th style="width: 10%;">
                                 <i class="fas fa-code me-1"></i>Code
                             </th>
-                            <th style="width: 25%;">
+                            <th style="width: 20%;">
                                 <i class="fas fa-tasks me-1"></i>Libellé
                             </th>
                             <th style="width: 15%;">
                                 <i class="fas fa-percentage me-1"></i>Progression
                             </th>
                             <th style="width: 15%;">
-                                <i class="fas fa-user me-1"></i>Responsable
+                                <i class="fas fa-calendar-alt me-1"></i>Date d'échéance
                             </th>
                             <th style="width: 15%;">
+                                <i class="fas fa-user me-1"></i>Responsable
+                            </th>
+                            <th style="width: 10%;">
                                 <i class="fas fa-list me-1"></i>Sous-Actions
                             </th>
-                            <th style="width: 20%;">
+                            <th style="width: 15%;">
                                 <i class="fas fa-cogs me-1"></i>Actions
                             </th>
                         </tr>
@@ -208,13 +211,29 @@
                                     </div>
                                 </td>
                                 <td>
+                                    @php
+                                        $maxEcheanceAction = $action->getMaxEcheanceDate();
+                                    @endphp
+                                    @if($maxEcheanceAction)
+                                        <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            {{ \Carbon\Carbon::parse($maxEcheanceAction)->format('d/m/Y') }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-light text-muted">
+                                            <i class="fas fa-calendar-times me-1"></i>
+                                            Aucune échéance
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
                                     @if($action->owner)
                                         <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">
                                             <i class="fas fa-user me-1"></i>
                                             {{ Str::limit($action->owner->name, 15) }}
                                         </span>
                                     @else
-                                        <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(4)) }}">Non assigné</span>
+                                        <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(4) }}; color: {{ $pilier->getHierarchicalColor(4) }}">Non assigné</span>
                                     @endif
                                 </td>
                                 <td>

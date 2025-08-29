@@ -772,6 +772,30 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="sous_action_type" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Type <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select @error('newSousAction.type') is-invalid @enderror" 
+                                        id="sous_action_type" 
+                                        wire:model="newSousAction.type">
+                                    <option value="normal">Normal</option>
+                                    <option value="projet">Projet</option>
+                                </select>
+                                @error('newSousAction.type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="form-text text-muted">
+                                    Type de la sous-action (Normal ou Projet)
+                                </small>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="sous_action_date_echeance" class="form-label">
                                     <i class="fas fa-calendar me-1"></i>Date d'échéance <span class="text-danger">*</span>
                                 </label>
@@ -854,17 +878,7 @@
                     </div>
                     @endif
                     
-                    <!-- Debug Info -->
-                    @if($editingSousAction)
-                    <div class="alert alert-info mb-3">
-                        <strong>Debug :</strong> 
-                        ID: {{ $editingSousAction->id }}, 
-                        Code: {{ $editingSousAction->code }}, 
-                        Libellé: {{ $editingSousAction->libelle }}, 
-                        Propriétaire: {{ $editingSousAction->owner_id }},
-                        Taux: {{ $editingSousAction->taux_avancement }}%
-                    </div>
-                    @endif
+                    
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -938,6 +952,30 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
+                                <label for="edit_sous_action_type" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Type <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select @error('editSousActionType') is-invalid @enderror" 
+                                        id="edit_sous_action_type" 
+                                        wire:model="editSousActionType">
+                                    <option value="normal">Normal</option>
+                                    <option value="projet">Projet</option>
+                                </select>
+                                @error('editSousActionType')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="form-text text-muted">
+                                    Type de la sous-action (Normal ou Projet)
+                                </small>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
                                 <label for="edit_sous_action_date_echeance" class="form-label">
                                     <i class="fas fa-calendar me-1"></i>Date d'échéance <span class="text-danger">*</span>
                                 </label>
@@ -956,21 +994,38 @@
                                 <label for="edit_sous_action_taux" class="form-label">
                                     <i class="fas fa-percentage me-1"></i>Taux d'avancement
                                 </label>
-                                <input type="number" 
-                                       class="form-control @error('editSousActionTauxAvancement') is-invalid @enderror" 
-                                       id="edit_sous_action_taux" 
-                                       wire:model="editSousActionTauxAvancement"
-                                       min="0" 
-                                       max="100" 
-                                       step="0.1"
-                                       readonly
-                                       style="background-color: #f8f9fa; cursor: not-allowed;">
-                                @error('editSousActionTauxAvancement')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                                <small class="form-text text-muted">
-                                    Taux actuel (0-100%)
-                                </small>
+                                @if($editSousActionType === 'projet')
+                                    <!-- Mode lecture seule pour les projets -->
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="edit_sous_action_taux" 
+                                           value="{{ $editSousActionTauxAvancement }}"
+                                           min="0" 
+                                           max="100" 
+                                           step="0.1"
+                                           readonly
+                                           style="background-color: #e9ecef; cursor: not-allowed;">
+                                    <small class="form-text text-warning">
+                                        <i class="fas fa-lock me-1"></i>Progression automatique (Projet)
+                                    </small>
+                                @else
+                                    <!-- Mode lecture seule pour toutes les sous-actions (édition via slider) -->
+                                    <input type="number" 
+                                           class="form-control @error('editSousActionTauxAvancement') is-invalid @enderror" 
+                                           id="edit_sous_action_taux" 
+                                           wire:model="editSousActionTauxAvancement"
+                                           min="0" 
+                                           max="100" 
+                                           step="0.1"
+                                           readonly
+                                           style="background-color: #f8f9fa; cursor: not-allowed;">
+                                    @error('editSousActionTauxAvancement')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="form-text text-muted">
+                                        Taux actuel (0-100%) - Modifiable via le slider dans la liste
+                                    </small>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -998,4 +1053,804 @@
     </div>
 </div>
 <div class="modal-backdrop fade show"></div>
+@endif
+
+<!-- Modal de gestion des activités -->
+@if($showActivitiesModal && $selectedSousActionForActivities)
+<div class="modal fade show d-block activities-modal" tabindex="-1" aria-labelledby="activitiesModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1050;">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+                            <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: white;">
+                    <h5 class="modal-title" id="activitiesModalLabel">
+                        <i class="fas fa-tasks me-2"></i>
+                        Gestion des Activités - {{ $pilier->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->objectifStrategique->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->code }}.{{ $selectedSousActionForActivities->action->code }}.{{ $selectedSousActionForActivities->code }}  {{ $selectedSousActionForActivities->libelle }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeActivitiesModal"></button>
+                </div>
+            
+            <div class="modal-body">
+                <!-- Informations du projet -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, {{ $pilier->getHierarchicalColor(5) }}, {{ $pilier->getHierarchicalColor(4) }});">
+                        <h6 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Informations du Projet
+                        </h6>
+                    </div>
+                    <div class="card-body project-info-compact">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <!-- Informations principales à gauche -->
+                            <div class="d-flex align-items-center">
+                                <div class="me-4">
+                                    <i class="fas fa-tag fa-2x text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ $selectedSousActionForActivities->libelle }}</h6>
+                                    <div class="small text-muted">
+                                        Code: {{ $pilier->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->objectifStrategique->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->code }}.{{ $selectedSousActionForActivities->action->code }}.{{ $selectedSousActionForActivities->code }} | 
+                                        Type: <span class="badge bg-info">{{ ucfirst($selectedSousActionForActivities->type) }}</span>
+                                        @if($selectedSousActionForActivities->date_echeance)
+                                            | Échéance: <span class="badge bg-warning text-dark">{{ \Carbon\Carbon::parse($selectedSousActionForActivities->date_echeance)->format('d/m/Y') }}</span>
+                                        @endif
+                                    </div>
+                                    @if($selectedSousActionForActivities->description)
+                                    <div class="mt-2 small text-muted">
+                                        <i class="fas fa-align-left me-1"></i>{{ Str::limit($selectedSousActionForActivities->description, 80) }}
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <!-- Progression circulaire à droite -->
+                            <div class="text-center">
+                                <div class="progress-circle" style="--progress: {{ $selectedSousActionForActivities->taux_avancement }}%;">
+                                    <svg width="60" height="60" viewBox="0 0 60 60">
+                                        <circle cx="30" cy="30" r="25" fill="none" stroke="#e9ecef" stroke-width="4"/>
+                                        <circle cx="30" cy="30" r="25" fill="none" stroke="{{ $pilier->getHierarchicalColor(5) }}" stroke-width="4" 
+                                                stroke-dasharray="157" stroke-dashoffset="{{ 157 - (157 * $selectedSousActionForActivities->taux_avancement / 100) }}"/>
+                                    </svg>
+                                    <div class="progress-text">
+                                        <span class="progress-percentage fw-bold">{{ number_format($selectedSousActionForActivities->taux_avancement, 1) }}%</span>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-tasks me-1"></i>{{ $selectedSousActionForActivities->activities->count() }} activité(s)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulaire de création d'activité -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-gradient-success text-white" style="background: linear-gradient(135deg, #28a745, #20c997); cursor: pointer;" wire:click="$toggle('showCreateActivityForm')" title="{{ $showCreateActivityForm ? 'Cliquer pour replier le formulaire' : 'Cliquer pour déplier le formulaire' }}">
+                        <h6 class="mb-0 d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-plus me-2"></i>Nouvelle Activité</span>
+                            <i class="fas {{ $showCreateActivityForm ? 'fa-chevron-up' : 'fa-chevron-down' }} transition-transform"></i>
+                        </h6>
+                    </div>
+                    @if($showCreateActivityForm)
+                    <div class="card-body bg-light">
+                        <form wire:submit.prevent="createActivity">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="activity_titre" class="form-label">Titre <span class="text-danger">*</span></label>
+                                        <input type="text" 
+                                               class="form-control @error('newActivity.titre') is-invalid @enderror" 
+                                               id="activity_titre" 
+                                               wire:model="newActivity.titre"
+                                               placeholder="Titre de l'activité">
+                                        @error('newActivity.titre')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="activity_owner" class="form-label">Responsable <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('newActivity.owner_id') is-invalid @enderror" 
+                                                id="activity_owner" 
+                                                wire:model="newActivity.owner_id">
+                                            <option value="">Sélectionner un responsable</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('newActivity.owner_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="activity_description" class="form-label">Description</label>
+                                <textarea class="form-control @error('newActivity.description') is-invalid @enderror" 
+                                          id="activity_description" 
+                                          wire:model="newActivity.description"
+                                          rows="3"
+                                          placeholder="Description de l'activité"></textarea>
+                                @error('newActivity.description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="activity_date_debut" class="form-label">
+                                            <i class="fas fa-calendar-alt me-1"></i>Date de début <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" 
+                                               class="form-control @error('newActivity.date_debut') is-invalid @enderror" 
+                                               id="activity_date_debut" 
+                                               wire:model="newActivity.date_debut">
+                                        @error('newActivity.date_debut')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="form-text text-muted">
+                                            Date de début de l'activité
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="activity_date_fin" class="form-label">
+                                            <i class="fas fa-calendar-check me-1"></i>Date de fin <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="date" 
+                                               class="form-control @error('newActivity.date_fin') is-invalid @enderror" 
+                                               id="activity_date_fin" 
+                                               wire:model="newActivity.date_fin">
+                                        @error('newActivity.date_fin')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="form-text text-muted">
+                                            @if($selectedSousActionForActivities->date_echeance)
+                                                Ne doit pas dépasser l'échéance du projet : {{ \Carbon\Carbon::parse($selectedSousActionForActivities->date_echeance)->format('d/m/Y') }}
+                                            @else
+                                                Date de fin de l'activité
+                                            @endif
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="activity_statut" class="form-label">Statut <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('newActivity.statut') is-invalid @enderror" 
+                                                id="activity_statut" 
+                                                wire:model="newActivity.statut">
+                                            <option value="en_attente">En attente</option>
+                                            <option value="en_cours">En cours</option>
+                                            <option value="termine">Terminé</option>
+                                            <option value="bloque">Bloqué</option>
+                                        </select>
+                                        @error('newActivity.statut')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="activity_progression" class="form-label">Progression initiale <span class="text-danger">*</span></label>
+                                        <input type="number" 
+                                               class="form-control @error('newActivity.taux_avancement') is-invalid @enderror" 
+                                               id="activity_progression" 
+                                               wire:model="newActivity.taux_avancement"
+                                               min="0" 
+                                               max="100" 
+                                               step="0.1">
+                                        @error('newActivity.taux_avancement')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-success btn-lg" style="border-radius: 25px; padding: 12px 30px;">
+                                    <i class="fas fa-plus me-2"></i>Créer l'Activité
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+
+                <!-- Liste des activités existantes -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-info text-white" style="background: linear-gradient(135deg, #17a2b8, #6f42c1);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Activités du Projet ({{ $selectedSousActionForActivities->activities->count() }})
+                            </h6>
+                            <div class="btn-group" role="group">
+                                <button type="button" 
+                                        class="btn btn-light btn-sm me-2" 
+                                        wire:click="openActivityCalendarModal"
+                                        title="Voir le calendrier des activités"
+                                        style="border-radius: 20px; padding: 8px 16px;">
+                                    <i class="fas fa-calendar-alt me-2"></i>📅 Calendrier
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-warning btn-sm" 
+                                        wire:click="openGanttChartModal"
+                                        title="Voir le diagramme de Gantt"
+                                        style="border-radius: 20px; padding: 8px 16px;">
+                                    <i class="fas fa-chart-bar me-2"></i>📊 Gantt
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if($selectedSousActionForActivities->activities->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th><i class="fas fa-heading me-1"></i>Titre</th>
+                                            <th><i class="fas fa-user me-1"></i>Responsable</th>
+                                            <th><i class="fas fa-calendar me-1"></i>Dates</th>
+                                            <th><i class="fas fa-info-circle me-1"></i>Statut</th>
+                                            <th><i class="fas fa-percentage me-1"></i>Progression</th>
+                                            <th><i class="fas fa-cogs me-1"></i>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($selectedSousActionForActivities->activities as $activity)
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ $activity->titre }}</strong>
+                                                    @if($activity->description)
+                                                        <br><small class="text-muted">{{ Str::limit($activity->description, 50) }}</small>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($activity->owner)
+                                                        <span class="badge bg-secondary">{{ $activity->owner->name }}</span>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <div class="small">
+                                                        <div><strong>Début :</strong> {{ \Carbon\Carbon::parse($activity->date_debut)->format('d/m/Y') }}</div>
+                                                        <div><strong>Fin :</strong> {{ \Carbon\Carbon::parse($activity->date_fin)->format('d/m/Y') }}</div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge" style="background-color: {{ $activity->statut_color }}; color: white;">
+                                                        {{ ucfirst(str_replace('_', ' ', $activity->statut)) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center justify-content-center">
+                                                        <div class="progress me-2" style="width: 60px; height: 8px;">
+                                                            <div class="progress-bar" 
+                                                                 role="progressbar" 
+                                                                 style="width: {{ $activity->taux_avancement }}%; background-color: {{ $pilier->getHierarchicalColor(5) }};"
+                                                                 aria-valuenow="{{ $activity->taux_avancement }}" 
+                                                                 aria-valuemin="0" 
+                                                                 aria-valuemax="100">
+                                                            </div>
+                                                        </div>
+                                                        <span class="small fw-bold">{{ number_format($activity->taux_avancement, 1) }}%</span>
+                                                    </div>
+                                                    <!-- Slider de progression modifiable -->
+                                                    <div class="mt-1 text-center">
+                                                        <input type="range" 
+                                                               class="form-range form-range-sm" 
+                                                               min="0" 
+                                                               max="100" 
+                                                               value="{{ $activity->taux_avancement }}"
+                                                               wire:change="updateActivityProgress({{ $activity->id }}, $event.target.value)"
+                                                               style="width: 80px; height: 20px;">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        @if($canEditActivity($activity))
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-primary btn-sm" 
+                                                                    wire:click="openEditActivityModal({{ $activity->id }})"
+                                                                    title="Modifier l'activité"
+                                                                    style="border-radius: 20px;">
+                                                                <i class="fas fa-edit me-1"></i>
+                                                            </button>
+                                                        @endif
+                                                        @if($canDeleteActivity($activity))
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-danger btn-sm" 
+                                                                    wire:click="deleteActivity({{ $activity->id }})"
+                                                                    onclick="if(!confirm('Êtes-vous sûr de vouloir supprimer cette activité ?')) return false;"
+                                                                    title="Supprimer l'activité"
+                                                                    style="border-radius: 20px;">
+                                                                <i class="fas fa-trash me-1"></i>
+                                                            </button>
+                                                        @endif
+                                                        @if(!$canEditActivity($activity) && !$canDeleteActivity($activity))
+                                                            <span class="text-muted small">
+                                                                <i class="fas fa-lock me-1"></i>Actions non autorisées
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-tasks fa-4x text-muted opacity-50"></i>
+                                </div>
+                                <h5 class="text-muted mb-2">Aucune activité créée</h5>
+                                <p class="text-muted">Commencez par créer votre première activité pour ce projet</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-light text-dark fs-6">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Les activités permettront de suivre la progression du projet
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            
+                            <div class="modal-footer bg-light border-top">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <div class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Projet créé le {{ \Carbon\Carbon::parse($selectedSousActionForActivities->created_at)->format('d/m/Y') }}
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-lg" wire:click="closeActivitiesModal" style="border-radius: 25px; padding: 10px 25px;">
+                            <i class="fas fa-times me-2"></i>Fermer
+                        </button>
+                    </div>
+                </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" style="z-index: 1040;"></div>
+</div>
+@endif
+
+<!-- Modal d'édition d'activité -->
+@if($editingActivity)
+<div class="modal fade show d-block" tabindex="-1" aria-labelledby="editActivityModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editActivityModalLabel">
+                    <i class="fas fa-edit me-2"></i>
+                    Modifier l'Activité : {{ $editingActivity->titre }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" wire:click="closeEditActivityModal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form wire:submit.prevent="updateActivity">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_activity_titre" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Titre <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control @error('editActivityData.titre') is-invalid @enderror" 
+                                       id="edit_activity_titre" 
+                                       wire:model="editActivityData.titre"
+                                       placeholder="Titre de l'activité">
+                                @error('editActivityData.titre')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_activity_owner" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Responsable <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select @error('editActivityData.owner_id') is-invalid @enderror" 
+                                        id="edit_activity_owner" 
+                                        wire:model="editActivityData.owner_id">
+                                    <option value="">Sélectionner un responsable</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('editActivityData.owner_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_activity_description" class="form-label">
+                            <i class="fas fa-align-left me-1"></i>Description
+                        </label>
+                        <textarea class="form-control @error('editActivityData.description') is-invalid @enderror" 
+                                  id="edit_activity_description" 
+                                  wire:model="editActivityData.description"
+                                  rows="3"
+                                  placeholder="Description de l'activité"></textarea>
+                        @error('editActivityData.description')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_activity_date_debut" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i>Date de début <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" 
+                                       class="form-control @error('editActivityData.date_debut') is-invalid @enderror" 
+                                       id="edit_activity_date_debut" 
+                                       wire:model="editActivityData.date_debut">
+                                @error('editActivityData.date_debut')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="form-text text-muted">
+                                    Date de début de l'activité
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_activity_date_fin" class="form-label">
+                                    <i class="fas fa-calendar-check me-1"></i>Date de fin <span class="text-danger">*</span>
+                                </label>
+                                <input type="date" 
+                                       class="form-control @error('editActivityData.date_fin') is-invalid @enderror" 
+                                       id="edit_activity_date_fin" 
+                                       wire:model="editActivityData.date_fin">
+                                @error('editActivityData.date_fin')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <small class="form-text text-muted">
+                                    @if($selectedSousActionForActivities->date_echeance)
+                                        Ne doit pas dépasser l'échéance du projet : {{ \Carbon\Carbon::parse($selectedSousActionForActivities->date_echeance)->format('d/m/Y') }}
+                                    @else
+                                        Date de fin de l'activité
+                                    @endif
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_activity_statut" class="form-label">
+                                    <i class="fas fa-info-circle me-1"></i>Statut <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select @error('editActivityData.statut') is-invalid @enderror" 
+                                        id="edit_activity_statut" 
+                                        wire:model="editActivityData.statut">
+                                    <option value="en_attente">En attente</option>
+                                    <option value="en_cours">En cours</option>
+                                    <option value="termine">Terminé</option>
+                                    <option value="bloque">Bloqué</option>
+                                </select>
+                                @error('editActivityData.statut')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_activity_progression" class="form-label">
+                                    <i class="fas fa-percentage me-1"></i>Progression <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" 
+                                       class="form-control @error('editActivityData.taux_avancement') is-invalid @enderror" 
+                                       id="edit_activity_progression" 
+                                       wire:model="editActivityData.taux_avancement"
+                                       min="0" 
+                                       max="100" 
+                                       step="0.1">
+                                @error('editActivityData.taux_avancement')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary me-2" wire:click="closeEditActivityModal">
+                            <i class="fas fa-times me-2"></i>Annuler
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Mettre à jour
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+</div>
+@endif
+
+<!-- Modal du diagramme de Gantt -->
+@if($showGanttChartModal && $selectedSousActionForActivities)
+<div class="modal fade show d-block" tabindex="-1" aria-labelledby="ganttChartModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #ffc107; color: #212529;">
+                <h4 class="modal-title" id="ganttChartModalLabel">
+                    <i class="fas fa-chart-bar me-3"></i>
+                    📊 Diagramme de Gantt - {{ $pilier->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->objectifStrategique->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->code }}.{{ $selectedSousActionForActivities->action->code }}.{{ $selectedSousActionForActivities->code }} {{ $selectedSousActionForActivities->libelle }}
+                </h4>
+                <button type="button" class="btn-close" wire:click="closeGanttChartModal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Navigation du diagramme de Gantt -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-outline-warning me-3" wire:click="previousGanttPeriod">
+                                <i class="fas fa-chevron-left me-1"></i>Période précédente
+                            </button>
+                            <h3 class="mb-0 fw-bold text-warning">
+                                {{ \Carbon\Carbon::createFromDate($ganttYear, $ganttMonth, 1)->locale('fr')->monthName }} {{ $ganttYear }}
+                            </h3>
+                            <button type="button" class="btn btn-outline-warning ms-3" wire:click="nextGanttPeriod">
+                                Période suivante<i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-outline-secondary" wire:click="goToCurrentGanttPeriod">
+                            <i class="fas fa-calendar-day me-1"></i>Aujourd'hui
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Légende des statuts -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="fas fa-palette me-2"></i>Légende des Statuts</h6>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-warning me-2"></div>
+                                        <span class="small">En attente</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-primary me-2"></div>
+                                        <span class="small">En cours</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-success me-2"></div>
+                                        <span class="small">Terminé</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-danger me-2"></div>
+                                        <span class="small">Bloqué</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagramme de Gantt -->
+                <div class="gantt-container">
+                    <div class="gantt-header">
+                        <div class="gantt-activity-header">Activité</div>
+                        <div class="gantt-timeline-header">Timeline</div>
+                    </div>
+                    
+                    <div class="gantt-body">
+                        @foreach($selectedSousActionForActivities->activities->sortBy('date_debut') as $activity)
+                            <div class="gantt-row">
+                                <div class="gantt-activity-info">
+                                    <div class="activity-name">{{ $activity->titre }}</div>
+                                    <div class="activity-dates">
+                                        {{ \Carbon\Carbon::parse($activity->date_debut)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($activity->date_fin)->format('d/m/Y') }}
+                                    </div>
+                                    <div class="activity-progress">
+                                        <span class="badge bg-{{ $activity->statut_color }}">{{ ucfirst(str_replace('_', ' ', $activity->statut)) }}</span>
+                                        <span class="badge bg-info">{{ number_format($activity->taux_avancement, 1) }}%</span>
+                                    </div>
+                                </div>
+                                <div class="gantt-timeline">
+                                    <div class="gantt-bar activity-{{ $activity->statut }}" 
+                                         style="left: {{ $this->calculateGanttBarPosition($activity) }}%; width: {{ $this->calculateGanttBarWidth($activity) }}%;"
+                                         title="{{ $activity->titre }} - {{ ucfirst(str_replace('_', ' ', $activity->statut)) }} - {{ number_format($activity->taux_avancement, 1) }}%"
+                                         wire:click="openEditActivityModal({{ $activity->id }})">
+                                        <div class="gantt-bar-content">
+                                            <span class="gantt-bar-title">{{ Str::limit($activity->titre, 20) }}</span>
+                                            <div class="gantt-bar-progress">
+                                                <div class="progress" style="height: 4px;">
+                                                    <div class="progress-bar" style="width: {{ $activity->taux_avancement }}%; background-color: white;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Cliquez sur une barre d'activité pour la modifier
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-lg" wire:click="closeGanttChartModal" style="border-radius: 25px; padding: 10px 25px;">
+                        <i class="fas fa-times me-2"></i>Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+</div>
+@endif
+
+<!-- Modal du calendrier des activités -->
+@if($showActivityCalendarModal && $selectedSousActionForActivities)
+<div class="modal fade show d-block" tabindex="-1" aria-labelledby="activityCalendarModalLabel" aria-hidden="true" wire:ignore.self style="z-index: 1060;">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: white;">
+                <h4 class="modal-title" id="activityCalendarModalLabel">
+                    <i class="fas fa-calendar-alt me-3"></i>
+                    📅 Calendrier des Activités - {{ $pilier->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->objectifStrategique->code }}.{{ $selectedSousActionForActivities->action->objectifSpecifique->code }}.{{ $selectedSousActionForActivities->action->code }}.{{ $selectedSousActionForActivities->code }} {{ $selectedSousActionForActivities->libelle }}
+                </h4>
+                <button type="button" class="btn-close btn-close-white" wire:click="closeActivityCalendarModal"></button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Navigation du calendrier -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-outline-primary me-3" wire:click="previousMonth">
+                                <i class="fas fa-chevron-left me-1"></i>Mois précédent
+                            </button>
+                            <h3 class="mb-0 fw-bold text-primary">
+                                {{ \Carbon\Carbon::createFromDate($calendarYear, $calendarMonth, 1)->locale('fr')->monthName }} {{ $calendarYear }}
+                            </h3>
+                            <button type="button" class="btn btn-outline-primary ms-3" wire:click="nextMonth">
+                                Mois suivant<i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-outline-secondary" wire:click="goToCurrentMonth">
+                            <i class="fas fa-calendar-day me-1"></i>Aujourd'hui
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Légende des statuts -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="mb-3"><i class="fas fa-palette me-2"></i>Légende des Statuts</h6>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-warning me-2"></div>
+                                        <span class="small">En attente</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-primary me-2"></div>
+                                        <span class="small">En cours</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-success me-2"></div>
+                                        <span class="small">Terminé</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <div class="status-indicator bg-danger me-2"></div>
+                                        <span class="small">Bloqué</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendrier -->
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <div class="calendar-day-header">Lun</div>
+                        <div class="calendar-day-header">Mar</div>
+                        <div class="calendar-day-header">Mer</div>
+                        <div class="calendar-day-header">Jeu</div>
+                        <div class="calendar-day-header">Ven</div>
+                        <div class="calendar-day-header">Sam</div>
+                        <div class="calendar-day-header">Dim</div>
+                    </div>
+                    
+                    <div class="calendar-grid">
+                        @foreach($calendarDays as $day)
+                            @php
+                                $activityCount = $day['activities']->count();
+                                $dayClasses = $day['isCurrentMonth'] ? '' : 'other-month';
+                                $dayClasses .= $day['isToday'] ? ' today' : '';
+                                
+                                // Calculer la hauteur nécessaire basée sur le nombre max de positions
+                                $maxPositions = collect($calendarDays)->map(function($d) { return count($d['activityPositions']); })->max() ?: 1;
+                                $dayHeight = max(120, $maxPositions * 25 + 40); // 25px par position + 40px pour le header
+                            @endphp
+                            
+                            <div class="calendar-day {{ $dayClasses }}" style="min-height: {{ $dayHeight }}px;">
+                                <div class="day-number">{{ $day['day'] }}</div>
+                                
+                                @if($activityCount > 0)
+                                    <!-- Indicateur de quantité d'activités -->
+                                    @if($activityCount > 2)
+                                        <div class="activity-count-indicator" title="{{ $activityCount }} activité(s)">
+                                            {{ $activityCount > 9 ? '9+' : $activityCount }}
+                                        </div>
+                                    @endif
+                                    
+                                    <div class="activities-container">
+                                        @foreach($day['activityPositions'] as $position => $activity)
+                                            @if($activity)
+                                                <div class="activity-item activity-{{ $activity->statut }}" 
+                                                     style="grid-row: {{ $position + 1 }};"
+                                                     title="{{ $activity->titre }} - {{ ucfirst(str_replace('_', ' ', $activity->statut)) }} - {{ number_format($activity->taux_avancement, 1) }}%"
+                                                     wire:click="openEditActivityModal({{ $activity->id }})">
+                                                    <div class="activity-title">{{ Str::limit($activity->titre, 12) }}</div>
+                                                    <div class="activity-progress">
+                                                        <div class="progress" style="height: 3px;">
+                                                            <div class="progress-bar" style="width: {{ $activity->taux_avancement }}%; background-color: {{ $pilier->getHierarchicalColor(5) }};"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <!-- Slot vide pour maintenir l'alignement -->
+                                                <div class="activity-slot-empty" style="grid-row: {{ $position + 1 }};"></div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Cliquez sur une activité pour la modifier
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-lg" wire:click="closeActivityCalendarModal" style="border-radius: 25px; padding: 10px 25px;">
+                        <i class="fas fa-times me-2"></i>Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show" style="z-index: 1050;"></div>
+</div>
 @endif

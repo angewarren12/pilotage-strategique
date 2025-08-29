@@ -65,7 +65,8 @@ class PilierHierarchiqueV2 extends Component
         'description' => '',
         'owner_id' => '',
         'date_echeance' => '',
-        'taux_avancement' => 0
+        'taux_avancement' => 0,
+        'type' => 'normal'
     ];
 
     // Éléments à éditer
@@ -711,6 +712,7 @@ class PilierHierarchiqueV2 extends Component
             $this->editSousActionLibelle = $this->editingSousAction->libelle;
             $this->editSousActionDescription = $this->editingSousAction->description;
             $this->editSousActionOwnerId = $this->editingSousAction->owner_id;
+            $this->editSousActionType = $this->editingSousAction->type ?? 'normal';
             $this->editSousActionDateEcheance = $this->editingSousAction->date_echeance ? $this->editingSousAction->date_echeance->format('Y-m-d') : '';
             $this->editSousActionTauxAvancement = $this->editingSousAction->taux_avancement ?? 0;
             
@@ -746,6 +748,7 @@ class PilierHierarchiqueV2 extends Component
         $this->editSousActionLibelle = '';
         $this->editSousActionDescription = '';
         $this->editSousActionOwnerId = '';
+        $this->editSousActionType = 'normal';
         $this->editSousActionDateEcheance = '';
         $this->editSousActionTauxAvancement = 0;
     }
@@ -763,7 +766,8 @@ class PilierHierarchiqueV2 extends Component
                 'newSousAction.code' => 'required|string|max:10',
                 'newSousAction.libelle' => 'required|string|max:255',
                 'newSousAction.owner_id' => 'required|exists:users,id',
-                'newSousAction.date_echeance' => 'nullable|date|after_or_equal:today'
+                'newSousAction.date_echeance' => 'nullable|date|after_or_equal:today',
+                'newSousAction.type' => 'required|in:normal,projet'
             ]);
             
             // Créer la sous-action avec DB Query Builder
@@ -773,6 +777,7 @@ class PilierHierarchiqueV2 extends Component
                 'description' => $this->newSousAction['description'],
                 'owner_id' => $this->newSousAction['owner_id'],
                 'action_id' => $this->selectedAction->id,
+                'type' => $this->newSousAction['type'],
                 'taux_avancement' => 0, // Taux initial à 0%
                 'date_echeance' => $this->newSousAction['date_echeance'] ?: null,
                 'created_at' => now(),
@@ -832,7 +837,8 @@ class PilierHierarchiqueV2 extends Component
                 'editSousActionCode' => 'required|string|max:10',
                 'editSousActionLibelle' => 'required|string|max:255',
                 'editSousActionOwnerId' => 'required|exists:users,id',
-                'editSousActionDateEcheance' => 'nullable|date'
+                'editSousActionDateEcheance' => 'nullable|date',
+                'editSousActionType' => 'required|in:normal,projet'
             ]);
             
             // Vérifier les permissions
@@ -857,6 +863,7 @@ class PilierHierarchiqueV2 extends Component
                     'libelle' => $this->editSousActionLibelle,
                     'description' => $this->editSousActionDescription,
                     'owner_id' => $this->editSousActionOwnerId,
+                    'type' => $this->editSousActionType,
                     'date_echeance' => $this->editSousActionDateEcheance ?: null,
                     'updated_at' => now()
                 ]);
@@ -912,7 +919,8 @@ class PilierHierarchiqueV2 extends Component
             'description' => '',
             'owner_id' => '',
             'date_echeance' => '',
-            'taux_avancement' => 0
+            'taux_avancement' => 0,
+            'type' => 'normal'
         ];
     }
 
@@ -1859,6 +1867,8 @@ class PilierHierarchiqueV2 extends Component
             'canCreateSousAction' => fn() => $this->canCreateSousAction(),
             'canEditSousAction' => fn($sousAction) => $this->canEditSousAction($sousAction),
             'canDeleteSousAction' => fn($sousAction) => $this->canDeleteSousAction($sousAction),
+            'canEditActivity' => fn($activity) => $this->canEditActivity($activity),
+            'canDeleteActivity' => fn($activity) => $this->canDeleteActivity($activity),
             'users' => User::all(), // Ajout de la liste des utilisateurs
         ]);
     }
@@ -1879,6 +1889,12 @@ class PilierHierarchiqueV2 extends Component
             $sousAction = SousAction::findOrFail($sousActionId);
             if (!$this->canEditSousAction($sousAction)) {
                 $this->dispatch('toast', 'error', 'Permission refusée');
+                return;
+            }
+
+            // Vérifier le type de sous-action
+            if (($sousAction->type ?? 'normal') === 'projet') {
+                $this->dispatch('toast', 'error', 'Impossible de modifier manuellement la progression d\'un projet. La progression est calculée automatiquement.');
                 return;
             }
 
@@ -1952,6 +1968,827 @@ class PilierHierarchiqueV2 extends Component
     }
 
     /**
+     * Calcul automatique de la progression d'un projet
+     * Cette méthode sera appelée automatiquement pour les sous-actions de type "projet"
+     */
+    public function calculateProjectProgress($sousActionId)
+    {
+        try {
+            $sousAction = SousAction::findOrFail($sousActionId);
+            
+            // Vérifier que c'est bien un projet
+            if (($sousAction->type ?? 'normal') !== 'projet') {
+                Log::warning('⚠️ Tentative de calcul de progression sur une sous-action non-projet', [
+                    'sous_action_id' => $sousActionId,
+                    'type' => $sousAction->type
+                ]);
+                return;
+            }
+
+            // Logique de calcul automatique de la progression
+            // Pour l'instant, on peut utiliser une logique simple
+            // À adapter selon vos besoins métier
+            
+            $newProgress = $this->calculateAutomaticProgress($sousAction);
+            
+            if ($newProgress !== null && $newProgress != $sousAction->taux_avancement) {
+                // Mettre à jour la progression
+                $updateData = ['taux_avancement' => $newProgress];
+                
+                // Gestion de la date de réalisation et notification
+                if ($newProgress == 100) {
+                    if (!$sousAction->date_realisation) {
+                        $updateData['date_realisation'] = now();
+                        
+                        // Notifier le propriétaire de la sous-action projet qu'elle est terminée
+                        if ($sousAction->owner_id) {
+                            $this->sendNotification(
+                                $sousAction->owner_id,
+                                'projet_completed',
+                                'Projet terminé ! 🎯',
+                                "Félicitations ! Votre projet '{$sousAction->libelle}' a été terminé avec succès !",
+                                [
+                                    'sous_action_id' => $sousAction->id,
+                                    'sous_action_libelle' => $sousAction->libelle,
+                                    'completion_date' => now()->toISOString(),
+                                    'type' => 'projet'
+                                ]
+                            );
+                            
+                            Log::info('✅ Notification de complétion de projet envoyée au propriétaire', [
+                                'sous_action_id' => $sousAction->id,
+                                'owner_id' => $sousAction->owner_id,
+                                'libelle' => $sousAction->libelle,
+                                'type' => 'projet'
+                            ]);
+                        }
+                    }
+                } else {
+                    $updateData['date_realisation'] = null;
+                }
+
+                // Mise à jour avec DB Query Builder
+                $updated = DB::table('sous_actions')
+                    ->where('id', $sousActionId)
+                    ->update($updateData);
+
+                if ($updated) {
+                    // Mise à jour des taux parents
+                    $this->updateParentProgressRates($sousAction);
+                    
+                    Log::info('✅ Progression automatique du projet calculée', [
+                        'sous_action_id' => $sousActionId,
+                        'ancien_taux' => $sousAction->taux_avancement,
+                        'nouveau_taux' => $newProgress
+                    ]);
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors du calcul automatique de la progression du projet', [
+                'sous_action_id' => $sousActionId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Logique de calcul automatique de la progression
+     * À personnaliser selon vos besoins métier
+     */
+    private function calculateAutomaticProgress($sousAction)
+    {
+        // Exemple de logique : progression basée sur la date d'échéance
+        if ($sousAction->date_echeance) {
+            $now = now();
+            $echeance = \Carbon\Carbon::parse($sousAction->date_echeance);
+            $creation = \Carbon\Carbon::parse($sousAction->created_at);
+            
+            $totalDays = $creation->diffInDays($echeance);
+            $elapsedDays = $creation->diffInDays($now);
+            
+            if ($totalDays > 0) {
+                $progress = min(100, max(0, ($elapsedDays / $totalDays) * 100));
+                return round($progress, 2);
+            }
+        }
+        
+        // Si pas de date d'échéance, retourner la progression actuelle
+        return $sousAction->taux_avancement;
+    }
+
+    /**
+     * Ouvrir le modal de gestion des activités pour une sous-action
+     */
+    public function openActivitiesModal($sousActionId)
+    {
+        $this->selectedSousActionForActivities = SousAction::with('activities.owner')->findOrFail($sousActionId);
+        $this->showActivitiesModal = true;
+        $this->resetNewActivity();
+        
+        Log::info('🔓 Modal des activités ouvert', [
+            'sous_action_id' => $sousActionId,
+            'type' => $this->selectedSousActionForActivities->type
+        ]);
+    }
+
+    /**
+     * Fermer le modal de gestion des activités
+     */
+    public function closeActivitiesModal()
+    {
+        $this->showActivitiesModal = false;
+        $this->selectedSousActionForActivities = null;
+        $this->resetNewActivity();
+        $this->editingActivity = null;
+    }
+
+    /**
+     * Réinitialiser le formulaire de nouvelle activité
+     */
+    public function resetNewActivity()
+    {
+        $this->newActivity = [
+            'titre' => '',
+            'description' => '',
+            'date_debut' => '',
+            'date_fin' => '',
+            'statut' => 'en_attente',
+            'taux_avancement' => 0,
+            'owner_id' => auth()->id(),
+            'tags' => []
+        ];
+    }
+
+    /**
+     * Créer une nouvelle activité
+     */
+    public function createActivity()
+    {
+        $this->validate([
+            'newActivity.titre' => 'required|string|max:255',
+            'newActivity.description' => 'nullable|string',
+            'newActivity.date_debut' => 'required|date',
+            'newActivity.date_fin' => 'required|date|after:newActivity.date_debut',
+            'newActivity.statut' => 'required|in:en_attente,en_cours,termine,bloque',
+            'newActivity.taux_avancement' => 'required|numeric|min:0|max:100',
+            'newActivity.owner_id' => 'required|exists:users,id',
+        ]);
+
+        // Validation supplémentaire : la date de fin ne doit pas dépasser l'échéance du projet
+        if ($this->selectedSousActionForActivities->date_echeance) {
+            $this->validate([
+                'newActivity.date_fin' => 'before_or_equal:' . $this->selectedSousActionForActivities->date_echeance,
+            ], [
+                'newActivity.date_fin.before_or_equal' => 'La date de fin de l\'activité ne peut pas dépasser l\'échéance du projet (' . \Carbon\Carbon::parse($this->selectedSousActionForActivities->date_echeance)->format('d/m/Y') . ')'
+            ]);
+        }
+
+        try {
+            $activityData = $this->newActivity;
+            $activityData['sous_action_id'] = $this->selectedSousActionForActivities->id;
+            $activityData['tags'] = json_encode($this->newActivity['tags']);
+
+            $activityId = DB::table('activities')->insertGetId($activityData);
+
+            if ($activityId) {
+                // Recalculer la progression de la sous-action projet
+                if ($this->selectedSousActionForActivities->type === 'projet') {
+                    $this->recalculateProjectProgress($this->selectedSousActionForActivities->id);
+                }
+
+                $this->dispatch('toast', 'success', 'Activité créée avec succès !');
+                $this->resetNewActivity();
+                
+                // Rafraîchir les données
+                $this->selectedSousActionForActivities = SousAction::with('activities.owner')->find($this->selectedSousActionForActivities->id);
+                
+                Log::info('✅ Activité créée avec succès', [
+                    'activity_id' => $activityId,
+                    'sous_action_id' => $this->selectedSousActionForActivities->id
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la création de l\'activité', [
+                'error' => $e->getMessage(),
+                'sous_action_id' => $this->selectedSousActionForActivities->id
+            ]);
+            
+            $this->dispatch('toast', 'error', 'Erreur lors de la création : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Ouvrir le modal d'édition d'une activité
+     */
+    public function openEditActivityModal($activityId)
+    {
+        $activity = DB::table('activities')->find($activityId);
+        if ($activity) {
+            $this->editingActivity = $activity;
+            $this->editActivityData = [
+                'titre' => $activity->titre,
+                'description' => $activity->description,
+                'date_debut' => $activity->date_debut,
+                'date_fin' => $activity->date_fin,
+                'statut' => $activity->statut,
+                'taux_avancement' => $activity->taux_avancement,
+                'owner_id' => $activity->owner_id,
+                'tags' => json_decode($activity->tags ?? '[]', true) ?: []
+            ];
+            
+            Log::info('🔓 Modal d\'édition d\'activité ouvert', [
+                'activity_id' => $activityId,
+                'titre' => $activity->titre
+            ]);
+        }
+    }
+
+    /**
+     * Fermer le modal d'édition d'activité
+     */
+    public function closeEditActivityModal()
+    {
+        $this->editingActivity = null;
+        $this->editActivityData = [];
+    }
+
+    /**
+     * Mettre à jour une activité
+     */
+    public function updateActivity()
+    {
+        // Vérifier que l'activité à éditer est bien définie
+        if (!$this->editingActivity) {
+            Log::error('❌ Tentative de mise à jour d\'une activité non définie', [
+                'editingActivity' => $this->editingActivity,
+                'editActivityData' => $this->editActivityData
+            ]);
+            $this->dispatch('toast', 'error', 'Aucune activité sélectionnée pour édition');
+            return;
+        }
+
+        $this->validate([
+            'editActivityData.titre' => 'required|string|max:255',
+            'editActivityData.description' => 'nullable|string',
+            'editActivityData.date_debut' => 'required|date',
+            'editActivityData.date_fin' => 'required|date|after:editActivityData.date_debut',
+            'editActivityData.statut' => 'required|in:en_attente,en_cours,termine,bloque',
+            'editActivityData.taux_avancement' => 'required|numeric|min:0|max:100',
+            'editActivityData.owner_id' => 'required|exists:users,id',
+        ]);
+
+        // Validation supplémentaire : la date de fin ne doit pas dépasser l'échéance du projet
+        if ($this->selectedSousActionForActivities->date_echeance) {
+            $this->validate([
+                'editActivityData.date_fin' => 'before_or_equal:' . $this->selectedSousActionForActivities->date_echeance,
+            ], [
+                'editActivityData.date_fin.before_or_equal' => 'La date de fin de l\'activité ne peut pas dépasser l\'échéance du projet (' . \Carbon\Carbon::parse($this->selectedSousActionForActivities->date_echeance)->format('d/m/Y') . ')'
+            ]);
+        }
+
+        try {
+            $activityId = $this->editingActivity->id;
+            $updateData = $this->editActivityData;
+            $updateData['tags'] = json_encode($this->editActivityData['tags']);
+
+            Log::info('🔄 Début de mise à jour de l\'activité', [
+                'activity_id' => $activityId,
+                'update_data' => $updateData,
+                'sous_action_id' => $this->selectedSousActionForActivities->id
+            ]);
+
+            $updated = DB::table('activities')
+                ->where('id', $activityId)
+                ->update($updateData);
+
+            if ($updated) {
+                // Recalculer la progression de la sous-action projet
+                if ($this->selectedSousActionForActivities->type === 'projet') {
+                    $this->recalculateProjectProgress($this->selectedSousActionForActivities->id);
+                }
+
+                $this->dispatch('toast', 'success', 'Activité mise à jour avec succès !');
+                $this->closeEditActivityModal();
+                
+                // Rafraîchir les données
+                $this->selectedSousActionForActivities = SousAction::with('activities.owner')->find($this->selectedSousActionForActivities->id);
+                
+                Log::info('✅ Activité mise à jour avec succès', [
+                    'activity_id' => $activityId,
+                    'sous_action_id' => $this->selectedSousActionForActivities->id
+                ]);
+            } else {
+                Log::warning('⚠️ Aucune modification effectuée lors de la mise à jour de l\'activité', [
+                    'activity_id' => $activityId
+                ]);
+                $this->dispatch('toast', 'warning', 'Aucune modification effectuée');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la mise à jour de l\'activité', [
+                'error' => $e->getMessage(),
+                'activity_id' => $this->editingActivity ? $this->editingActivity->id : 'null',
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $this->dispatch('toast', 'error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Supprimer une activité
+     */
+    public function deleteActivity($activityId)
+    {
+        try {
+            $deleted = DB::table('activities')->where('id', $activityId)->delete();
+
+            if ($deleted) {
+                // Recalculer la progression de la sous-action projet
+                if ($this->selectedSousActionForActivities->type === 'projet') {
+                    $this->recalculateProjectProgress($this->selectedSousActionForActivities->id);
+                }
+
+                $this->dispatch('toast', 'success', 'Activité supprimée avec succès !');
+                
+                // Rafraîchir les données
+                $this->selectedSousActionForActivities = SousAction::with('activities.owner')->find($this->selectedSousActionForActivities->id);
+                
+                Log::info('✅ Activité supprimée avec succès', [
+                    'activity_id' => $activityId,
+                    'sous_action_id' => $this->selectedSousActionForActivities->id
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la suppression de l\'activité', [
+                'error' => $e->getMessage(),
+                'activity_id' => $activityId
+            ]);
+            
+            $this->dispatch('toast', 'error', 'Erreur lors de la suppression : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mettre à jour la progression d'une activité
+     */
+    public function updateActivityProgress($activityId, $newProgress)
+    {
+        try {
+            Log::info('🔄 Début de mise à jour de la progression d\'activité', [
+                'activity_id' => $activityId,
+                'nouvelle_progression' => $newProgress,
+                'user_id' => Auth::id(),
+                'timestamp' => now()->toISOString()
+            ]);
+
+            if (!is_numeric($newProgress) || $newProgress < 0 || $newProgress > 100) {
+                Log::warning('⚠️ Valeur de progression invalide', [
+                    'activity_id' => $activityId,
+                    'nouvelle_progression' => $newProgress
+                ]);
+                $this->dispatch('toast', 'error', 'Valeur de progression invalide (0-100)');
+                return;
+            }
+
+            // Récupérer l'activité avant mise à jour pour comparer
+            $activityBefore = DB::table('activities')->where('id', $activityId)->first();
+            
+            if (!$activityBefore) {
+                Log::error('❌ Activité non trouvée lors de la mise à jour de progression', [
+                    'activity_id' => $activityId
+                ]);
+                $this->dispatch('toast', 'error', 'Activité non trouvée');
+                return;
+            }
+
+            Log::info('📊 Activité trouvée avant mise à jour', [
+                'activity_id' => $activityId,
+                'ancienne_progression' => $activityBefore->taux_avancement,
+                'nouvelle_progression' => $newProgress,
+                'titre' => $activityBefore->titre,
+                'sous_action_id' => $activityBefore->sous_action_id,
+                'owner_id' => $activityBefore->owner_id,
+                'ancien_statut' => $activityBefore->statut
+            ]);
+
+            // Vérifier si l'activité passe à 100%
+            $passeA100 = ($activityBefore->taux_avancement < 100 && $newProgress == 100);
+            
+            if ($passeA100) {
+                Log::info('🎯 ACTIVITÉ PASSE À 100% - Préparation de la notification', [
+                    'activity_id' => $activityId,
+                    'ancienne_progression' => $activityBefore->taux_avancement,
+                    'nouvelle_progression' => $newProgress,
+                    'titre' => $activityBefore->titre,
+                    'owner_id' => $activityBefore->owner_id
+                ]);
+            }
+
+            // Déterminer le nouveau statut
+            $nouveauStatut = $newProgress >= 100 ? 'termine' : ($newProgress > 0 ? 'en_cours' : 'en_attente');
+            
+            Log::info('🔄 Mise à jour du statut de l\'activité', [
+                'activity_id' => $activityId,
+                'ancien_statut' => $activityBefore->statut,
+                'nouveau_statut' => $nouveauStatut,
+                'progression' => $newProgress
+            ]);
+
+            $updated = DB::table('activities')
+                ->where('id', $activityId)
+                ->update([
+                    'taux_avancement' => $newProgress,
+                    'statut' => $nouveauStatut
+                ]);
+
+            if (!$updated) {
+                Log::error('❌ Échec de la mise à jour de la progression de l\'activité', [
+                    'activity_id' => $activityId,
+                    'nouvelle_progression' => $newProgress
+                ]);
+                $this->dispatch('toast', 'error', 'Erreur lors de la mise à jour de la progression');
+                return;
+            }
+
+            Log::info('✅ Progression de l\'activité mise à jour avec succès', [
+                'activity_id' => $activityId,
+                'ancienne_progression' => $activityBefore->taux_avancement,
+                'nouvelle_progression' => $newProgress,
+                'ancien_statut' => $activityBefore->statut,
+                'nouveau_statut' => $nouveauStatut,
+                'updated_at' => now()->toISOString()
+            ]);
+
+            // Récupérer l'activité mise à jour
+            $activity = DB::table('activities')->where('id', $activityId)->first();
+            
+            if ($activity) {
+                // Si l'activité passe à 100%, envoyer une notification au propriétaire
+                if ($passeA100 && $activity->owner_id) {
+                    Log::info('🔔 ENVOI DE NOTIFICATION - Activité terminée à 100%', [
+                        'activity_id' => $activityId,
+                        'owner_id' => $activity->owner_id,
+                        'titre' => $activity->titre,
+                        'progression' => $newProgress,
+                        'sous_action_id' => $activity->sous_action_id
+                    ]);
+
+                    try {
+                        $notificationSent = $this->sendNotification(
+                            $activity->owner_id,
+                            'activity_completed',
+                            'Activité terminée ! 🎯',
+                            "Félicitations ! Votre activité '{$activity->titre}' a été terminée avec succès !",
+                            [
+                                'activity_id' => $activity->id,
+                                'activity_titre' => $activity->titre,
+                                'completion_date' => now()->toISOString(),
+                                'sous_action_id' => $activity->sous_action_id
+                            ]
+                        );
+
+                        if ($notificationSent) {
+                            Log::info('✅ NOTIFICATION ENVOYÉE avec succès pour l\'activité terminée', [
+                                'activity_id' => $activityId,
+                                'owner_id' => $activity->owner_id,
+                                'notification_type' => 'activity_completed',
+                                'timestamp' => now()->toISOString()
+                            ]);
+                        } else {
+                            Log::warning('⚠️ Échec de l\'envoi de la notification pour l\'activité terminée', [
+                                'activity_id' => $activityId,
+                                'owner_id' => $activity->owner_id
+                            ]);
+                        }
+                    } catch (\Exception $notificationError) {
+                        Log::error('❌ Erreur lors de l\'envoi de la notification pour l\'activité terminée', [
+                            'activity_id' => $activityId,
+                            'owner_id' => $activity->owner_id,
+                            'error' => $notificationError->getMessage(),
+                            'trace' => $notificationError->getTraceAsString()
+                        ]);
+                    }
+                } else {
+                    Log::info('ℹ️ Pas de notification nécessaire', [
+                        'activity_id' => $activityId,
+                        'passe_a_100' => $passeA100,
+                        'owner_id' => $activity->owner_id,
+                        'raison' => $passeA100 ? 'Pas de propriétaire' : 'Progression différente de 100%'
+                    ]);
+                }
+
+                // Recalculer la progression du projet
+                if ($this->selectedSousActionForActivities->type === 'projet') {
+                    Log::info('🔄 Début du recalcul de la progression du projet', [
+                        'sous_action_id' => $this->selectedSousActionForActivities->id,
+                        'activity_id' => $activityId,
+                        'type_sous_action' => $this->selectedSousActionForActivities->type
+                    ]);
+
+                    $this->recalculateProjectProgress($this->selectedSousActionForActivities->id);
+                    
+                    Log::info('✅ Recalcul de la progression du projet terminé', [
+                        'sous_action_id' => $this->selectedSousActionForActivities->id,
+                        'activity_id' => $activityId
+                    ]);
+                } else {
+                    Log::info('ℹ️ Pas de recalcul nécessaire - Sous-action de type normal', [
+                        'sous_action_id' => $this->selectedSousActionForActivities->id,
+                        'type' => $this->selectedSousActionForActivities->type
+                    ]);
+                }
+
+                $this->dispatch('toast', 'success', 'Progression de l\'activité mise à jour !');
+                
+                // Rafraîchir les données
+                $this->selectedSousActionForActivities = SousAction::with('activities.owner')->find($this->selectedSousActionForActivities->id);
+                
+                Log::info('🔄 Données rafraîchies après mise à jour', [
+                    'activity_id' => $activityId,
+                    'sous_action_id' => $this->selectedSousActionForActivities->id,
+                    'timestamp' => now()->toISOString()
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors de la mise à jour de la progression de l\'activité', [
+                'activity_id' => $activityId,
+                'nouvelle_progression' => $newProgress,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'timestamp' => now()->toISOString()
+            ]);
+            
+            $this->dispatch('toast', 'error', 'Erreur : ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut éditer une activité
+     */
+    public function canEditActivity($activity)
+    {
+        $user = auth()->user();
+        
+        // L'admin général peut tout faire
+        if ($user->hasRole('admin_general')) {
+            return true;
+        }
+        
+        // Le propriétaire de l'activité peut l'éditer
+        if ($activity->owner_id == $user->id) {
+            return true;
+        }
+        
+        // Le propriétaire de la sous-action peut éditer ses activités
+        $sousAction = SousAction::find($activity->sous_action_id);
+        if ($sousAction && $sousAction->owner_id == $user->id) {
+            return true;
+        }
+        
+        // Le propriétaire de l'action parent peut éditer
+        if ($sousAction && $sousAction->action) {
+            $action = $sousAction->action;
+            if ($action->owner_id == $user->id) {
+                return true;
+            }
+            
+            // Vérifier la chaîne hiérarchique
+            if ($action->objectifSpecifique && $action->objectifSpecifique->owner_id == $user->id) {
+                return true;
+            }
+            
+            if ($action->objectifSpecifique && $action->objectifSpecifique->objectifStrategique && 
+                $action->objectifSpecifique->objectifStrategique->owner_id == $user->id) {
+                return true;
+            }
+            
+            if ($action->objectifSpecifique && $action->objectifSpecifique->objectifStrategique && 
+                $action->objectifSpecifique->objectifStrategique->pilier && 
+                $action->objectifSpecifique->objectifStrategique->pilier->owner_id == $user->id) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut supprimer une activité
+     */
+    public function canDeleteActivity($activity)
+    {
+        $user = auth()->user();
+        
+        // L'admin général peut tout faire
+        if ($user->hasRole('admin_general')) {
+            return true;
+        }
+        
+        // Le propriétaire de l'activité peut la supprimer
+        if ($activity->owner_id == $user->id) {
+            return true;
+        }
+        
+        // Le propriétaire de la sous-action peut supprimer ses activités
+        $sousAction = SousAction::find($activity->sous_action_id);
+        if ($sousAction && $sousAction->owner_id == $user->id) {
+            return true;
+        }
+        
+        // Le propriétaire de l'action parent peut supprimer
+        if ($sousAction && $sousAction->action) {
+            $action = $sousAction->action;
+            if ($action->owner_id == $user->id) {
+                return true;
+            }
+            
+            // Vérifier la chaîne hiérarchique
+            if ($action->objectifSpecifique && $action->objectifSpecifique->owner_id == $user->id) {
+                return true;
+            }
+            
+            if ($action->objectifSpecifique && $action->objectifSpecifique->objectifStrategique && 
+                $action->objectifSpecifique->objectifStrategique->owner_id == $user->id) {
+                return true;
+            }
+            
+            if ($action->objectifSpecifique && $action->objectifSpecifique->objectifStrategique && 
+                $action->objectifSpecifique->objectifStrategique->pilier && 
+                $action->objectifSpecifique->objectifStrategique->pilier->owner_id == $user->id) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Recalculer la progression d'un projet basée sur ses activités
+     */
+    private function recalculateProjectProgress($sousActionId)
+    {
+        try {
+            Log::info('🔄 Début du recalcul de la progression du projet', [
+                'sous_action_id' => $sousActionId,
+                'timestamp' => now()->toISOString()
+            ]);
+
+            // Récupérer la sous-action pour vérifier son type
+            $sousAction = DB::table('sous_actions')->where('id', $sousActionId)->first();
+            
+            if (!$sousAction) {
+                Log::error('❌ Sous-action non trouvée lors du recalcul de progression', [
+                    'sous_action_id' => $sousActionId
+                ]);
+                return;
+            }
+
+            Log::info('📊 Informations de la sous-action projet', [
+                'sous_action_id' => $sousActionId,
+                'type' => $sousAction->type,
+                'libelle' => $sousAction->libelle,
+                'ancienne_progression' => $sousAction->taux_avancement,
+                'owner_id' => $sousAction->owner_id
+            ]);
+
+            $activities = DB::table('activities')
+                ->where('sous_action_id', $sousActionId)
+                ->get();
+
+            Log::info('📋 Activités trouvées pour le projet', [
+                'sous_action_id' => $sousActionId,
+                'nombre_activites' => $activities->count(),
+                'activites_details' => $activities->map(function($activity) {
+                    return [
+                        'id' => $activity->id,
+                        'titre' => $activity->titre,
+                        'taux_avancement' => $activity->taux_avancement,
+                        'statut' => $activity->statut
+                    ];
+                })
+            ]);
+
+            if ($activities->count() > 0) {
+                $totalProgress = $activities->sum('taux_avancement');
+                $averageProgress = $totalProgress / $activities->count();
+                $newProgress = round($averageProgress, 2);
+                
+                Log::info('🧮 Calcul de la nouvelle progression du projet', [
+                    'sous_action_id' => $sousActionId,
+                    'total_progression_activites' => $totalProgress,
+                    'nombre_activites' => $activities->count(),
+                    'progression_moyenne' => $averageProgress,
+                    'progression_arrondie' => $newProgress,
+                    'ancienne_progression' => $sousAction->taux_avancement
+                ]);
+
+                // Vérifier si le projet passe à 100%
+                $passeA100 = ($sousAction->taux_avancement < 100 && $newProgress == 100);
+                
+                if ($passeA100) {
+                    Log::info('🎯 PROJET PASSE À 100% - Préparation de la notification', [
+                        'sous_action_id' => $sousActionId,
+                        'ancienne_progression' => $sousAction->taux_avancement,
+                        'nouvelle_progression' => $newProgress,
+                        'libelle' => $sousAction->libelle,
+                        'owner_id' => $sousAction->owner_id
+                    ]);
+                }
+                
+                // Préparer les données de mise à jour
+                $updateData = ['taux_avancement' => $newProgress];
+                
+                // Gestion de la date de réalisation pour les projets
+                if ($newProgress == 100) {
+                    // Si exactement 100%, enregistrer la date de réalisation
+                    if (!$sousAction->date_realisation) {
+                        $updateData['date_realisation'] = now();
+                        
+                        Log::info('📅 Date de réalisation ajoutée au projet terminé', [
+                            'sous_action_id' => $sousActionId,
+                            'date_realisation' => now()->toISOString(),
+                            'libelle' => $sousAction->libelle
+                        ]);
+                    }
+                } else {
+                    // Si différent de 100%, masquer la date de réalisation
+                    $updateData['date_realisation'] = null;
+                    
+                    if ($sousAction->date_realisation) {
+                        Log::info('📅 Date de réalisation supprimée du projet (progression < 100%)', [
+                            'sous_action_id' => $sousActionId,
+                            'ancienne_date_realisation' => $sousAction->date_realisation,
+                            'nouvelle_progression' => $newProgress
+                        ]);
+                    }
+                }
+                
+                // Mettre à jour la progression de la sous-action
+                $updated = DB::table('sous_actions')
+                    ->where('id', $sousActionId)
+                    ->update($updateData);
+
+                if ($updated) {
+                    Log::info('✅ Progression de la sous-action projet mise à jour', [
+                        'sous_action_id' => $sousActionId,
+                        'ancienne_progression' => $sousAction->taux_avancement,
+                        'nouvelle_progression' => $newProgress,
+                        'timestamp' => now()->toISOString()
+                    ]);
+
+                    // Mettre à jour les taux parents
+                    $sousActionObj = SousAction::find($sousActionId);
+                    if ($sousActionObj) {
+                        Log::info('🔄 Début de la mise à jour des taux parents', [
+                            'sous_action_id' => $sousActionId
+                        ]);
+                        
+                        $this->updateParentProgressRates($sousActionObj);
+                        
+                        Log::info('✅ Mise à jour des taux parents terminée', [
+                            'sous_action_id' => $sousActionId
+                        ]);
+                    } else {
+                        Log::warning('⚠️ Impossible de récupérer l\'objet SousAction pour la mise à jour des parents', [
+                            'sous_action_id' => $sousActionId
+                        ]);
+                    }
+                } else {
+                    Log::error('❌ Échec de la mise à jour de la progression de la sous-action projet', [
+                        'sous_action_id' => $sousActionId,
+                        'nouvelle_progression' => $newProgress
+                    ]);
+                }
+
+                Log::info('✅ Progression du projet recalculée avec succès', [
+                    'sous_action_id' => $sousActionId,
+                    'nombre_activites' => $activities->count(),
+                    'ancienne_progression' => $sousAction->taux_avancement,
+                    'nouvelle_progression' => $newProgress,
+                    'timestamp' => now()->toISOString()
+                ]);
+            } else {
+                Log::info('ℹ️ Aucune activité trouvée pour le projet', [
+                    'sous_action_id' => $sousActionId
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Erreur lors du recalcul de la progression du projet', [
+                'sous_action_id' => $sousActionId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'timestamp' => now()->toISOString()
+            ]);
+        }
+    }
+
+    /**
      * Mise à jour des taux parents avec DB Query Builder
      */
     private function updateParentProgressRates($sousAction)
@@ -2005,7 +2842,7 @@ class PilierHierarchiqueV2 extends Component
 
             // 3. Mettre à jour l'Objectif Stratégique parent
             if ($sousAction->action && $sousAction->action->objectifSpecifique && $sousAction->action->objectifSpecifique->objectif_strategique_id) {
-                $osProgress = DB::table('objectifs_specifiques')
+                $osProgress = DB::table('objectif_specifiques')
                     ->where('objectif_strategique_id', $sousAction->action->objectifSpecifique->objectif_strategique_id)
                     ->avg('taux_avancement');
                 
@@ -2120,6 +2957,46 @@ class PilierHierarchiqueV2 extends Component
     public $editSousActionOwnerId = '';
     public $editSousActionDateEcheance = '';
     public $editSousActionTauxAvancement = 0;
+    public $editSousActionType = 'normal';
+    
+    // Propriétés pour la gestion des activités
+    public $selectedSousActionForActivities = null;
+    public $showActivitiesModal = false;
+    public $newActivity = [
+        'titre' => '',
+        'description' => '',
+        'date_debut' => '',
+        'date_fin' => '',
+        'statut' => 'en_attente',
+        'taux_avancement' => 0,
+        'owner_id' => null,
+        'tags' => []
+    ];
+    public $editingActivity = null;
+    public $editActivityData = [
+        'titre' => '',
+        'description' => '',
+        'date_debut' => '',
+        'date_fin' => '',
+        'statut' => 'en_attente',
+        'taux_avancement' => 0,
+        'owner_id' => null,
+        'tags' => []
+    ];
+    
+    // Nouvelle propriété pour contrôler la visibilité du formulaire de création d'activité
+    public $showCreateActivityForm = false; // Masqué par défaut
+    
+    // Propriétés pour le calendrier des activités
+    public $showActivityCalendarModal = false;
+    public $calendarMonth;
+    public $calendarYear;
+    public $calendarDays = [];
+    
+    // Propriétés pour le diagramme de Gantt
+    public $showGanttChartModal = false;
+    public $ganttMonth;
+    public $ganttYear;
     
     // Propriétés pour l'édition d'objectif stratégique
     public $editingObjectifStrategique = null;
@@ -2144,6 +3021,9 @@ class PilierHierarchiqueV2 extends Component
                 $averageProgress = $totalProgress / $sousActions->count();
                 $newProgress = round($averageProgress, 2);
                 
+                // Récupérer l'action pour vérifier si elle atteint 100%
+                $action = DB::table('actions')->where('id', $actionId)->first();
+                
                 // Mettre à jour avec DB
                 DB::table('actions')
                     ->where('id', $actionId)
@@ -2151,6 +3031,29 @@ class PilierHierarchiqueV2 extends Component
                         'taux_avancement' => $newProgress,
                         'updated_at' => now()
                     ]);
+                
+                // Notification si l'action atteint 100%
+                if ($newProgress == 100 && $action && $action->taux_avancement < 100) {
+                    if ($action->owner_id) {
+                        $this->sendNotification(
+                            $action->owner_id,
+                            'action_completed',
+                            'Action terminée ! 🎯',
+                            "Félicitations ! Votre action '{$action->libelle}' a été terminée avec succès !",
+                            [
+                                'action_id' => $action->id,
+                                'action_libelle' => $action->libelle,
+                                'completion_date' => now()->toISOString()
+                            ]
+                        );
+                        
+                        Log::info('✅ Notification de complétion d\'action envoyée au propriétaire', [
+                            'action_id' => $action->id,
+                            'owner_id' => $action->owner_id,
+                            'libelle' => $action->libelle
+                        ]);
+                    }
+                }
                 
                 Log::info('✅ Taux d\'avancement Action mis à jour avec DB', [
                     'action_id' => $actionId,
@@ -2181,6 +3084,9 @@ class PilierHierarchiqueV2 extends Component
                 $averageProgress = $totalProgress / $actions->count();
                 $newProgress = round($averageProgress, 2);
                 
+                // Récupérer l'objectif spécifique pour vérifier s'il atteint 100%
+                $objectifSpecifique = DB::table('objectif_specifiques')->where('id', $objectifSpecifiqueId)->first();
+                
                 // Mettre à jour avec DB
                 DB::table('objectif_specifiques')
                     ->where('id', $objectifSpecifiqueId)
@@ -2188,6 +3094,29 @@ class PilierHierarchiqueV2 extends Component
                         'taux_avancement' => $newProgress,
                         'updated_at' => now()
                     ]);
+                
+                // Notification si l'objectif spécifique atteint 100%
+                if ($newProgress == 100 && $objectifSpecifique && $objectifSpecifique->taux_avancement < 100) {
+                    if ($objectifSpecifique->owner_id) {
+                        $this->sendNotification(
+                            $objectifSpecifique->owner_id,
+                            'objectif_specifique_completed',
+                            'Objectif Spécifique terminé ! 🎯',
+                            "Félicitations ! Votre objectif spécifique '{$objectifSpecifique->libelle}' a été terminé avec succès !",
+                            [
+                                'objectif_specifique_id' => $objectifSpecifique->id,
+                                'objectif_specifique_libelle' => $objectifSpecifique->libelle,
+                                'completion_date' => now()->toISOString()
+                            ]
+                        );
+                        
+                        Log::info('✅ Notification de complétion d\'objectif spécifique envoyée au propriétaire', [
+                            'objectif_specifique_id' => $objectifSpecifique->id,
+                            'owner_id' => $objectifSpecifique->owner_id,
+                            'libelle' => $objectifSpecifique->libelle
+                        ]);
+                    }
+                }
                 
                 Log::info('✅ Taux d\'avancement OSP mis à jour avec DB', [
                     'osp_id' => $objectifSpecifiqueId,
@@ -2200,6 +3129,357 @@ class PilierHierarchiqueV2 extends Component
                 'osp_id' => $objectifSpecifiqueId
             ]);
         }
+    }
+
+    /**
+     * Ouvrir le modal du calendrier des activités
+     */
+    public function openActivityCalendarModal()
+    {
+        $this->calendarMonth = now()->month;
+        $this->calendarYear = now()->year;
+        $this->generateCalendarDays();
+        $this->showActivityCalendarModal = true;
+        
+        Log::info('📅 Modal du calendrier des activités ouvert', [
+            'sous_action_id' => $this->selectedSousActionForActivities->id,
+            'month' => $this->calendarMonth,
+            'year' => $this->calendarYear
+        ]);
+    }
+
+    /**
+     * Fermer le modal du calendrier des activités
+     */
+    public function closeActivityCalendarModal()
+    {
+        $this->showActivityCalendarModal = false;
+        $this->calendarDays = [];
+    }
+
+    /**
+     * Aller au mois précédent
+     */
+    public function previousMonth()
+    {
+        if ($this->calendarMonth == 1) {
+            $this->calendarMonth = 12;
+            $this->calendarYear--;
+        } else {
+            $this->calendarMonth--;
+        }
+        
+        $this->generateCalendarDays();
+        
+        Log::info('📅 Navigation vers le mois précédent', [
+            'month' => $this->calendarMonth,
+            'year' => $this->calendarYear
+        ]);
+    }
+
+    /**
+     * Aller au mois suivant
+     */
+    public function nextMonth()
+    {
+        if ($this->calendarMonth == 12) {
+            $this->calendarMonth = 1;
+            $this->calendarYear++;
+        } else {
+            $this->calendarMonth++;
+        }
+        
+        $this->generateCalendarDays();
+        
+        Log::info('📅 Navigation vers le mois suivant', [
+            'month' => $this->calendarMonth,
+            'year' => $this->calendarYear
+        ]);
+    }
+
+    /**
+     * Aller au mois actuel
+     */
+    public function goToCurrentMonth()
+    {
+        $this->calendarMonth = now()->month;
+        $this->calendarYear = now()->year;
+        $this->generateCalendarDays();
+        
+        Log::info('📅 Retour au mois actuel', [
+            'month' => $this->calendarMonth,
+            'year' => $this->calendarYear
+        ]);
+    }
+
+    /**
+     * Afficher toutes les activités d'un jour spécifique
+     */
+    public function showDayActivities($date)
+    {
+        $formattedDate = \Carbon\Carbon::parse($date)->format('d/m/Y');
+        $activities = $this->selectedSousActionForActivities->activities
+            ->filter(function ($activity) use ($date) {
+                $startDate = \Carbon\Carbon::parse($activity->date_debut);
+                $endDate = \Carbon\Carbon::parse($activity->date_fin);
+                $targetDate = \Carbon\Carbon::parse($date);
+                
+                return $targetDate->between($startDate, $endDate, true);
+            });
+        
+        $this->dispatch('toast', 'info', "📅 {$activities->count()} activité(s) pour le {$formattedDate}");
+        
+        Log::info('📅 Affichage des activités d\'un jour', [
+            'date' => $date,
+            'formatted_date' => $formattedDate,
+            'activity_count' => $activities->count(),
+            'sous_action_id' => $this->selectedSousActionForActivities->id
+        ]);
+    }
+
+    /**
+     * Générer les jours du calendrier pour le mois et l'année donnés
+     */
+    private function generateCalendarDays()
+    {
+        $this->calendarDays = [];
+        
+        // Premier jour du mois
+        $firstDayOfMonth = \Carbon\Carbon::createFromDate($this->calendarYear, $this->calendarMonth, 1);
+        
+        // Dernier jour du mois
+        $lastDayOfMonth = $firstDayOfMonth->copy()->endOfMonth();
+        
+        // Premier jour de la semaine (lundi = 1)
+        $firstDayOfWeek = $firstDayOfMonth->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        
+        // Dernier jour de la semaine (dimanche = 0)
+        $lastDayOfWeek = $lastDayOfMonth->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        
+        $currentDate = $firstDayOfWeek->copy();
+        
+        // Récupérer toutes les activités du projet pour ce mois
+        $allActivities = $this->selectedSousActionForActivities->activities
+            ->filter(function ($activity) use ($firstDayOfWeek, $lastDayOfWeek) {
+                $startDate = \Carbon\Carbon::parse($activity->date_debut);
+                $endDate = \Carbon\Carbon::parse($activity->date_fin);
+                
+                // Une activité est visible si elle chevauche la période du mois
+                return $startDate->lte($lastDayOfWeek) && $endDate->gte($firstDayOfWeek);
+            });
+        
+        // Créer un index des activités par position
+        $activityPositions = $this->createActivityPositions($allActivities, $firstDayOfWeek, $lastDayOfWeek);
+        
+        while ($currentDate->lte($lastDayOfWeek)) {
+            $day = [
+                'date' => $currentDate->copy(),
+                'day' => $currentDate->day,
+                'isCurrentMonth' => $currentDate->month == $this->calendarMonth,
+                'isToday' => $currentDate->isToday(),
+                'activities' => collect(),
+                'activityPositions' => []
+            ];
+            
+            // Si c'est un jour du mois actuel, récupérer les activités
+            if ($day['isCurrentMonth']) {
+                $day['activities'] = $allActivities
+                    ->filter(function ($activity) use ($currentDate) {
+                        $startDate = \Carbon\Carbon::parse($activity->date_debut);
+                        $endDate = \Carbon\Carbon::parse($activity->date_fin);
+                        
+                        // Une activité est visible si elle commence, se termine ou est en cours ce jour-là
+                        return $currentDate->between($startDate, $endDate, true);
+                    });
+                
+                // Créer les positions d'activités pour ce jour
+                $day['activityPositions'] = $this->getActivityPositionsForDay($currentDate, $activityPositions);
+            }
+            
+            $this->calendarDays[] = $day;
+            $currentDate->addDay();
+        }
+        
+        Log::info('📅 Jours du calendrier générés avec alignement', [
+            'month' => $this->calendarMonth,
+            'year' => $this->calendarYear,
+            'total_days' => count($this->calendarDays),
+            'days_with_activities' => collect($this->calendarDays)->filter(fn($day) => $day['activities']->count() > 0)->count(),
+            'max_activity_positions' => count($activityPositions)
+        ]);
+    }
+
+    /**
+     * Créer un index des positions d'activités pour le mois
+     */
+    private function createActivityPositions($activities, $startDate, $endDate)
+    {
+        $positions = [];
+        $currentDate = $startDate->copy();
+        
+        while ($currentDate->lte($endDate)) {
+            $dayActivities = $activities->filter(function ($activity) use ($currentDate) {
+                $start = \Carbon\Carbon::parse($activity->date_debut);
+                $end = \Carbon\Carbon::parse($activity->date_fin);
+                return $currentDate->between($start, $end, true);
+            });
+            
+            if ($dayActivities->count() > 0) {
+                $positions[$currentDate->format('Y-m-d')] = $dayActivities->values();
+            }
+            
+            $currentDate->addDay();
+        }
+        
+        return $positions;
+    }
+
+    /**
+     * Obtenir les positions d'activités pour un jour spécifique
+     */
+    private function getActivityPositionsForDay($date, $activityPositions)
+    {
+        $dateKey = $date->format('Y-m-d');
+        $dayActivities = $activityPositions[$dateKey] ?? collect();
+        
+        // Créer un tableau de positions avec des "slots" vides
+        $maxPositions = $this->getMaxActivityPositions();
+        $positions = array_fill(0, $maxPositions, null);
+        
+        foreach ($dayActivities as $index => $activity) {
+            $positions[$index] = $activity;
+        }
+        
+        return $positions;
+    }
+
+    /**
+     * Obtenir le nombre maximum de positions d'activités
+     */
+    private function getMaxActivityPositions()
+    {
+        $maxCount = 0;
+        
+        foreach ($this->calendarDays as $day) {
+            if ($day['activities']->count() > $maxCount) {
+                $maxCount = $day['activities']->count();
+            }
+        }
+        
+        return max($maxCount, 1); // Au moins 1 position
+    }
+
+    /**
+     * Ouvrir le modal du diagramme de Gantt
+     */
+    public function openGanttChartModal()
+    {
+        $this->ganttMonth = now()->month;
+        $this->ganttYear = now()->year;
+        $this->showGanttChartModal = true;
+        
+        Log::info('📊 Modal du diagramme de Gantt ouvert', [
+            'sous_action_id' => $this->selectedSousActionForActivities->id,
+            'month' => $this->ganttMonth,
+            'year' => $this->ganttYear
+        ]);
+    }
+
+    /**
+     * Fermer le modal du diagramme de Gantt
+     */
+    public function closeGanttChartModal()
+    {
+        $this->showGanttChartModal = false;
+    }
+
+    /**
+     * Aller à la période précédente du Gantt
+     */
+    public function previousGanttPeriod()
+    {
+        if ($this->ganttMonth == 1) {
+            $this->ganttMonth = 12;
+            $this->ganttYear--;
+        } else {
+            $this->ganttMonth--;
+        }
+        
+        Log::info('📊 Navigation vers la période précédente du Gantt', [
+            'month' => $this->ganttMonth,
+            'year' => $this->ganttYear
+        ]);
+    }
+
+    /**
+     * Aller à la période suivante du Gantt
+     */
+    public function nextGanttPeriod()
+    {
+        if ($this->ganttMonth == 12) {
+            $this->ganttMonth = 1;
+            $this->ganttYear++;
+        } else {
+            $this->ganttMonth++;
+        }
+        
+        Log::info('📊 Navigation vers la période suivante du Gantt', [
+            'month' => $this->ganttMonth,
+            'year' => $this->ganttYear
+        ]);
+    }
+
+    /**
+     * Aller à la période actuelle du Gantt
+     */
+    public function goToCurrentGanttPeriod()
+    {
+        $this->ganttMonth = now()->month;
+        $this->ganttYear = now()->year;
+        
+        Log::info('📊 Retour à la période actuelle du Gantt', [
+            'month' => $this->ganttMonth,
+            'year' => $this->ganttYear
+        ]);
+    }
+
+    /**
+     * Calculer la position de la barre Gantt
+     */
+    public function calculateGanttBarPosition($activity)
+    {
+        $startDate = \Carbon\Carbon::parse($activity->date_debut);
+        $monthStart = \Carbon\Carbon::createFromDate($this->ganttYear, $this->ganttMonth, 1);
+        $monthEnd = $monthStart->copy()->endOfMonth();
+        
+        if ($startDate->lt($monthStart)) {
+            return 0;
+        }
+        
+        $daysFromStart = $startDate->diffInDays($monthStart);
+        $totalDays = $monthStart->diffInDays($monthEnd) + 1;
+        
+        return ($daysFromStart / $totalDays) * 100;
+    }
+
+    /**
+     * Calculer la largeur de la barre Gantt
+     */
+    public function calculateGanttBarWidth($activity)
+    {
+        $startDate = \Carbon\Carbon::parse($activity->date_debut);
+        $endDate = \Carbon\Carbon::parse($activity->date_fin);
+        $monthStart = \Carbon\Carbon::createFromDate($this->ganttYear, $this->ganttMonth, 1);
+        $monthEnd = $monthStart->copy()->endOfMonth();
+        
+        // Ajuster les dates pour le mois affiché
+        $effectiveStart = $startDate->lt($monthStart) ? $monthStart : $startDate;
+        $effectiveEnd = $endDate->gt($monthEnd) ? $monthEnd : $endDate;
+        
+        $duration = $effectiveEnd->diffInDays($effectiveStart) + 1;
+        $totalDays = $monthStart->diffInDays($monthEnd) + 1;
+        
+        return min(($duration / $totalDays) * 100, 100);
     }
 
 }

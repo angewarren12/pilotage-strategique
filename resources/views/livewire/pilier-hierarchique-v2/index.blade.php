@@ -88,6 +88,9 @@
     
     <!-- CSS pour la progression circulaire améliorée -->
     <link rel="stylesheet" href="{{ asset('css/progress-circle.css') }}?v={{ time() }}">
+    
+    <!-- CSS pour le modal des activités -->
+    <link rel="stylesheet" href="{{ asset('css/activities-modal.css') }}">
 
     <!-- Scripts JavaScript -->
     <script>

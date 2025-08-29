@@ -226,6 +226,7 @@
                                         <th>Libellé</th>
                                         <th>Description</th>
                                         <th>Progression</th>
+                                        <th>Date d'échéance</th>
                                         <th>Objectifs Stratégiques</th>
                                         <th>Actions</th>
                                     </tr>
@@ -260,6 +261,22 @@
                                             <div class="taux-avancement-display text-center mt-1 taux-avancement" data-pilier-id="{{ $pilier->id }}">
                                                 {{ number_format($pilier->taux_avancement, 2) }}%
                                             </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $maxEcheance = $pilier->getMaxEcheanceDate();
+                                            @endphp
+                                            @if($maxEcheance)
+                                                <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    {{ \Carbon\Carbon::parse($maxEcheance)->format('d/m/Y') }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-light text-muted">
+                                                    <i class="fas fa-calendar-times me-1"></i>
+                                                    Aucune échéance
+                                                </span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge bg-info">{{ $pilier->objectifsStrategiques->count() }}</span>

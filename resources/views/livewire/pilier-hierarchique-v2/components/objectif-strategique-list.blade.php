@@ -32,7 +32,7 @@
         transform: translate(-50%, -50%);
         text-align: center;
         width: 100%;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: bold;
     }
     
@@ -185,16 +185,16 @@
             <div class="col-md-4 text-end">
                 <div class="progress-circle mb-3">
                     <div class="d-flex flex-column align-items-center">
-                        <div class="progress-ring" style="width: 80px; height: 80px;">
-                            <svg width="80" height="80" viewBox="0 0 80 80">
-                                <circle cx="40" cy="40" r="35" stroke="#e9ecef" stroke-width="6" fill="none"/>
-                                <circle cx="40" cy="40" r="35" stroke="{{ $pilier->getHierarchicalColor(2) }}" stroke-width="6" fill="none" 
-                                        stroke-dasharray="{{ 2 * pi() * 35 }}" 
-                                        stroke-dashoffset="{{ 2 * pi() * 35 * (1 - $selectedObjectifStrategique->taux_avancement / 100) }}"
-                                        transform="rotate(-90 40 40)"/>
+                        <div class="progress-ring" style="width: 120px; height: 120px;">
+                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                <circle cx="60" cy="60" r="52" stroke="#e9ecef" stroke-width="8" fill="none"/>
+                                <circle cx="60" cy="60" r="52" stroke="{{ $pilier->getHierarchicalColor(2) }}" stroke-width="8" fill="none" 
+                                        stroke-dasharray="326.726" 
+                                        stroke-dashoffset="{{ 326.726 * (1 - $selectedObjectifStrategique->taux_avancement / 100) }}"
+                                        transform="rotate(-90 60 60)"/>
                             </svg>
                             <div class="progress-text">
-                                <span class="fw-bold">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</span>
+                                <span class="fw-bold" style="font-size: 18px;">{{ number_format($selectedObjectifStrategique->taux_avancement, 1) }}%</span>
                             </div>
                         </div>
                         <small class="text-muted mt-2">Progression globale</small>
@@ -228,15 +228,16 @@
                                 </div>
                             </div>
                             <div class="col-md-5 text-center">
-                                <div class="progress-ring" style="position: relative;">
-                                    <svg width="100" height="100" viewBox="0 0 100 100">
-                                        <circle cx="50" cy="50" r="45" fill="none" stroke="#e9ecef" stroke-width="6"/>
-                                        <circle cx="50" cy="50" r="45" fill="none" stroke="{{ $pilier->getHierarchicalColor(1) }}" stroke-width="6" 
-                                                stroke-dasharray="282.74" stroke-dashoffset="{{ 282.74 - (282.74 * $pilier->taux_avancement / 100) }}"/>
+                                <div class="progress-ring" style="width: 120px; height: 120px;">
+                                    <svg width="120" height="120" viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="52" stroke="#e9ecef" stroke-width="8" fill="none"></circle>
+                                        <circle cx="60" cy="60" r="52" stroke="#99caff" stroke-width="8" fill="none" 
+                                                stroke-dasharray="326.726" 
+                                                stroke-dashoffset="{{ 326.726 * (1 - $pilier->taux_avancement / 100) }}" 
+                                                transform="rotate(-90 60 60)"></circle>
                                     </svg>
-                                    <div class="progress-text" style="position: absolute !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; text-align: center !important; width: 100% !important;">
-                                        <span class="progress-percentage" style="font-size: 18px !important; line-height: 1.2 !important; color: #495057 !important; display: block !important; text-shadow: 0 1px 2px rgba(0,0,0,0.1) !important; font-weight: bold !important;">{{ number_format($pilier->taux_avancement, 1) }}%</span>
-                                        <small class="text-muted d-block" style="font-size: 12px !important;">Avancement</small>
+                                    <div class="progress-text">
+                                        <span class="fw-bold" style="font-size: 18px;">{{ number_format($pilier->taux_avancement, 1) }}%</span>
                                     </div>
                                 </div>
                             </div>

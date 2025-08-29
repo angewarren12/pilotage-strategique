@@ -18,27 +18,19 @@ class Activity extends Model
         'description',
         'date_debut',
         'date_fin',
-        'duree_estimee',
-        'priorite',
         'statut',
         'taux_avancement',
         'owner_id',
-        'notes',
         'tags'
     ];
 
     protected $casts = [
-        'date_debut' => 'datetime',
-        'date_fin' => 'datetime',
-        'duree_estimee' => 'integer',
+        'date_debut' => 'date',
+        'date_fin' => 'date',
         'taux_avancement' => 'decimal:2'
     ];
 
-    // Constantes pour les priorités
-    const PRIORITE_BASSE = 'basse';
-    const PRIORITE_MOYENNE = 'moyenne';
-    const PRIORITE_HAUTE = 'haute';
-    const PRIORITE_CRITIQUE = 'critique';
+
 
     // Constantes pour les statuts
     const STATUT_EN_ATTENTE = 'en_attente';
@@ -58,16 +50,7 @@ class Activity extends Model
     }
 
     // Accesseurs
-    public function getPrioriteColorAttribute(): string
-    {
-        return match($this->priorite) {
-            self::PRIORITE_BASSE => '#28a745',
-            self::PRIORITE_MOYENNE => '#ffc107',
-            self::PRIORITE_HAUTE => '#fd7e14',
-            self::PRIORITE_CRITIQUE => '#dc3545',
-            default => '#6c757d'
-        };
-    }
+
 
     public function getStatutColorAttribute(): string
     {
@@ -125,10 +108,7 @@ class Activity extends Model
         return $query->where('statut', $statut);
     }
 
-    public function scopeByPriorite($query, $priorite)
-    {
-        return $query->where('priorite', $priorite);
-    }
+
 
     public function scopeEnRetard($query)
     {
@@ -214,15 +194,7 @@ class Activity extends Model
         }
     }
 
-    public function getPrioritesList(): array
-    {
-        return [
-            self::PRIORITE_BASSE => 'Basse',
-            self::PRIORITE_MOYENNE => 'Moyenne',
-            self::PRIORITE_HAUTE => 'Haute',
-            self::PRIORITE_CRITIQUE => 'Critique'
-        ];
-    }
+
 
     public function getStatutsList(): array
     {

@@ -24,6 +24,24 @@
                         <p class="text-muted mb-0">
                             <strong>Objectif Stratégique:</strong> {{ $selectedObjectifStrategique->libelle }}
                         </p>
+                        <p class="text-muted mb-0">
+                            @php
+                                $maxEcheanceOSP = $selectedObjectifSpecifique->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheanceOSP)
+                                <strong>Échéance max des sous-actions:</strong> 
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheanceOSP)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <strong>Échéance max des sous-actions:</strong> 
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune échéance
+                                </span>
+                            @endif
+                        </p>
                     </div>
                 </div>
                 
@@ -75,6 +93,24 @@
                             <span class="text-muted me-2">Code :</span>
                             <span class="badge bg-secondary">{{ $pilier->code }}</span>
                         </div>
+                        <div class="d-flex align-items-center mb-2">
+                            @php
+                                $maxEcheancePilier = $pilier->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheancePilier)
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheancePilier)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune
+                                </span>
+                            @endif
+                        </div>
                         <div class="text-center">
                             <div class="progress-circle" style="--progress: {{ $pilier->taux_avancement }}%;">
                                 <svg width="50" height="50" viewBox="0 0 50 50">
@@ -109,6 +145,24 @@
                         <div class="d-flex align-items-center mb-2">
                             <span class="text-muted me-2">Code :</span>
                             <span class="badge bg-secondary">{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            @php
+                                $maxEcheanceOS = $selectedObjectifStrategique->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheanceOS)
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheanceOS)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune
+                                </span>
+                            @endif
                         </div>
                         <div class="text-center">
                             <div class="progress-circle" style="--progress: {{ $selectedObjectifStrategique->taux_avancement }}%;">
@@ -155,19 +209,22 @@
                             <th style="width: 10%;">
                                 <i class="fas fa-code me-1"></i>Code
                             </th>
-                            <th style="width: 25%;">
+                            <th style="width: 20%;">
                                 <i class="fas fa-tasks me-1"></i>Libellé
                             </th>
                             <th style="width: 15%;">
                                 <i class="fas fa-percentage me-1"></i>Progression
                             </th>
                             <th style="width: 15%;">
-                                <i class="fas fa-user me-1"></i>Responsable
+                                <i class="fas fa-calendar-alt me-1"></i>Date d'échéance
                             </th>
                             <th style="width: 15%;">
+                                <i class="fas fa-user me-1"></i>Responsable
+                            </th>
+                            <th style="width: 10%;">
                                 <i class="fas fa-list me-1"></i>Sous-Actions
                             </th>
-                            <th style="width: 20%;">
+                            <th style="width: 15%;">
                                 <i class="fas fa-cogs me-1"></i>Actions
                             </th>
                         </tr>
@@ -206,6 +263,22 @@
                                             </div>
                                         </div>
                                     </div>
+                                </td>
+                                <td>
+                                    @php
+                                        $maxEcheanceAction = $action->getMaxEcheanceDate();
+                                    @endphp
+                                    @if($maxEcheanceAction)
+                                        <span class="badge bg-warning text-dark" title="Date d'échéance maximale des sous-actions">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            {{ \Carbon\Carbon::parse($maxEcheanceAction)->format('d/m/Y') }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-light text-muted">
+                                            <i class="fas fa-calendar-times me-1"></i>
+                                            Aucune échéance
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($action->responsable)

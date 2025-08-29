@@ -30,6 +30,24 @@
                                 | <strong>Échéance:</strong> {{ \Carbon\Carbon::parse($selectedAction->date_echeance)->format('d/m/Y') }}
                             @endif
                         </p>
+                        <p class="text-muted mb-0">
+                            @php
+                                $maxEcheanceAction = $selectedAction->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheanceAction)
+                                <strong>Échéance max des sous-actions:</strong> 
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheanceAction)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <strong>Échéance max des sous-actions:</strong> 
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune échéance
+                                </span>
+                            @endif
+                        </p>
                     </div>
                 </div>
                 
@@ -81,6 +99,24 @@
                             <span class="text-muted me-2">Code :</span>
                             <span class="badge bg-secondary">{{ $pilier->code }}</span>
                         </div>
+                        <div class="d-flex align-items-center mb-2">
+                            @php
+                                $maxEcheancePilier = $pilier->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheancePilier)
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheancePilier)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune
+                                </span>
+                            @endif
+                        </div>
                         <div class="text-center">
                             <div class="progress-circle" style="--progress: {{ $pilier->taux_avancement }}%;">
                                 <svg width="40" height="40" viewBox="0 0 40 40">
@@ -116,6 +152,24 @@
                             <span class="text-muted me-2">Code :</span>
                             <span class="badge bg-secondary">{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}</span>
                         </div>
+                        <div class="d-flex align-items-center mb-2">
+                            @php
+                                $maxEcheanceOS = $selectedObjectifStrategique->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheanceOS)
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheanceOS)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune
+                                </span>
+                            @endif
+                        </div>
                         <div class="text-center">
                             <div class="progress-circle" style="--progress: {{ $selectedObjectifStrategique->taux_avancement }}%;">
                                 <svg width="40" height="40" viewBox="0 0 40 40">
@@ -150,6 +204,24 @@
                         <div class="d-flex align-items-center mb-2">
                             <span class="text-muted me-2">Code :</span>
                             <span class="badge bg-secondary">{{ $pilier->code }}.{{ $selectedObjectifStrategique->code }}.{{ $selectedObjectifSpecifique->code }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            @php
+                                $maxEcheanceOSP = $selectedObjectifSpecifique->getMaxEcheanceDate();
+                            @endphp
+                            @if($maxEcheanceOSP)
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($maxEcheanceOSP)->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="text-muted me-2">Échéance max :</span>
+                                <span class="badge bg-light text-muted">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Aucune
+                                </span>
+                            @endif
                         </div>
                         <div class="text-center">
                             <div class="progress-circle" style="--progress: {{ $selectedObjectifSpecifique->taux_avancement }}%;">
@@ -196,8 +268,11 @@
                             <th style="width: 10%;">
                                 <i class="fas fa-code me-1"></i>Code
                             </th>
-                            <th style="width: 25%;">
+                            <th style="width: 20%;">
                                 <i class="fas fa-tasks me-1"></i>Libellé
+                            </th>
+                            <th style="width: 10%;">
+                                <i class="fas fa-tag me-1"></i>Type
                             </th>
                             <th style="width: 15%;">
                                 <i class="fas fa-percentage me-1"></i>Progression
@@ -230,6 +305,12 @@
                                     </div>
                                 </td>
                                 <td>
+                                    <span class="badge badge-enhanced" style="background: {{ $pilier->getHierarchicalColor(5) }}; color: {{ $pilier->getTextColor($pilier->getHierarchicalColor(5)) }}">
+                                        <i class="fas fa-tag me-1"></i>
+                                        {{ ucfirst($sousAction->type ?? 'normal') }}
+                                    </span>
+                                </td>
+                                <td>
                                     <div class="d-flex flex-column align-items-start">
                                         <div class="d-flex justify-content-between align-items-center w-100 mb-1">
                                             <small class="text-muted">Progression</small>
@@ -237,21 +318,39 @@
                                                 {{ number_format($sousAction->taux_avancement, 2) }}%
                                             </span>
                                         </div>
-                                        <div class="progress-slider-container mb-2" style="width: 100%;">
-                                            <input type="range" 
-                                                   class="form-range progress-slider" 
-                                                   style="--progress-color: {{ $pilier->getHierarchicalColor(5) }};"
-                                                   min="0" 
-                                                   max="100" 
-                                                   step="1"
-                                                   value="{{ $sousAction->taux_avancement }}"
-                                                   wire:change=" updateSousActionProgress({{ $sousAction->id }}, $event.target.value)"
-                                                   title="Glissez pour modifier la progression ({{ $sousAction->taux_avancement }}%)">
-                                            <div class="progress-labels d-flex justify-content-between mt-1">
-                                                <small class="text-muted">0%</small>
-                                                <small class="text-muted">100%</small>
+                                        
+                                        @if(($sousAction->type ?? 'normal') === 'projet')
+                                            <!-- Mode lecture seule pour les projets -->
+                                            <div class="progress mb-2" style="height: 8px; width: 100%;">
+                                                <div class="progress-bar" 
+                                                     role="progressbar" 
+                                                     style="width: {{ $sousAction->taux_avancement }}%; background-color: {{ $pilier->getHierarchicalColor(5) }};"
+                                                     aria-valuenow="{{ $sousAction->taux_avancement }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                </div>
                                             </div>
-                                        </div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-lock me-1"></i>Progression automatique (Projet)
+                                            </small>
+                                        @else
+                                            <!-- Mode modifiable pour les sous-actions normales -->
+                                            <div class="progress-slider-container mb-2" style="width: 100%;">
+                                                <input type="range" 
+                                                       class="form-range progress-slider" 
+                                                       style="--progress-color: {{ $pilier->getHierarchicalColor(5) }};"
+                                                       min="0" 
+                                                       max="100" 
+                                                       step="1"
+                                                       value="{{ $sousAction->taux_avancement }}"
+                                                       wire:change="updateSousActionProgress({{ $sousAction->id }}, $event.target.value)"
+                                                       title="Glissez pour modifier la progression ({{ $sousAction->taux_avancement }}%)">
+                                                <div class="progress-labels d-flex justify-content-between mt-1">
+                                                    <small class="text-muted">0%</small>
+                                                    <small class="text-muted">100%</small>
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </td>
                                 <td>
@@ -288,6 +387,17 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
+                                        @if(($sousAction->type ?? 'normal') === 'projet')
+                                            <!-- Bouton Gérer les Activités (pour les projets) -->
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-info btn-action" 
+                                                    title="Gérer les activités du projet"
+                                                    wire:click="openActivitiesModal({{ $sousAction->id }})">
+                                                <i class="fas fa-tasks"></i>
+                                                <span class="ms-1 d-none d-sm-inline">Activités</span>
+                                            </button>
+                                        @endif
+                                        
                                         @if($canEditSousAction($sousAction))
                                             <!-- Bouton Modifier -->
                                             <button type="button" 
