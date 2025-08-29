@@ -103,6 +103,133 @@
         border-radius: 12px 12px 0 0;
     }
     
+    /* Styles responsifs pour le modal des couleurs hiérarchiques */
+    #colorPreviewModal .modal-dialog {
+        max-width: 95vw;
+        margin: 1rem auto;
+    }
+    
+    #colorPreviewModal .modal-content {
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+    
+    #colorPreviewModal .modal-header {
+        background: linear-gradient(135deg, #20B2AA 0%, #48D1CC 100%);
+        color: white;
+        border-bottom: none;
+    }
+    
+    #colorPreviewModal .modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    #colorPreviewModal .modal-body {
+        padding: 1.5rem;
+    }
+    
+    #colorPreviewModal .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    
+    #colorPreviewModal .card-header {
+        border-radius: 0.75rem 0.75rem 0 0 !important;
+        padding: 1rem;
+        font-weight: 600;
+    }
+    
+    #colorPreviewModal .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Styles pour les éléments de couleur */
+    .color-preview-item {
+        padding: 0.5rem;
+    }
+    
+    .color-badge {
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .color-badge:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .color-code {
+        font-family: 'Courier New', monospace;
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        border: 1px solid #e9ecef;
+        margin-top: 0.5rem;
+    }
+    
+    /* Responsive pour petits écrans */
+    @media (max-width: 768px) {
+        #colorPreviewModal .modal-dialog {
+            max-width: 98vw;
+            margin: 0.5rem auto;
+        }
+        
+        #colorPreviewModal .modal-body {
+            padding: 1rem;
+        }
+        
+        #colorPreviewModal .card-body {
+            padding: 1rem;
+        }
+        
+        .color-preview-item {
+            padding: 0.25rem;
+        }
+        
+        .color-badge {
+            padding: 6px 8px !important;
+            font-size: 0.8rem !important;
+            max-width: 100px !important;
+        }
+        
+        .color-code {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+        }
+        
+        /* Forcer l'affichage en grille sur très petits écrans */
+        #colorPreviewModal .col-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+    
+    /* Responsive pour écrans moyens */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        #colorPreviewModal .modal-dialog {
+            max-width: 90vw;
+        }
+        
+        .color-badge {
+            max-width: 110px !important;
+        }
+    }
+    
+    /* Responsive pour grands écrans */
+    @media (min-width: 1025px) {
+        #colorPreviewModal .modal-dialog {
+            max-width: 80vw;
+        }
+        
+        .color-badge {
+            max-width: 120px !important;
+        }
+    }
+    
     /* Styles pour le sélecteur de couleur */
     .color-palette {
         margin-top: 10px;
@@ -4677,7 +4804,7 @@ function openPilierHierarchiqueV2(pilierId) {
 function showColorPreview() {
     const piliers = @json($piliers);
     let previewHtml = '<div class="modal fade" id="colorPreviewModal" tabindex="-1">';
-    previewHtml += '<div class="modal-dialog modal-lg">';
+    previewHtml += '<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">';
     previewHtml += '<div class="modal-content">';
     previewHtml += '<div class="modal-header">';
     previewHtml += '<h5 class="modal-title"><i class="fas fa-palette me-2"></i>Aperçu du Système de Couleurs Hiérarchiques</h5>';
@@ -4725,12 +4852,12 @@ function showColorPreview() {
             const luminance = (0.299 * newR + 0.587 * newG + 0.114 * newB) / 255;
             const textColor = luminance > 0.5 ? 'dark' : 'white';
             
-            previewHtml += '<div class="col-md-2 mb-2">';
-            previewHtml += '<div class="text-center">';
-            previewHtml += '<div class="badge fs-6 mb-1" style="background: ' + hierarchicalColor + '; color: ' + textColor + '; padding: 8px 12px;">';
+            previewHtml += '<div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-3">';
+            previewHtml += '<div class="text-center color-preview-item">';
+            previewHtml += '<div class="badge fs-6 mb-2 color-badge" style="background: ' + hierarchicalColor + '; color: ' + textColor + '; padding: 8px 12px; width: 100%; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">';
             previewHtml += level.name;
             previewHtml += '</div>';
-            previewHtml += '<div class="small text-muted">' + hierarchicalColor + '</div>';
+            previewHtml += '<div class="small text-muted color-code" style="font-size: 0.75rem; word-break: break-all;">' + hierarchicalColor + '</div>';
             previewHtml += '</div>';
             previewHtml += '</div>';
         });

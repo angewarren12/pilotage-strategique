@@ -46,31 +46,168 @@
     }
 }
 
-/* Optimisations spécifiques pour écrans moyens (900px-1200px) */
-@media (min-width: 900px) and (max-width: 1200px) {
-    /* Forcer le scroll horizontal et améliorer la visibilité */
+/* Optimisations pour écrans moyens (800px-1100px) - PROBLÉMATIQUE IDENTIFIÉE */
+@media (min-width: 800px) and (max-width: 1100px) {
+    /* Forcer le scroll horizontal */
     .table-responsive {
         overflow-x: auto !important;
-        border: 2px solid #007bff;
-        border-radius: 8px;
-        position: relative;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: auto;
+        max-width: 100%;
+        width: 100%;
     }
     
-    /* Indicateur de scroll plus visible */
-    .table-responsive::before {
-        content: '📱 Faites défiler horizontalement pour voir toutes les colonnes';
-        position: absolute;
-        top: -30px;
-        left: 0;
-        right: 0;
-        background: #007bff;
-        color: white;
-        text-align: center;
+    /* Améliorer la visibilité de la barre de scroll */
+    .table-responsive::-webkit-scrollbar {
+        height: 12px !important;
+        width: 12px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 6px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    
+    /* Optimiser la grille EXÉCUTION */
+    .execution-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px;
+        min-width: 200px;
+    }
+    
+    .execution-header {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px;
+    }
+    
+    .execution-section {
         padding: 6px;
+        min-width: 180px;
+    }
+    
+    /* Ajuster les tailles de police */
+    .execution-label {
+        font-size: 0.75em;
+    }
+    
+    .execution-value {
+        font-size: 0.85em;
+    }
+    
+    /* Optimiser la table principale */
+    .table {
+        min-width: 1000px !important;
+        width: max-content;
+    }
+    
+    /* Réduire l'espacement des cellules */
+    .table th,
+    .table td {
+        padding: 5px 4px;
+        font-size: 0.85em;
+        white-space: nowrap;
+    }
+    
+    .hierarchical-cell {
+        padding: 6px 4px;
+    }
+    
+    /* Optimiser les colonnes pour l'accessibilité */
+    .table th:nth-child(1),
+    .table td:nth-child(1) {
+        min-width: 100px;
+        max-width: 120px;
+    }
+    
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+        min-width: 80px;
+        max-width: 100px;
+    }
+    
+    .table th:nth-child(3),
+    .table td:nth-child(3) {
+        min-width: 80px;
+        max-width: 100px;
+    }
+    
+    .table th:nth-child(4),
+    .table td:nth-child(4) {
+        min-width: 80px;
+        max-width: 100px;
+    }
+    
+    .table th:nth-child(5),
+    .table td:nth-child(5) {
+        min-width: 160px;
+        max-width: 200px;
+    }
+    
+    /* Assurer que les boutons d'action sont visibles */
+    .table th:nth-child(6),
+    .table td:nth-child(6) {
+        min-width: 120px;
+        max-width: 150px;
+    }
+    
+    /* Améliorer la visibilité des boutons */
+    .btn {
         font-size: 0.8em;
-        font-weight: bold;
-        border-radius: 6px 6px 0 0;
-        z-index: 1000;
+        padding: 5px 8px;
+        margin: 2px;
+        white-space: nowrap;
+        min-width: 60px;
+    }
+    
+    .btn-sm {
+        font-size: 0.75em;
+        padding: 4px 6px;
+        min-width: 50px;
+    }
+}
+
+/* Optimisations spécifiques pour écrans moyens (900px-1200px) */
+@media (min-width: 900px) and (max-width: 1200px) {
+    /* Forcer le scroll horizontal */
+    .table-responsive {
+        overflow-x: auto !important;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: auto;
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    /* Améliorer la visibilité de la barre de scroll */
+    .table-responsive::-webkit-scrollbar {
+        height: 12px !important;
+        width: 12px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 6px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
     
     /* Optimiser la table */
@@ -117,13 +254,11 @@
         max-width: 220px;
     }
     
-    /* Colonne des boutons d'action - CRITIQUE */
+    /* Colonne des boutons d'action */
     .table th:nth-child(6),
     .table td:nth-child(6) {
         min-width: 140px !important;
         max-width: 180px;
-        background-color: rgba(0, 123, 255, 0.05);
-        border-left: 2px solid #007bff;
     }
     
     /* Améliorer la visibilité des boutons */
@@ -157,24 +292,6 @@
     .table-responsive {
         font-size: 0.8em;
         overflow-x: auto !important;
-        border: 1px solid #dc3545;
-    }
-    
-    /* Indicateur de scroll pour mobile */
-    .table-responsive::before {
-        content: '📱 Défilez horizontalement pour voir les boutons';
-        position: absolute;
-        top: -25px;
-        left: 0;
-        right: 0;
-        background: #dc3545;
-        color: white;
-        text-align: center;
-        padding: 4px;
-        font-size: 0.7em;
-        font-weight: bold;
-        border-radius: 4px 4px 0 0;
-        z-index: 1000;
     }
     
     .hierarchical-cell {
@@ -229,8 +346,6 @@
     .table th:nth-child(6),
     .table td:nth-child(6) {
         min-width: 120px !important;
-        background-color: rgba(220, 53, 69, 0.1);
-        border-left: 2px solid #dc3545;
     }
     
     /* Boutons adaptés au mobile */

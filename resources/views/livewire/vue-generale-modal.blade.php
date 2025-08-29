@@ -140,51 +140,62 @@
                             <table class="table table-bordered table-hover mb-0" id="hierarchicalTable">
                                 <thead class="table-dark sticky-top">
                                     <tr>
-                                        <th style="width: 15%;" class="text-center sortable" onclick="sortTable(0)">
+                                        <th style="width: 10%;" class="text-center sortable" onclick="sortTable(0)">
                                             <i class="fas fa-layer-group me-1"></i>
                                             PILIER
                                             <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th style="width: 15%;" class="text-center sortable" onclick="sortTable(1)">
+                                        <th style="width: 12%;" class="text-center sortable" onclick="sortTable(1)">
                                             <i class="fas fa-bullseye me-1"></i>
                                             COMITÉ STRATÉGIQUE
                                             <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th style="width: 15%;" class="text-center sortable" onclick="sortTable(2)">
+                                        <th style="width: 12%;" class="text-center sortable" onclick="sortTable(2)">
                                             <i class="fas fa-compass me-1"></i>
                                             COMITÉ DE PILOTAGE
                                             <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th style="width: 15%;" class="text-center sortable" onclick="sortTable(3)">
+                                        <th style="width: 12%;" class="text-center sortable" onclick="sortTable(3)">
                                             <i class="fas fa-tasks me-1"></i>
                                             ACTIONS
                                             <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th style="width: 15%;" class="text-center sortable" onclick="sortTable(4)">
+                                        <th style="width: 13%;" class="text-center sortable" onclick="sortTable(4)">
                                             <i class="fas fa-list-ul me-1"></i>
                                             SOUS-ACTIONS
                                             <i class="fas fa-sort ms-1"></i>
                                         </th>
-                                        <th style="width: 25%;" class="text-center sortable" onclick="sortTable(5)">
-                                            <i class="fas fa-calendar-check me-1"></i>
-                                            EXÉCUTION
+                                        <th style="width: 10%;" class="text-center sortable" onclick="sortTable(5)">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            ÉCHÉANCE
+                                            <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th style="width: 10%;" class="text-center sortable" onclick="sortTable(6)">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            RÉALISATION
+                                            <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th style="width: 10%;" class="text-center sortable" onclick="sortTable(7)">
+                                            <i class="fas fa-clock me-1"></i>
+                                            ÉCART
+                                            <i class="fas fa-sort ms-1"></i>
+                                        </th>
+                                        <th style="width: 11%;" class="text-center sortable" onclick="sortTable(8)">
+                                            <i class="fas fa-percentage me-1"></i>
+                                            PROGRESSION
                                             <i class="fas fa-sort ms-1"></i>
                                         </th>
                                     </tr>
                                     <tr class="table-secondary">
+                                        <th class="text-center">Code | Libellé | %</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
                                         <th class="text-center">Code | Libellé | % | Owner</th>
-                                        <th class="text-center">Code | Libellé | % | Owner</th>
-                                        <th class="text-center">
-                                            <div class="execution-header">
-                                                <div class="execution-header-item">Échéance</div>
-                                                <div class="execution-header-item">Date Réalisation</div>
-                                                <div class="execution-header-item">Écart</div>
-                                                <div class="execution-header-item">Progression</div>
-                                            </div>
-                                        </th>
+                                        <th class="text-center">Date limite</th>
+                                        <th class="text-center">Date réalisée</th>
+                                        <th class="text-center">Délai</th>
+                                        <th class="text-center">% Avancement</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -238,14 +249,12 @@
                                                                             style="background-color: {{ $pilier->color }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                             <div class="fw-bold">{{ $pilier->code }}</div>
                                                                             <div>{{ $pilier->libelle }}</div>
-                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress mt-1" style="height: 3px; background: rgba(255,255,255,0.3);">
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $pilier->taux_avancement }}%"></div>
                                                                             </div>
                                                                             <small class="text-white-75">{{ number_format($pilier->taux_avancement, 0) }}%</small>
-                                                                            <div class="mt-1">
-                                                                                <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
-                                                                            </div>
+                                                                            <!-- Les piliers n'ont pas de propriétaire -->
                                                                         </td>
                                                                     @endif
 
@@ -254,7 +263,7 @@
                                                                             style="background-color: {{ $pilier->getHierarchicalColor(1) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                             <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}</div>
                                                                             <div>{{ $objectifStrategique->libelle }}</div>
-                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress mt-1" style="height: 3px; background: rgba(255,255,255,0.3);">
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $objectifStrategique->taux_avancement }}%"></div>
                                                                             </div>
@@ -270,7 +279,7 @@
                                                                             style="background-color: {{ $pilier->getHierarchicalColor(2) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                             <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}</div>
                                                                             <div>{{ $objectifSpecifique->libelle }}</div>
-                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress mt-1" style="height: 3px; background: rgba(255,255,255,0.3);">
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $objectifSpecifique->taux_avancement }}%"></div>
                                                                             </div>
@@ -288,7 +297,7 @@
                                                                             title="Cliquer pour ouvrir la discussion">
                                                                             <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}</div>
                                                                             <div>{{ $action->libelle }}</div>
-                                                                            <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                            <div class="progress mt-1" style="height: 3px; background: rgba(255,255,255,0.3);">
                                                                                 <div class="progress-bar bg-white" 
                                                                                      style="width: {{ $action->taux_avancement }}%"></div>
                                                                             </div>
@@ -304,7 +313,7 @@
                                                                         style="background-color: {{ $pilier->getHierarchicalColor(4) }}; color: white; border-left: 4px solid {{ $pilier->color }};">
                                                                         <div class="fw-bold">{{ $pilier->code }}.{{ $objectifStrategique->code }}.{{ $objectifSpecifique->code }}.{{ $action->code }}.{{ $sousAction->code }}</div>
                                                                         <div>{{ $sousAction->libelle }}</div>
-                                                                        <div class="progress mt-1" style="height: 6px; background: rgba(255,255,255,0.3);">
+                                                                        <div class="progress mt-1" style="height: 3px; background: rgba(255,255,255,0.3);">
                                                                             <div class="progress-bar bg-white" 
                                                                                  style="width: {{ $sousAction->taux_avancement }}%"></div>
                                                                         </div>
@@ -314,44 +323,26 @@
                                                                         </div>
                                                                     </td>
 
-                                                                    <td>
-                                                                        <div class="execution-section">
-                                                                            <div class="execution-grid">
-                                                                                <div class="execution-item">
-                                                                                    <div class="execution-label">Échéance</div>
-                                                                                    <div class="execution-value">
-                                                                                        {{ $sousAction->date_echeance ? Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') : 'Non définie' }}
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="execution-item">
-                                                                                    <div class="execution-label">Date Réalisation</div>
-                                                                                    <div class="execution-value">
-                                                                                        {{ $sousAction->date_realisation ? Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') : '-' }}
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="execution-item">
-                                                                                    <div class="execution-label">Écart</div>
-                                                                                    <div class="execution-value">
-                                                                                        @php
-                                                                                            $ecart = $this->calculateEcart($sousAction->date_echeance, $sousAction->date_realisation);
-                                                                                        @endphp
-                                                                                        @if($ecart)
-                                                                                            <span class="badge bg-{{ $sousAction->date_realisation ? 'success' : 'warning' }}">
-                                                                                                {{ $ecart }}
-                                                                                            </span>
-                                                                                        @else
-                                                                                            <span class="badge bg-secondary">-</span>
-                                                                                        @endif
-                                                                                    </div>
-                                                                                </div>
-                                                                                <div class="execution-item">
-                                                                                    <div class="execution-label">Progression</div>
-                                                                                    <div class="execution-value">
-                                                                                        <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 0) }}%</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
+                                                                    <td class="text-center">
+                                                                        <span class="execution-value">{{ $sousAction->date_echeance ? Carbon\Carbon::parse($sousAction->date_echeance)->format('d/m/Y') : 'Non définie' }}</span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="execution-value">{{ $sousAction->date_realisation ? Carbon\Carbon::parse($sousAction->date_realisation)->format('d/m/Y') : '-' }}</span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        @php
+                                                                            $ecart = $this->calculateEcart($sousAction->date_echeance, $sousAction->date_realisation);
+                                                                        @endphp
+                                                                        @if($ecart)
+                                                                            <span class="badge bg-{{ $sousAction->date_realisation ? 'success' : 'warning' }}">
+                                                                                {{ $ecart }}
+                                                                            </span>
+                                                                        @else
+                                                                            <span class="badge bg-secondary">-</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <span class="badge bg-primary">{{ number_format($sousAction->taux_avancement, 0) }}%</span>
                                                                     </td>
                                                                 </tr>
                                                             @endforeach
@@ -422,60 +413,36 @@
                                                                     </div>
                                                                 </td>
 
-                                                                <td class="text-center text-muted" colspan="1">
+                                                                <td class="text-center text-muted">
                                                                     <div class="empty-sous-action">
                                                                         <i class="fas fa-info-circle me-2"></i>
                                                                         <span class="empty-text">Aucune sous-action</span>
                                                                     </div>
                                                                 </td>
 
-                                                                <td>
-                                                                    <div class="execution-section execution-empty">
-                                                                        <div class="execution-grid">
-                                                                            <div class="execution-item">
-                                                                                <div class="execution-label">Échéance</div>
-                                                                                <div class="execution-value">
-                                                                                    <span class="empty-value">
-                                                                                        <i class="fas fa-calendar-times me-1"></i>
-                                                                                        Non définie
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="execution-item">
-                                                                                <div class="execution-label">Date Réalisation</div>
-                                                                                <div class="execution-value">
-                                                                                    <span class="empty-value">
-                                                                                        <i class="fas fa-clock me-1"></i>
-                                                                                        En attente
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="execution-item">
-                                                                                <div class="execution-label">Écart</div>
-                                                                                <div class="execution-value">
-                                                                                    <span class="empty-value">
-                                                                                        <i class="fas fa-minus me-1"></i>
-                                                                                        N/A
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="execution-item">
-                                                                                <div class="execution-label">Progression</div>
-                                                                                <div class="execution-value">
-                                                                                    <span class="empty-value">
-                                                                                        <i class="fas fa-exclamation-triangle me-1"></i>
-                                                                                        {{ number_format($action->taux_avancement, 0) }}%
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="empty-action-hint">
-                                                                            <small class="text-muted">
-                                                                                <i class="fas fa-lightbulb me-1"></i>
-                                                                                Créez des sous-actions pour commencer l'exécution
-                                                                            </small>
-                                                                        </div>
-                                                                    </div>
+                                                                <td class="text-center text-muted">
+                                                                    <span class="empty-value">
+                                                                        <i class="fas fa-calendar-times me-1"></i>
+                                                                        Non définie
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-center text-muted">
+                                                                    <span class="empty-value">
+                                                                        <i class="fas fa-clock me-1"></i>
+                                                                        En attente
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-center text-muted">
+                                                                    <span class="empty-value">
+                                                                        <i class="fas fa-minus me-1"></i>
+                                                                        N/A
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-center text-muted">
+                                                                    <span class="empty-value">
+                                                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                                                        {{ number_format($action->taux_avancement, 0) }}%
+                                                                    </span>
                                                                 </td>
                                                             </tr>
                                                         @endif
@@ -498,7 +465,7 @@
                                                         <span class="badge bg-white text-dark">{{ $pilier->owner->name ?? 'Non assigné' }}</span>
                                                     </div>
                                                 </td>
-                                                <td class="text-center text-muted" colspan="5">
+                                                <td class="text-center text-muted" colspan="4">
                                                     <i class="fas fa-info-circle me-2"></i>
                                                     Aucun Objectif Stratégique défini
                                                 </td>
@@ -650,99 +617,205 @@
 
         /* Styles pour la section EXÉCUTION */
         .execution-section {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
         }
 
-        .execution-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid */
-            gap: 10px;
+        .execution-row {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
         .execution-item {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
+            gap: 5px;
+            white-space: nowrap;
         }
 
         .execution-label {
-            font-size: 0.8em;
+            font-size: 0.75em;
             color: #6c757d;
-            margin-bottom: 2px;
+            font-weight: 600;
         }
 
         .execution-value {
-            font-size: 1em;
-            font-weight: bold;
+            font-size: 0.85em;
+            font-weight: 500;
             color: #343a40;
         }
 
         /* Styles pour l'en-tête de la section EXÉCUTION */
         .execution-header {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-            text-align: center;
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .execution-header-item {
-            font-size: 0.9em;
-            font-weight: bold;
+            font-size: 0.8em;
+            font-weight: 600;
             color: #495057;
-            padding: 5px;
-            background-color: rgba(255, 255, 255, 0.1);
+            padding: 3px 8px;
+            background-color: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
+            white-space: nowrap;
         }
 
-        /* Responsive adjustments for execution grid */
+        /* Responsive adjustments for execution section */
         @media (max-width: 768px) {
-            .execution-grid {
-                grid-template-columns: 1fr; /* Stack on small screens */
-            }
-            
-            .execution-header {
-                grid-template-columns: 1fr; /* Stack on small screens */
+            .execution-row {
+                gap: 10px;
+                flex-wrap: wrap;
             }
             
             .execution-item {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                padding: 5px;
-                border-bottom: 1px solid #e9ecef;
+                gap: 3px;
             }
             
             .execution-label {
-                margin-bottom: 0;
-                margin-right: 10px;
+                font-size: 0.7em;
+            }
+            
+            .execution-value {
+                font-size: 0.8em;
             }
         }
 
         /* Desktop optimizations */
         @media (min-width: 1200px) {
-            .execution-grid {
-                grid-template-columns: repeat(4, 1fr); /* Fixed 4 columns on large screens */
-                gap: 15px;
+            .execution-row {
+                gap: 20px;
             }
             
-            .execution-header {
-                grid-template-columns: repeat(4, 1fr); /* Fixed 4 columns on large screens */
-                gap: 15px;
+            /* Optimiser l'affichage sur desktop */
+            .hierarchical-cell {
+                padding: 10px 8px;
+            }
+            
+            .hierarchical-cell .fw-bold {
+                font-size: 0.95em;
+                line-height: 1.3;
+            }
+            
+            .hierarchical-cell div:not(.fw-bold) {
+                font-size: 0.9em;
+                line-height: 1.4;
+                margin-bottom: 3px;
+            }
+            
+            .hierarchical-cell .progress {
+                max-width: 90%;
+                margin: 0 auto;
+            }
+            
+            .hierarchical-cell small {
+                font-size: 0.8em;
+                margin-top: 3px;
+            }
+            
+            .hierarchical-cell .badge {
+                font-size: 0.8em;
+                padding: 3px 8px;
+                margin-top: 4px;
+            }
+            
+            /* Maximiser l'espace pour la colonne EXÉCUTION */
+            .execution-section {
+                padding: 10px;
+            }
+            
+            .execution-row {
+                gap: 25px;
+                justify-content: space-between;
+            }
+            
+            .execution-item {
+                gap: 6px;
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .execution-label {
+                font-size: 0.8em;
+                white-space: nowrap;
+            }
+            
+            .execution-value {
+                font-size: 0.9em;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
 
         /* Medium screen optimizations */
         @media (min-width: 768px) and (max-width: 1199px) {
-            .execution-grid {
-                grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+            .execution-row {
+                gap: 15px;
+            }
+            
+            /* Améliorer l'affichage sur écran moyen */
+            .hierarchical-cell {
+                padding: 6px 4px;
+            }
+            
+            .hierarchical-cell .fw-bold {
+                font-size: 0.85em;
+                line-height: 1.2;
+            }
+            
+            .hierarchical-cell div:not(.fw-bold) {
+                font-size: 0.8em;
+                line-height: 1.3;
+                margin-bottom: 2px;
+            }
+            
+            .hierarchical-cell .progress {
+                max-width: 85%;
+                margin: 0 auto;
+            }
+            
+            .hierarchical-cell small {
+                font-size: 0.7em;
+                display: block;
+                margin-top: 2px;
+            }
+            
+            .hierarchical-cell .badge {
+                font-size: 0.7em;
+                padding: 2px 6px;
+                margin-top: 3px;
+            }
+            
+            /* Optimiser l'espacement dans la colonne EXÉCUTION */
+            .execution-section {
+                padding: 6px;
+            }
+            
+            .execution-row {
                 gap: 12px;
             }
             
-            .execution-header {
-                grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
-                gap: 12px;
+            .execution-item {
+                gap: 4px;
+            }
+            
+            .execution-label {
+                font-size: 0.7em;
+            }
+            
+            .execution-value {
+                font-size: 0.8em;
             }
         }
 
@@ -763,6 +836,38 @@
             .hierarchical-cell small {
                 font-size: 0.75em;
             }
+            
+            /* Réduire la largeur des barres de progression sur écran moyen */
+            .hierarchical-cell .progress {
+                max-width: 80%;
+                margin: 0 auto;
+            }
+        }
+        
+        /* Styles pour le mode zoom out (largeur pleine) */
+        .vue-generale-table.zoom-out {
+            width: 100vw !important;
+            min-width: 100vw !important;
+            max-width: none !important;
+        }
+        
+        .vue-generale-table.zoom-out #hierarchicalTable {
+            width: 100% !important;
+            table-layout: auto !important;
+        }
+        
+        .vue-generale-table.zoom-out .table-responsive {
+            width: 100% !important;
+            max-width: none !important;
+            overflow-x: visible !important;
+        }
+        
+        /* Optimiser l'affichage des colonnes en mode zoom out */
+        .vue-generale-table.zoom-out th,
+        .vue-generale-table.zoom-out td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         @media (max-width: 768px) {
@@ -788,7 +893,9 @@
             }
             
             .progress {
-                height: 4px !important;
+                height: 3px !important;
+                max-width: 70% !important;
+                margin: 0 auto !important;
             }
             
             .modal-dialog {
@@ -808,11 +915,42 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
+        
+        /* Optimiser la largeur du tableau pour utiliser tout l'espace disponible */
+        #hierarchicalTable {
+            min-width: 1200px;
+            width: 100%;
+            table-layout: fixed;
+        }
+        
+        /* S'assurer que la colonne EXÉCUTION utilise tout l'espace disponible */
+        #hierarchicalTable th:last-child,
+        #hierarchicalTable td:last-child {
+            min-width: 400px;
+        }
+        
+        /* Optimiser l'espacement des cellules */
+        .hierarchical-cell {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* Forcer le tableau à utiliser toute la largeur disponible */
+        .vue-generale-table {
+            width: 100% !important;
+            max-width: none !important;
+        }
+        
+        /* Ajuster la largeur du conteneur du tableau selon le zoom */
+        .vue-generale-table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
 
         /* Better table cell spacing */
         .table th,
         .table td {
-            vertical-align: middle;
+            vertical-align: top;
             white-space: nowrap;
         }
 
@@ -907,6 +1045,51 @@
             table.style.transform = `scale(${currentZoom / 100})`;
             table.style.transformOrigin = 'top left';
             zoomLevel.textContent = currentZoom + '%';
+            
+            // Ajuster la largeur du tableau selon le zoom
+            if (currentZoom <= 75) {
+                // Zoom out : utiliser toute la largeur disponible
+                table.style.width = '100vw';
+                table.style.minWidth = '100vw';
+                table.style.maxWidth = 'none';
+                table.classList.add('zoom-out');
+                
+                // Ajuster les colonnes pour utiliser tout l'espace
+                const headers = table.querySelectorAll('thead th');
+                const totalColumns = headers.length;
+                const baseWidth = 100 / totalColumns;
+                
+                headers.forEach((header, index) => {
+                    if (index === totalColumns - 1) {
+                        // Dernière colonne (EXÉCUTION) : plus large
+                        header.style.width = `${baseWidth + 10}%`;
+                    } else if (index === 0) {
+                        // Première colonne (PILIER) : plus étroite
+                        header.style.width = `${baseWidth - 2}%`;
+                    } else {
+                        // Colonnes intermédiaires : largeur équilibrée
+                        header.style.width = `${baseWidth}%`;
+                    }
+                });
+            } else {
+                // Zoom normal ou zoom in : largeur standard
+                table.style.width = '100%';
+                table.style.minWidth = '1200px';
+                table.style.maxWidth = 'none';
+                table.classList.remove('zoom-out');
+                
+                // Restaurer les largeurs originales des colonnes
+                const headers = table.querySelectorAll('thead th');
+                headers[0].style.width = '10%';  // PILIER
+                headers[1].style.width = '12%';  // OBJECTIF STRATÉGIQUE
+                headers[2].style.width = '12%';  // COMITÉ DE PILOTAGE
+                headers[3].style.width = '12%';  // ACTIONS
+                headers[4].style.width = '13%';  // SOUS-ACTIONS
+                headers[5].style.width = '10%';  // ÉCHÉANCE
+                headers[6].style.width = '10%';  // RÉALISATION
+                headers[7].style.width = '10%';  // ÉCART
+                headers[8].style.width = '11%';  // PROGRESSION
+            }
             
             // Ajuster la hauteur du conteneur
             const container = table.parentElement;
